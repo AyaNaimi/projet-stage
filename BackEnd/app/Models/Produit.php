@@ -15,11 +15,27 @@ class Produit extends Model
     {
         return $this->belongsTo(categorie::class, 'categorie_id');
     }
+    public function souscategorie()
+    {
+        return $this->belongsTo(categorie::class, 'suCat_id');
+    }
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function etiquette()
+    {
+        return $this->belongsTo(Produit::class, 'produit_Etiq_id');
+    }
 
+    public function Embalge()
+    {
+        return $this->belongsTo(Produit::class, 'produit_Embalg_id');
+    }
+    public function EmbalgeS()
+    {
+        return $this->belongsTo(Produit::class,'produit_Embalg_S_id');
+    }
     public function calibre()
     {
         return $this->belongsTo(Calibre::class, 'calibre_id');
@@ -34,4 +50,39 @@ class Produit extends Model
     {
         return $this->hasMany(LigneCommande::class);
     }
+    public function prixProduits()
+{
+    return $this->hasMany(PrixProduit::class,'produit_id');
+}
+public function historique()
+{
+    return $this->belongsTo(StockProduit::class, 'produit_id','id');
+}
+public function prixProduitsLast()
+{
+    return $this->hasOne(PrixProduit::class)
+        ->where(function ($query) {
+            $query->whereNull('dateFin') // Prix sans date de fin
+                ->orWhere(function ($query) {
+                    $query->where('dateDebut', '<=', now()) // date_debut <= aujourd'hui
+                        ->where('dateFin', '>=', now()); // aujourd'hui <= date_fin
+                });
+        })
+        ->orderByRaw('
+            CASE 
+                WHEN dateFin IS NULL THEN 1
+                ELSE 2 
+            END, dateDebut DESC
+        ');
+}
+
+public function stockProduit()
+{
+    return $this->hasMany(StockProduit::class, 'produit_id');
+}
+
+public function stock()
+{
+    return $this->hasMany(StockProduit::class, 'produit_id');
+}
 }

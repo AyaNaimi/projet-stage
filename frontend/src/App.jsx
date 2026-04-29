@@ -9,6 +9,7 @@ import { HeaderProvider } from "./Acceuil/HeaderContext";
 import Login from "./Login/Login.jsx";
 import EmpHistorique from "./Zakaria/EmpHistorique.jsx";
 import DepartementManager from "./Zakaria/Employe/DepartementManager";
+import ProduitPage from "./pages/p.jsx";
 
 const App = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const App = () => {
             <Route path="/" element={<DepartementManager />} />
             <Route path="/login" element={<Login />} />
             <Route path="/employes" element={<DepartementManager />} />
+            <Route path="/produits" element={<ProduitPage />} />
             <Route path="/emphistorique" element={<EmpHistorique />} />
           </Routes>
         </HeaderProvider>

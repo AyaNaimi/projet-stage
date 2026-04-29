@@ -28,11 +28,13 @@ import PeopleIcon from "@mui/icons-material/People";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import PrintIcon from "@mui/icons-material/Print";
 import SearchIcon from "@mui/icons-material/Search";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import TableViewIcon from "@mui/icons-material/TableView";
 import { useOpen } from "./OpenProvider";
 import { useHeader } from "./HeaderContext";
 
 const drawerWidth = 220;
+const AUTH_API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -110,6 +112,12 @@ const navItems = [
     match: (pathname) => pathname === "/employes",
   },
   {
+    to: "/produits",
+    label: "Gestion produits",
+    icon: <ShoppingBagIcon />,
+    match: (pathname) => pathname === "/produits",
+  },
+  {
     to: "/emphistorique",
     label: "Historique",
     icon: <HistoryIcon />,
@@ -151,7 +159,7 @@ const Navigation = () => {
       }
 
       try {
-        const response = await axios.get("http://localhost:8000/api/user", {
+        const response = await axios.get('http://localhost:8000/api/user', {
           withCredentials: true,
           headers: {
             Authorization: `Bearer ${token}`,
