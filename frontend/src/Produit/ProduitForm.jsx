@@ -45,6 +45,14 @@ export default function ProduitForm(props) {
     handleAddEmptyRowRep,
   } = props;
 
+  const calibreList = Array.isArray(calibres)
+    ? calibres
+    : Array.isArray(calibres?.calibres)
+      ? calibres.calibres
+      : Array.isArray(calibres?.data)
+        ? calibres.data
+        : [];
+
   return (
     <Form className="col row" onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center' }}>
       <Form.Label className="text-center ">
@@ -67,7 +75,7 @@ export default function ProduitForm(props) {
         <Form.Label style={{ flex: '1', marginRight: '5px', marginLeft: '7px' }}>Calibre</Form.Label>
         <Form.Select style={{ flex: '2' }} name="calibre_id" value={formData.calibre_id} onChange={handleChange} className="form-select form-select">
           <option value="">Sélectionner un calibre</option>
-          {calibres.map((calibre) => (
+          {calibreList.map((calibre) => (
             <option key={calibre.id} value={calibre.id}>
               {calibre.calibre}
             </option>
@@ -98,7 +106,7 @@ export default function ProduitForm(props) {
                     </tr>
                   </thead>
                   <tbody>
-                    {calibres.map((categ) => (
+                    {calibreList.map((categ) => (
                       <tr key={categ.id}>
                         <td>{categ.id}</td>
                         <td>{categ.calibre}</td>

@@ -1,13 +1,21 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+const normalizeCalibres = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.calibres)) return payload.calibres;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
 export const fetchCalibres = createAsyncThunk(
   'calibres/fetchCalibres',
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/calibres`);
-      localStorage.setItem('calibres', JSON.stringify(response.data));
-      return response.data;
+      const calibres = normalizeCalibres(response.data);
+      localStorage.setItem('calibres', JSON.stringify(calibres));
+      return calibres;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Error fetching calibres');
     }
