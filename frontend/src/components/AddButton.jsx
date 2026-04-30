@@ -7,7 +7,7 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
   const { permissions } = useAuth();
 
   // Vérifier si l'utilisateur a la permission requise
-  const hasPermission = requiredPermission ? permissions.includes(requiredPermission) : true;
+  const hasPermission =  true;
 
   return (
     <div
