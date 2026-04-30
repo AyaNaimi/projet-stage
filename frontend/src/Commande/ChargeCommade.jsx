@@ -1,7 +1,7 @@
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../axiosInstance";
 import Swal from "sweetalert2";
 import { Form, Button } from "react-bootstrap";
 import "../style.css";
@@ -99,36 +99,28 @@ const ChargeCommande = () => {
 
   const fetchChargementCommandes = async () => {
     try {
-      const livreurResponse = await axios.get(
-        "http://localhost:8000/api/vehicule-livreurs"
-      );
+      const livreurResponse = await axios.get("/api/vehicule-livreurs");
 
       console.log("API Response for Livreurs:", livreurResponse.data.livreurs);
 
       setVehicule_livreurs(livreurResponse.data.vehicule_livreurs);
-      const produitsResponse = await axios.get(
-        "http://localhost:8000/api/produits"
-      );
+      const produitsResponse = await axios.get("/api/produits");
 
       console.log(
         "API Response for Vehicules:",
-        produitsResponse.data.vehicules
+        produitsResponse.data.vehicules,
       );
 
       setProduits(produitsResponse.data.produit);
-      const commandesResponse = await axios.get(
-        "http://localhost:8000/api/commandes"
-      );
+      const commandesResponse = await axios.get("/api/commandes");
 
       console.log(
         "API Response for Commandes:",
-        commandesResponse.data.commandes
+        commandesResponse.data.commandes,
       );
 
       setCommandes(commandesResponse.data.commandes);
-      const response = await axios.get(
-        "http://localhost:8000/api/chargementCommandes"
-      );
+      const response = await axios.get("/api/chargementCommandes");
 
       console.log("API Response:", response.data);
 
@@ -256,7 +248,7 @@ const ChargeCommande = () => {
       if (result.isConfirmed) {
         selectedItems.forEach((id) => {
           axios
-            .delete(`http://localhost:8000/api/chargementCommandes/${id}`)
+            .delete(`/api/chargementCommandes/${id}`)
             .then((response) => {
               fetchChargementCommandes();
               Swal.fire({
@@ -268,7 +260,7 @@ const ChargeCommande = () => {
             .catch((error) => {
               console.error(
                 "Erreur lors de la suppression du chargementCommande:",
-                error
+                error,
               );
               Swal.fire({
                 icon: "error",
@@ -293,7 +285,7 @@ const ChargeCommande = () => {
       setSelectedItems([]);
     } else {
       setSelectedItems(
-        chargementCommandes.map((chargementCommande) => chargementCommande.id)
+        chargementCommandes.map((chargementCommande) => chargementCommande.id),
       );
     }
   };
@@ -436,7 +428,7 @@ const ChargeCommande = () => {
       "User",
     ];
     const selectedChargementCommandes = chargementCommandes.filter(
-      (chargementCommande) => selectedItems.includes(chargementCommande.id)
+      (chargementCommande) => selectedItems.includes(chargementCommande.id),
     );
     const rows = selectedChargementCommandes.map((chargementCommande) => [
       chargementCommande.id,
@@ -455,7 +447,7 @@ const ChargeCommande = () => {
 
     // Calculate the width of the columns
     const columnWidths = columns.map(
-      (col) => pdf.getStringUnitWidth(col) * 5 + padding * 2
+      (col) => pdf.getStringUnitWidth(col) * 5 + padding * 2,
     );
     const tableWidth = columnWidths.reduce((total, width) => total + width, 0);
 
@@ -516,7 +508,7 @@ const ChargeCommande = () => {
 
   const exportToExcel = () => {
     const selectedChargementCommandes = chargementCommandes.filter(
-      (chargementCommande) => selectedItems.includes(chargementCommande.id)
+      (chargementCommande) => selectedItems.includes(chargementCommande.id),
     );
     const ws = XLSX.utils.json_to_sheet(selectedChargementCommandes);
     const wb = XLSX.utils.book_new();
@@ -541,7 +533,7 @@ const ChargeCommande = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:8000/api/chargementCommandes/${id}`)
+          .delete(`/api/chargementCommandes/${id}`)
           .then((response) => {
             if (response.data.message) {
               // Successful deletion
@@ -555,7 +547,7 @@ const ChargeCommande = () => {
               // Error occurred
               if (
                 response.data.error.includes(
-                  "Impossible de supprimer ou de mettre à jour une ligne parent : une contrainte de clé étrangère échoue"
+                  "Impossible de supprimer ou de mettre à jour une ligne parent : une contrainte de clé étrangère échoue",
                 )
               ) {
                 // Violated integrity constraint error
@@ -571,7 +563,7 @@ const ChargeCommande = () => {
             // Request error
             console.error(
               "Erreur lors de la suppression du chargementCommande:",
-              error
+              error,
             );
             Swal.fire({
               icon: "error",
@@ -618,7 +610,7 @@ const ChargeCommande = () => {
     setExpandedRows((prevRows) =>
       prevRows.includes(chargementCommandes)
         ? prevRows.filter((row) => row !== chargementCommandes)
-        : [...prevRows, chargementCommandes]
+        : [...prevRows, chargementCommandes],
     );
   };
   //------------------------- chargementCommande SUBMIT---------------------//
@@ -634,8 +626,8 @@ const ChargeCommande = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const url = editingChargementCommande
-      ? `http://localhost:8000/api/chargementCommandes/${editingChargementCommande.id}`
-      : "http://localhost:8000/api/chargementCommandes";
+      ? `/api/chargementCommandes/${editingChargementCommande.id}`
+      : "/api/chargementCommandes";
     const method = editingChargementCommande ? "put" : "post";
     axios({
       method: method,
@@ -668,7 +660,7 @@ const ChargeCommande = () => {
           `Erreur lors de ${
             editingChargementCommande ? "la modification" : "l'ajout"
           } du chargementCommande:`,
-          error
+          error,
         );
         Swal.fire({
           icon: "error",
@@ -775,10 +767,9 @@ const ChargeCommande = () => {
 
   return (
     <ThemeProvider theme={createTheme()}>
-      <Box sx={{  position:'absolute',
-        top:'0px',
-        left:'220px',
-        width:'90%'}}>
+      <Box
+        sx={{ position: "absolute", top: "0px", left: "220px", width: "90%" }}
+      >
         <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 1 }}>
           {/* <Toolbar /> */}
           {/* <h3 className="text-left" style={{ color: "grey" }}>
@@ -834,7 +825,6 @@ const ChargeCommande = () => {
             </div>
           </div>
           */}
-       
 
           <div
             className="d-flex justify-content-between align-items-center"
@@ -1030,7 +1020,7 @@ const ChargeCommande = () => {
                 </Form>
               </div>
             )}
-          </div> 
+          </div>
           <div className="add-Ajout-form ">
             <a
               // href="#"
@@ -1103,7 +1093,7 @@ const ChargeCommande = () => {
                     {vehicule_livreurs
                       .filter(
                         (item) =>
-                          item.vehicule_id === parseInt(formData.vehicule_id)
+                          item.vehicule_id === parseInt(formData.vehicule_id),
                       )
                       .map((filteredItem) => (
                         <option
@@ -1215,17 +1205,17 @@ const ChargeCommande = () => {
             <table className="table" id="stockTable">
               <thead>
                 <tr>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>
                     <input type="checkbox" onChange={handleSelectAllChange} />
                   </th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Commande</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Livreur</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Vehicule</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>confort</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Remarque</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Date Prevue</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Date Reelle</th>
-                  <th style={{ backgroundColor:"#e0e0e0" }}>Action</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Commande</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Livreur</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Vehicule</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>confort</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Remarque</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Date Prevue</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Date Reelle</th>
+                  <th style={{ backgroundColor: "#e0e0e0" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1242,7 +1232,7 @@ const ChargeCommande = () => {
                                 handleCheckboxChange(chargementCommande.id)
                               }
                               checked={selectedItems.includes(
-                                chargementCommande.id
+                                chargementCommande.id,
                               )}
                             />
                           </td>
@@ -1336,12 +1326,13 @@ const ChargeCommande = () => {
                                       (ligneCommande) => {
                                         const produit = produits.find(
                                           (prod) =>
-                                            prod.id === ligneCommande.produit_id
+                                            prod.id ===
+                                            ligneCommande.produit_id,
                                         );
                                         console.log("prod", produit);
                                         console.log(
                                           "id",
-                                          ligneCommande.produit_id
+                                          ligneCommande.produit_id,
                                         );
                                         return (
                                           <tr key={ligneCommande.id}>
@@ -1354,7 +1345,7 @@ const ChargeCommande = () => {
                                             </td>
                                           </tr>
                                         );
-                                      }
+                                      },
                                     )}
                                   </tbody>
                                 </table>
@@ -1377,7 +1368,7 @@ const ChargeCommande = () => {
                                 handleCheckboxChange(chargementCommande.id)
                               }
                               checked={selectedItems.includes(
-                                chargementCommande.id
+                                chargementCommande.id,
                               )}
                             />
                           </td>
@@ -1471,12 +1462,13 @@ const ChargeCommande = () => {
                                       (ligneCommande) => {
                                         const produit = produits.find(
                                           (prod) =>
-                                            prod.id === ligneCommande.produit_id
+                                            prod.id ===
+                                            ligneCommande.produit_id,
                                         );
                                         console.log("prod", produit);
                                         console.log(
                                           "id",
-                                          ligneCommande.produit_id
+                                          ligneCommande.produit_id,
                                         );
                                         return (
                                           <tr key={ligneCommande.id}>
@@ -1489,7 +1481,7 @@ const ChargeCommande = () => {
                                             </td>
                                           </tr>
                                         );
-                                      }
+                                      },
                                     )}
                                   </tbody>
                                 </table>

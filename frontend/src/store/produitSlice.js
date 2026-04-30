@@ -1,26 +1,26 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { storeDataInIndexedDB } from '../utils/indexedDBUtils';
-import API_BASE_URL from '../utils/api/baseUrl';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axiosInstance from "../axiosInstance";
+import { storeDataInIndexedDB } from "../utils/indexedDBUtils";
+import API_BASE_URL from "../utils/api/baseUrl";
 
 export const fetchProduits = createAsyncThunk(
-  'produits/fetchProduits',
+  "produits/fetchProduits",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/produits`);
-      await storeDataInIndexedDB(response.data.produit, 'produits');
+      const response = await axiosInstance.get(`/api/produits`);
+      await storeDataInIndexedDB(response.data.produit, "produits");
       return {
         produits: response.data.produit,
-        chartData: response.data.Categorie || response.data.AllProduit
+        chartData: response.data.Categorie || response.data.AllProduit,
       };
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Error fetching produits');
+      return rejectWithValue(error.response?.data || "Error fetching produits");
     }
-  }
+  },
 );
 
 const produitSlice = createSlice({
-  name: 'produits',
+  name: "produits",
   initialState: {
     items: [],
     chartData: null,

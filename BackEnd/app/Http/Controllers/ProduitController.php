@@ -329,6 +329,22 @@ class ProduitController extends Controller
         }
     }
 
+    public function chartProduitData()
+    {
+        try {
+            $categories = Categorie::with('produits')->get();
+            $allProduits = Produit::all();
+
+            return response()->json([
+                'message' => 'Données du graphique récupérées avec succès',
+                'Categorie' => $categories,
+                'AllProduit' => $allProduits,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function produitsAvecStock()
     {
         try {

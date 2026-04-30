@@ -857,9 +857,10 @@ Route::apiResource('groupe-arrondi', GroupeArrondiController::class);
 
 
 
-    //produits
-    Route::get('produits', [ProduitController::class, 'index']);
-    Route::get('produits/{produit}', [ProduitController::class, 'show']);
+     //produits
+     Route::get('produits', [ProduitController::class, 'index']);
+     Route::get('produits/chart-data', [ProduitController::class, 'chartProduitData']);
+     Route::get('produits/{produit}', [ProduitController::class, 'show']);
     Route::post('produit/{id}/update-logo', [ProduitController::class, 'updateLogo']);
     Route::delete('deleteSelectProd', [ProduitController::class, 'deleteSelected']);
     Route::delete('prixProduit/{id}', [ProduitController::class, 'destroyPrix']);

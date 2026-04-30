@@ -91,7 +91,7 @@ const ProduitList = () => {
   const [filteredProduitsByCategory, setFilteredProduitsByCategory] = useState(
     []
   );
-  const {  permissions } = useAuth();
+   const {  permissions = [] } = useAuth();
 
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -1967,7 +1967,7 @@ Type</h5>
                         onChange={() => handleCheckboxChange(produit.id)}
                       />
                     </td>
-                    {columnVisibility.logo && <td style={{ backgroundColor: "white" }}><img src={produit.logoP} alt="Logo" style={{ width: "50px", height: "50px", borderRadius: "50%" }} /></td>}
+                    {columnVisibility.logo && <td style={{ backgroundColor: "white" }}><img src={API_BASE_URL + produit.logoP} alt="Logo" style={{ width: "50px", height: "50px", borderRadius: "50%" }} /></td>}
                     {columnVisibility.code && <td style={{ backgroundColor: "white" }}>{produit.Code_produit}</td>}
                     {columnVisibility.designation && <td style={{ backgroundColor: "white" }}>{produit.designation}</td>}
                     {columnVisibility.typeQuantite && <td style={{ backgroundColor: "white" }}>{produit.type_quantite}</td>}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
+import axiosInstance from "../axiosInstance";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Navigation from "../Acceuil/Navigation";
@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PrintList from "./PrintList";
 import ExportPdfButton from "./exportToPdf";
 import TablePagination from "@mui/material/TablePagination";
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import {
   faTrash,
   faPlus,
@@ -90,8 +90,8 @@ const CommandeList = () => {
   }, [editingCommandesId]);
 
   const fetchExistingLigneCommandes = async (commandId) => {
-    axios
-      .get(`http://localhost:8000/api/ligneCommandes/${commandId}`)
+    axiosInstance
+      .get(`/api/ligneCommandes/${commandId}`)
       .then((ligneCommandesResponse) => {
         const existingLigneCommandes =
           ligneCommandesResponse.data.ligneCommandes;
@@ -100,8 +100,8 @@ const CommandeList = () => {
       });
   };
   const fetchExistingLignePreparationCommandes = async (commandId) => {
-    axios
-      .get(`http://localhost:8000/api/lignePreparationCommandes/${commandId}`)
+    axiosInstance
+      .get(`/api/lignePreparationCommandes/${commandId}`)
       .then((lignePreparationCommandesResponse) => {
         const existingLignePreparationCommandes =
           lignePreparationCommandesResponse.data.lignePreparationCommandes;
@@ -114,21 +114,21 @@ const CommandeList = () => {
     setExpandTotal((prevRows) =>
       prevRows.includes(commande)
         ? prevRows.filter((row) => row !== commande)
-        : [...prevRows, commande]
+        : [...prevRows, commande],
     );
   };
   const handleShowLigneCommandes = async (commande) => {
     setExpandedRows((prevRows) =>
       prevRows.includes(commande)
         ? prevRows.filter((row) => row !== commande)
-        : [...prevRows, commande]
+        : [...prevRows, commande],
     );
   };
   const handleShowLignePreparationCommandes = async (preparationId) => {
     setExpandedPrepRows((prevRows) =>
       prevRows.includes(preparationId)
         ? prevRows.filter((row) => row !== preparationId)
-        : [...prevRows, preparationId]
+        : [...prevRows, preparationId],
     );
   };
 
@@ -136,7 +136,7 @@ const CommandeList = () => {
     setExpandedStatus((prevRows) =>
       prevRows.includes(commande)
         ? prevRows.filter((row) => row !== commande)
-        : [...prevRows, commande]
+        : [...prevRows, commande],
     );
   };
 
@@ -148,10 +148,10 @@ const CommandeList = () => {
         siteClientResponse,
         produitsResponse,
       ] = await Promise.all([
-        axios.get("http://localhost:8000/api/commandes"),
-        axios.get("http://localhost:8000/api/clients"),
-        axios.get("http://localhost:8000/api/siteclients"),
-        axios.get("http://localhost:8000/api/produits"),
+        axiosInstance.get("/api/commandes"),
+        axiosInstance.get("/api/clients"),
+        axiosInstance.get("/api/siteclients"),
+        axiosInstance.get("/api/produits"),
       ]);
       setCommandes(commandesResponse.data.commandes);
       setClients(clientsResponse.data.client);
@@ -201,7 +201,7 @@ const CommandeList = () => {
       if (!Array.isArray(preparation.lignes_preparation)) {
         console.error(
           "Expected an array but received:",
-          preparation.lignes_preparation
+          preparation.lignes_preparation,
         );
         return total; // Ignorer cette préparation si les lignes de préparation ne sont pas un tableau
       }
@@ -219,7 +219,7 @@ const CommandeList = () => {
     const correspondingProduct = produits.find(
       (product) =>
         product.calibre.calibre === calibre &&
-        product.designation === designation
+        product.designation === designation,
     );
 
     if (!correspondingProduct) {
@@ -227,7 +227,7 @@ const CommandeList = () => {
     }
 
     const correspondingLigneCommande = ligneCommandes.find(
-      (ligne) => ligne.produit_id === correspondingProduct.id
+      (ligne) => ligne.produit_id === correspondingProduct.id,
     );
 
     return correspondingLigneCommande ? correspondingLigneCommande.quantite : 0;
@@ -235,10 +235,10 @@ const CommandeList = () => {
   const populateProductInputs = (id, inputType) => {
     console.log(
       "existing LignePreparationCommande",
-      existingLignePreparationCommandes
+      existingLignePreparationCommandes,
     );
     const existingLignePreparationCommande = selectedProductsData.find(
-      (data) => data.id === id
+      (data) => data.id === id,
     );
     if (existingLignePreparationCommande) {
       return existingLignePreparationCommande[inputType];
@@ -251,13 +251,13 @@ const CommandeList = () => {
       lignePreparationCommandes.filter(
         (ligne) =>
           produits.find((produit) => produit.id === ligne.produit_id)?.calibre
-            .calibre === calibre
+            .calibre === calibre,
       );
 
     // Calculate the total quantity for the calibre
     const total = lignePreparationCommandesForCalibre.reduce(
       (acc, ligne) => acc + ligne.quantite,
-      0
+      0,
     );
 
     return total;
@@ -284,16 +284,16 @@ const CommandeList = () => {
             commande_id: editingCommandes.id,
             datePreparationCommande: formData.datePreparationCommande,
             status: "En Attente", // Adjust the status dynamically if necessary
-          }
+          },
         );
         console.log("preparation", preparationResponse.data);
         const preparationId = preparationResponse.data.id;
 
         const existingLignePreparationCommandesResponse = await axios.get(
-          `http://localhost:8000/api/lignePreparationCommandes/${preparationId}`
+          `http://localhost:8000/api/lignePreparationCommandes/${preparationId}`,
         );
         const existingLignePreparationCommandes = Array.isArray(
-          existingLignePreparationCommandesResponse.data
+          existingLignePreparationCommandesResponse.data,
         )
           ? existingLignePreparationCommandesResponse.data
           : []; // Ensure it's always treated as an array
@@ -304,7 +304,7 @@ const CommandeList = () => {
               existingLignePreparationCommandes.find(
                 (lignePreparationCommande) =>
                   lignePreparationCommande.produit_id ===
-                  selectedProduct.produit_id
+                  selectedProduct.produit_id,
               );
 
             return {
@@ -315,13 +315,13 @@ const CommandeList = () => {
               produit_id: selectedProduct.produit_id,
               prix_unitaire: 12,
               quantite: getElementValueById(
-                `quantite_${index}_${selectedProduct.produit_id}`
+                `quantite_${index}_${selectedProduct.produit_id}`,
               ),
               lot: getElementValueById(
-                `lot_${index}_${selectedProduct.produit_id}`
+                `lot_${index}_${selectedProduct.produit_id}`,
               ),
             };
-          }
+          },
         );
 
         console.log("selectedPrdsData", selectedPrdsData);
@@ -335,7 +335,7 @@ const CommandeList = () => {
                 headers: {
                   "X-CSRF-TOKEN": csrfToken,
                 },
-              }
+              },
             );
           } else if (
             lignePreparationCommandeData.quantite &&
@@ -349,7 +349,7 @@ const CommandeList = () => {
                 headers: {
                   "X-CSRF-TOKEN": csrfToken,
                 },
-              }
+              },
             );
           }
         }
@@ -400,7 +400,7 @@ const CommandeList = () => {
   };
   function getClassForCommande(commande, preparation) {
     const quantiteLigneCommande = calculateTotalQuantity(
-      commande.ligne_commandes
+      commande.ligne_commandes,
     );
     const quantiteLignePreparation = preparation
       ? calculateTotalQuantity(preparation.lignes_preparation)
@@ -445,7 +445,7 @@ const CommandeList = () => {
           return preparation.lignes_preparation
             .map((lignePreparation) => {
               const product = produits.find(
-                (produit) => produit.id === lignePreparation.produit_id
+                (produit) => produit.id === lignePreparation.produit_id,
               );
               if (product) {
                 return {
@@ -466,7 +466,7 @@ const CommandeList = () => {
         } else {
           console.error(
             "No lines of preparation available for this preparation:",
-            preparation
+            preparation,
           );
           return [];
         }
@@ -477,7 +477,7 @@ const CommandeList = () => {
     } else {
       const selectedProducts = commande.ligne_commandes.map((ligneCommande) => {
         const product = produits.find(
-          (produit) => produit.id === ligneCommande.produit_id
+          (produit) => produit.id === ligneCommande.produit_id,
         );
 
         return {
@@ -503,14 +503,14 @@ const CommandeList = () => {
     const preparationToEdit = editingCommandes.preparations.find(
       (preparation) =>
         preparation.lignes_preparation.some(
-          (lignePreparation) => lignePreparation.id === ligneId
-        )
+          (lignePreparation) => lignePreparation.id === ligneId,
+        ),
     );
 
     if (preparationToEdit) {
       // Trouver la ligne de préparation spécifique
       const ligneToEdit = preparationToEdit.lignes_preparation.find(
-        (lignePreparation) => lignePreparation.id === ligneId
+        (lignePreparation) => lignePreparation.id === ligneId,
       );
 
       // Mettre à jour l'état ou les données de la ligne de préparation en cours d'édition
@@ -529,7 +529,7 @@ const CommandeList = () => {
       // Vous pouvez utiliser des boutons dans votre composant React pour confirmer ou annuler les modifications
     } else {
       console.error(
-        "Ligne de préparation non trouvée dans la commande en cours d'édition"
+        "Ligne de préparation non trouvée dans la commande en cours d'édition",
       );
     }
   }
@@ -653,7 +653,7 @@ const CommandeList = () => {
 
   useEffect(() => {
     const filtered = commandes.filter((Commandes) =>
-      Commandes.reference.toLowerCase().includes(searchTerm.toLowerCase())
+      Commandes.reference.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     setFilteredCommandes(filtered);
   }, [commandes, searchTerm]);
@@ -722,7 +722,7 @@ const CommandeList = () => {
       console.error(
         "Expected arrays but received:",
         ligne_commandes,
-        preparations
+        preparations,
       );
       return "#FF8787"; // Retourner rouge en cas d'erreur ou d'absence de préparations
     }
@@ -733,7 +733,7 @@ const CommandeList = () => {
     console.log("Total des lignes de commande:", totalCommandes);
     console.log(
       "Total des lignes de préparation pour la commande:",
-      totalPreparation
+      totalPreparation,
     );
     return totalCommandes === totalPreparation ? "#87A922" : "#FCDC2A";
   };
@@ -766,10 +766,9 @@ const CommandeList = () => {
 
   return (
     <ThemeProvider theme={createTheme()}>
-      <Box sx={{  position:'absolute',
-        top:'0px',
-        left:'220px',
-        width:'90%' }}>
+      <Box
+        sx={{ position: "absolute", top: "0px", left: "220px", width: "90%" }}
+      >
         <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 4 }}>
           <Toolbar />
           <div className="d-flex justify-content-center align-items-center">
@@ -817,7 +816,7 @@ const CommandeList = () => {
                       name="client_id"
                       value={getClientValue(
                         formData.client_id,
-                        "raison_sociale"
+                        "raison_sociale",
                       )}
                       readOnly // Make the input read-only
                     />
@@ -845,7 +844,7 @@ const CommandeList = () => {
                         formData.site_id
                           ? getSiteClientValue(
                               formData.site_id,
-                              "raison_sociale"
+                              "raison_sociale",
                             )
                           : "aucun site"
                       }
@@ -867,8 +866,7 @@ const CommandeList = () => {
                       className="form-control"
                       id="status"
                       name="status"
-                      value={formData.status
-                        }
+                      value={formData.status}
                       readOnly // Make the input read-only
                     />
                   </div>
@@ -952,7 +950,7 @@ const CommandeList = () => {
                       value={formData.status}
                       onChange={handleChange} // Assurez-vous que handleChange met à jour le formData
                     >
-                      <option value="En attente" >En attente</option>
+                      <option value="En attente">En attente</option>
                       <option value="En cours">En cours</option>
                       <option value="Valide">Valide</option>
                     </select>
@@ -962,10 +960,10 @@ const CommandeList = () => {
               {editingCommandes && (
                 <>
                   {calculateTotalQuantity(
-                    editingCommandes.ligne_preparation_commandes
+                    editingCommandes.ligne_preparation_commandes,
                   ) !==
                     calculateTotalQuantity(
-                      editingCommandes.ligne_commandes
+                      editingCommandes.ligne_commandes,
                     ) && (
                     <div>
                       <Button
@@ -1011,7 +1009,7 @@ const CommandeList = () => {
                                   }))}
                                   onChange={(selected) => {
                                     const produit = produits.find(
-                                      (prod) => prod.id === selected[0].value
+                                      (prod) => prod.id === selected[0].value,
                                     );
                                     handleProductSelection(
                                       {
@@ -1020,7 +1018,7 @@ const CommandeList = () => {
                                         designation: produit.designation,
                                         calibre_id: produit.calibre_id,
                                       },
-                                      index
+                                      index,
                                     );
                                   }}
                                   values={
@@ -1055,7 +1053,7 @@ const CommandeList = () => {
                                     ] ||
                                     populateProductInputs(
                                       productData.id,
-                                      "quantite_lot"
+                                      "quantite_lot",
                                     )
                                   }
                                   onChange={(event) =>
@@ -1143,7 +1141,7 @@ const CommandeList = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              
+
               <tbody className="text-center">
                 {filteredCommandes &&
                   filteredCommandes.map((commande) => (
@@ -1156,7 +1154,7 @@ const CommandeList = () => {
                               style={{
                                 backgroundColor: calculateRowColor(
                                   commande.ligne_commandes,
-                                  commande.preparations
+                                  commande.preparations,
                                 ),
                               }}
                             >
@@ -1175,7 +1173,7 @@ const CommandeList = () => {
                                   style={{ marginRight: "10px" }}
                                   onClick={() =>
                                     handleShowLignePreparationCommandes(
-                                      preparation.id
+                                      preparation.id,
                                     )
                                   }
                                 >
@@ -1195,7 +1193,7 @@ const CommandeList = () => {
                               <td>
                                 {getClientValue(
                                   commande.client_id,
-                                  "raison_sociale"
+                                  "raison_sociale",
                                 )}
                               </td>
                               <td
@@ -1206,7 +1204,7 @@ const CommandeList = () => {
                                 {commande.site_id
                                   ? getSiteClientValue(
                                       commande.site_id,
-                                      "raison_sociale"
+                                      "raison_sociale",
                                     )
                                   : "aucun site"}
                               </td>
@@ -1215,7 +1213,7 @@ const CommandeList = () => {
                               <td>{commande.status}</td>
                               <td>
                                 {calculateTotalQuantity(
-                                  commande.ligne_commandes
+                                  commande.ligne_commandes,
                                 )}
                               </td>
                               <td>
@@ -1319,7 +1317,7 @@ const CommandeList = () => {
                                             const produit = produits.find(
                                               (prod) =>
                                                 prod.id ===
-                                                lignePreparationCommande.produit_id
+                                                lignePreparationCommande.produit_id,
                                             );
 
                                             return (
@@ -1349,7 +1347,7 @@ const CommandeList = () => {
                                                 </td>
                                               </tr>
                                             );
-                                          }
+                                          },
                                         )}
                                       </tbody>
                                     </table>
@@ -1425,7 +1423,7 @@ const CommandeList = () => {
                                                   DH
                                                 </td>
                                               </tr>
-                                            )
+                                            ),
                                           )}
                                         </tbody>
                                       </table>
@@ -1451,14 +1449,14 @@ const CommandeList = () => {
                           <td>
                             {getClientValue(
                               commande.client_id,
-                              "raison_sociale"
+                              "raison_sociale",
                             )}
                           </td>
                           <td className={commande.site_id ? "" : "text-danger"}>
                             {commande.site_id
                               ? getSiteClientValue(
                                   commande.site_id,
-                                  "raison_sociale"
+                                  "raison_sociale",
                                 )
                               : "aucun site"}
                           </td>
@@ -1474,7 +1472,7 @@ const CommandeList = () => {
                                 className="btn btn-sm btn-info m-1"
                                 onClick={() => handleEdit(commande)}
                               >
-      <FontAwesomeIcon icon={faEdit} />
+                                <FontAwesomeIcon icon={faEdit} />
                               </Button>
                               <Button
                                 className="btn btn-sm btn-light m-1"

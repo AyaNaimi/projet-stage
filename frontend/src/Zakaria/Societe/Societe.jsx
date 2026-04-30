@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../../axiosInstance";
 import Swal from "sweetalert2";
 import { Form, Button, Card, Tabs, Tab } from "react-bootstrap";
 import Navigation from "../../Acceuil/Navigation";
@@ -23,20 +23,17 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Fab, Toolbar } from "@mui/material";
 import { BsShop } from "react-icons/bs";
-import { useOpen } from "../../Acceuil/OpenProvider.jsx"; 
+import { useOpen } from "../../Acceuil/OpenProvider.jsx";
 import { BiPlus } from "react-icons/bi";
 import ExpandRTable from "../Employe/ExpandRTable";
 import PageHeader from "../../ComponentHistorique/PageHeader";
-import SocieteForm from './SocieteForm';
-import { FaUserPlus } from 'react-icons/fa';
+import SocieteForm from "./SocieteForm";
+import { FaUserPlus } from "react-icons/fa";
 import { FaPlusCircle, FaMinus, FaPlus } from "react-icons/fa";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import { useHeader } from "../../Acceuil/HeaderContext";
 import { openPrintableTable } from "../Standardized/printTable";
 import Dropdown from "react-bootstrap/Dropdown";
-
-
-
 
 const Societe = () => {
   const columnVisibilityStorageKey = "societe-column-visibility";
@@ -45,7 +42,9 @@ const Societe = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredProduits, setFilteredProduits] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [filteredProduitsByCategory, setFilteredProduitsByCategory] = useState([]);
+  const [filteredProduitsByCategory, setFilteredProduitsByCategory] = useState(
+    [],
+  );
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -55,20 +54,21 @@ const Societe = () => {
   const [editingProduit, setEditingProduit] = useState(null);
   const [editingProduitId, setEditingProduitId] = useState(null);
   const [userHasDeletePermission, setUserHasDeletePermission] = useState(true);
-  const { setTitle, setOnPrint, setOnExportPDF, setOnExportExcel, searchQuery, setSearchQuery, clearActions } = useHeader();
-
-
-
-
-
-
-
+  const {
+    setTitle,
+    setOnPrint,
+    setOnExportPDF,
+    setOnExportExcel,
+    searchQuery,
+    setSearchQuery,
+    clearActions,
+  } = useHeader();
 
   const [formContainerStyle, setFormContainerStyle] = useState({
     right: "-900px",
   });
   const [tableContainerStyle, setTableContainerStyle] = useState({
-    width:"100%"
+    width: "100%",
   });
   const { open } = useOpen();
   const { dynamicStyles } = useOpen();
@@ -84,12 +84,12 @@ const Societe = () => {
 
   const [globalSearch, setGlobalSearch] = useState("");
   const societeColumns = [
-    { key: 'RaisonSocial', label: 'Raison Sociale' },
-    { key: 'ICE', label: 'ICE' },
-    { key: 'NumeroCNSS', label: 'Numero CNSS' },
-    { key: 'NumeroFiscale', label: 'Numero Fiscale' },
-    { key: 'RegistreCommercial', label: 'Registre Commercial' },
-    { key: 'AdresseSociete', label: 'Adresse' }
+    { key: "RaisonSocial", label: "Raison Sociale" },
+    { key: "ICE", label: "ICE" },
+    { key: "NumeroCNSS", label: "Numero CNSS" },
+    { key: "NumeroFiscale", label: "Numero Fiscale" },
+    { key: "RegistreCommercial", label: "Registre Commercial" },
+    { key: "AdresseSociete", label: "Adresse" },
   ];
 
   const getInitialColumnVisibility = () => {
@@ -111,13 +111,20 @@ const Societe = () => {
     }
   };
 
-  const [columnVisibility, setColumnVisibility] = useState(() => getInitialColumnVisibility());
+  const [columnVisibility, setColumnVisibility] = useState(() =>
+    getInitialColumnVisibility(),
+  );
 
   useEffect(() => {
-    localStorage.setItem(columnVisibilityStorageKey, JSON.stringify(columnVisibility));
+    localStorage.setItem(
+      columnVisibilityStorageKey,
+      JSON.stringify(columnVisibility),
+    );
   }, [columnVisibility, columnVisibilityStorageKey]);
 
-  const displayColumns = societeColumns.filter((column) => columnVisibility[column.key] !== false);
+  const displayColumns = societeColumns.filter(
+    (column) => columnVisibility[column.key] !== false,
+  );
 
   const handleColumnsChange = (columnKey) => {
     setColumnVisibility((prev) => ({
@@ -140,87 +147,88 @@ const Societe = () => {
     transition: "all 0.2s ease",
   };
 
-  const CustomColumnsMenu = React.forwardRef(({ style, className, "aria-labelledby": labeledBy }, ref) => (
-    <div
-      ref={ref}
-      style={{
-        ...style,
-        padding: "12px",
-        backgroundColor: "white",
-        border: "1px solid #d1d5db",
-        borderRadius: "12px",
-        minWidth: "230px",
-        maxHeight: "360px",
-        overflowY: "auto",
-        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
-      }}
-      className={className}
-      aria-labelledby={labeledBy}
-    >
-      <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#374151", marginBottom: "10px" }}>
-        Masquer les champs
+  const CustomColumnsMenu = React.forwardRef(
+    ({ style, className, "aria-labelledby": labeledBy }, ref) => (
+      <div
+        ref={ref}
+        style={{
+          ...style,
+          padding: "12px",
+          backgroundColor: "white",
+          border: "1px solid #d1d5db",
+          borderRadius: "12px",
+          minWidth: "230px",
+          maxHeight: "360px",
+          overflowY: "auto",
+          boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
+        }}
+        className={className}
+        aria-labelledby={labeledBy}
+      >
+        <div
+          style={{
+            fontSize: "0.88rem",
+            fontWeight: 700,
+            color: "#374151",
+            marginBottom: "10px",
+          }}
+        >
+          Masquer les champs
+        </div>
+        <Form onClick={(event) => event.stopPropagation()}>
+          {societeColumns.map((column) => (
+            <Form.Check
+              key={column.key}
+              type="checkbox"
+              id={`societe-column-${column.key}`}
+              label={column.label}
+              checked={columnVisibility[column.key] !== false}
+              onChange={() => handleColumnsChange(column.key)}
+              style={{ marginBottom: "0.45rem", color: "#4b5563" }}
+            />
+          ))}
+        </Form>
       </div>
-      <Form onClick={(event) => event.stopPropagation()}>
-        {societeColumns.map((column) => (
-          <Form.Check
-            key={column.key}
-            type="checkbox"
-            id={`societe-column-${column.key}`}
-            label={column.label}
-            checked={columnVisibility[column.key] !== false}
-            onChange={() => handleColumnsChange(column.key)}
-            style={{ marginBottom: "0.45rem", color: "#4b5563" }}
-          />
-        ))}
-      </Form>
-    </div>
-  ));
+    ),
+  );
   const [filterOptions, setFilterOptions] = useState({
     filters: [
       {
-        key: 'RaisonSocial',
-        label: 'Raison Sociale',
-        value: '',
+        key: "RaisonSocial",
+        label: "Raison Sociale",
+        value: "",
         options: [],
-        placeholder: 'Filtrer par raison sociale'
+        placeholder: "Filtrer par raison sociale",
       },
       {
-        key: 'ICE',
-        label: 'ICE',
-        value: '',
+        key: "ICE",
+        label: "ICE",
+        value: "",
         options: [],
-        placeholder: 'Filtrer par ICE'
-      }
-    ]
+        placeholder: "Filtrer par ICE",
+      },
+    ],
   });
 
   const fetchAgent = async () => {
-    const response = await axios.get('http://localhost:8000/api/societes');
+    const response = await axiosInstance.get("/api/societes");
     const societes = response.data;
-    const usersResponse = await axios.get('http://localhost:8000/api/user');
+    const usersResponse = await axiosInstance.get("/api/user");
     const user = usersResponse.data.id;
     return { societes, user };
   };
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['societes-user'],
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["societes-user"],
     queryFn: fetchAgent,
     staleTime: Infinity,
     refetchInterval: 1000 * 60 * 10,
-    refetchOnMount: false, 
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
-  
   });
 
   const produits = data?.societes || [];
   const user = data?.user || null;
-  
-
 
   const handleSearch = (term) => {
     setSearchTerm(term);
@@ -233,12 +241,12 @@ const Societe = () => {
   const handleChangeRowsPerPage = (event) => {
     const selectedRows = parseInt(event.target.value, 10);
     setRowsPerPage(selectedRows);
-    localStorage.setItem('rowsPerPageEmploye', selectedRows);  // Store in localStorage
+    localStorage.setItem("rowsPerPageEmploye", selectedRows); // Store in localStorage
     setPage(0);
   };
 
   useEffect(() => {
-    const savedRowsPerPage = localStorage.getItem('rowsPerPageEmploye');
+    const savedRowsPerPage = localStorage.getItem("rowsPerPageEmploye");
     if (savedRowsPerPage) {
       setRowsPerPage(parseInt(savedRowsPerPage, 10));
     }
@@ -277,10 +285,10 @@ const Societe = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         selectedItems.forEach((id) => {
-          axios
-            .delete(`http://localhost:8000/api/agents/${id}`)
+          axiosInstance
+            .delete(`/api/agents/${id}`)
             .then((response) => {
-              refetch();            
+              refetch();
             })
             .catch((error) => {
               console.error("Error deleting product:", error);
@@ -324,11 +332,11 @@ const Societe = () => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        axios
-          .delete(`http://localhost:8000/api/societes/${id}`)
+        axiosInstance
+          .delete(`/api/societes/${id}`)
           .then((response) => {
             refetch();
-              Swal.fire({
+            Swal.fire({
               icon: "success",
               title: "Succès!",
               text: "Agent supprimé avec succès.",
@@ -345,11 +353,11 @@ const Societe = () => {
             } else if (error.response && error.response.status === 400) {
               // Afficher le message d'erreur dans Swal.fire()
               Swal.fire({
-                  icon: "error",
-                  title: "Erreur",
-                  text: error.response.data.error
+                icon: "error",
+                title: "Erreur",
+                text: error.response.data.error,
               });
-          } else {
+            } else {
               Swal.fire({
                 icon: "error",
                 title: "Erreur!",
@@ -377,16 +385,15 @@ const Societe = () => {
     setTableContainerStyle({ width: "61.5%" });
   };
 
-  
   const handleSubmit = async (formData) => {
     try {
       const apiUrl = editingProduit
-        ? `http://localhost:8000/api/societes/${editingProduit.id}`
-        : `http://localhost:8000/api/societes`;
+        ? `/api/societes/${editingProduit.id}`
+        : `/api/societes`;
 
       const method = editingProduit ? "put" : "post";
 
-      await axios[method](apiUrl, formData);
+      await axiosInstance[method](apiUrl, formData);
       closeForm();
       refetch();
       const successMessage = `Société ${editingProduit ? "modifiée" : "ajoutée"} avec succès.`;
@@ -414,9 +421,7 @@ const Societe = () => {
 
   const handleDeletecatgeorie = async (categorieId) => {
     try {
-      await axios.delete(
-        `http://localhost:8000/api/categories/${categorieId}`
-      );
+      await axiosInstance.delete(`/api/categories/${categorieId}`);
       Swal.fire({
         icon: "success",
         title: "Succès!",
@@ -456,9 +461,7 @@ const Societe = () => {
       setFilteredProduits(filtered);
     }
   }, [produits, globalSearch]);
-  
 
-  
   const [genreFiltre, setGenreFiltre] = useState("");
 
   // Fonction pour filtrer les produits
@@ -468,12 +471,12 @@ const Societe = () => {
 
   // Définir les colonnes pour ExpandRTable
   const columns = [
-    { key: 'RaisonSocial', label: 'Raison Sociale' },
-    { key: 'ICE', label: 'ICE' },
-    { key: 'NumeroCNSS', label: 'Numéro CNSS' },
-    { key: 'NumeroFiscale', label: 'Numéro Fiscale' },
-    { key: 'RegistreCommercial', label: 'Registre Commercial' },
-    { key: 'AdresseSociete', label: 'Adresse' }
+    { key: "RaisonSocial", label: "Raison Sociale" },
+    { key: "ICE", label: "ICE" },
+    { key: "NumeroCNSS", label: "Numéro CNSS" },
+    { key: "NumeroFiscale", label: "Numéro Fiscale" },
+    { key: "RegistreCommercial", label: "Registre Commercial" },
+    { key: "AdresseSociete", label: "Adresse" },
   ];
 
   // Fonction pour mettre en surbrillance le texte de recherche
@@ -485,14 +488,21 @@ const Societe = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ['Raison Sociale', 'ICE', 'Numéro CNSS', 'Numéro Fiscale', 'Registre Commercial', 'Adresse'];
-    const tableRows = filteredProduits.map(societe => [
+    const tableColumn = [
+      "Raison Sociale",
+      "ICE",
+      "Numéro CNSS",
+      "Numéro Fiscale",
+      "Registre Commercial",
+      "Adresse",
+    ];
+    const tableRows = filteredProduits.map((societe) => [
       societe.RaisonSocial,
       societe.ICE,
       societe.NumeroCNSS,
       societe.NumeroFiscale,
       societe.RegistreCommercial,
-      societe.AdresseSociete
+      societe.AdresseSociete,
     ]);
 
     doc.autoTable({
@@ -501,13 +511,20 @@ const Societe = () => {
       startY: 20,
     });
 
-    doc.save('societes.pdf');
+    doc.save("societes.pdf");
   };
 
   const handlePrint = () => {
     openPrintableTable({
       title: "Liste des societes",
-      columns: ['Raison Sociale', 'ICE', 'NumÃ©ro CNSS', 'NumÃ©ro Fiscale', 'Registre Commercial', 'Adresse'],
+      columns: [
+        "Raison Sociale",
+        "ICE",
+        "NumÃ©ro CNSS",
+        "NumÃ©ro Fiscale",
+        "Registre Commercial",
+        "Adresse",
+      ],
       rows: filteredProduits.map((societe) => [
         societe.RaisonSocial,
         societe.ICE,
@@ -520,14 +537,12 @@ const Societe = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    setFilterOptions(prev => ({
-      filters: prev.filters.map(filter => 
-        filter.key === key ? { ...filter, value } : filter
-      )
+    setFilterOptions((prev) => ({
+      filters: prev.filters.map((filter) =>
+        filter.key === key ? { ...filter, value } : filter,
+      ),
     }));
   };
-
-
 
   useEffect(() => {
     setTitle("Liste des sociétés");
@@ -536,118 +551,107 @@ const Societe = () => {
     setOnExportExcel(() => exportToExcel);
     return () => {
       clearActions();
-      setTitle('');
+      setTitle("");
     };
-  }, [setTitle, setOnPrint, setOnExportPDF, setOnExportExcel, clearActions, handlePrint, exportToPDF, exportToExcel]);
-  
-  
-
+  }, [
+    setTitle,
+    setOnPrint,
+    setOnExportPDF,
+    setOnExportExcel,
+    clearActions,
+    handlePrint,
+    exportToPDF,
+    exportToExcel,
+  ]);
 
   useEffect(() => {
-    setGlobalSearch(searchQuery || '');
+    setGlobalSearch(searchQuery || "");
   }, [searchQuery]);
-
-
-
-
 
   return (
     <>
+      <ThemeProvider theme={createTheme()}>
+        <Box className="postionPage" sx={{ ...dynamicStyles }}>
+          <Box component="main" sx={{ flexGrow: 1, p: 0, mt: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+                position: "relative",
+                margin: 0,
+                padding: 0,
+                height: "calc(100vh - 80px)",
+              }}
+            >
+              {showForm && (
+                <div
+                  style={{
+                    position: "fixed",
+                    right: "0",
+                    zIndex: 1000,
+                    overflowY: "auto",
+                    top: "-8.2%",
+                    width: "20%",
+                    height: "84%",
+                    marginTop: "8.7%",
+                    marginRight: "1%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "flex-start",
+                    borderRadius: "8px",
+                    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+                    backgroundColor: "#fff",
+                  }}
+                >
+                  <SocieteForm
+                    onSubmit={handleSubmit}
+                    onCancel={closeForm}
+                    initialData={editingProduit}
+                  />
+                </div>
+              )}
 
-
-    <ThemeProvider theme={createTheme()}>
-      <Box className="postionPage" sx={{ ...dynamicStyles}}>
-      <Box component="main" sx={{ flexGrow: 1, p: 0, mt: 12 }}>
-        <div style={{ 
-        display: "flex", 
-        flex: 1, 
-        position: "relative",
-        margin: 0,
-        padding: 0,
-        height: "calc(100vh - 80px)"}}
-      >
-
-
-
-
-            {showForm && (
               <div
+                className="container3"
                 style={{
-                  position: 'fixed',
-                  right: '0',
-                  zIndex: 1000,
-                  overflowY: 'auto',
-                  top: '-8.2%',
-                  width: '20%',
-                  height: '84%',
-                  marginTop: '8.7%',
-                  marginRight: '1%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'flex-start',
-                  borderRadius: '8px',
-                  boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-                  backgroundColor: '#fff',
-
+                  width: showForm ? "74.5%" : "99%",
                 }}
               >
-                <SocieteForm
-                  onSubmit={handleSubmit}
-                  onCancel={closeForm}
-                  initialData={editingProduit}
-                />
-              </div>
-            )}
-
-
-<div className="container3" style={{ 
-              width: showForm ? '74.5%' : '99%' }}>
-
-
-                 <div className="mt-4">
-                    <div className="section-header mb-3">
-                        <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span className="section-title mb-1">
-                                    <i className="fas fa-calendar-times me-2"></i>
-                                    Détails Société
-                                </span>
-                                <p className="section-description text-muted mb-0">
-                                    {produits.length} société{produits.length > 1 ? 's' : ''} actuellement enregistrée{produits.length > 1 ? 's' : ''}
-                                </p>
-                            </div>
-                            <Button
-            onClick={handleShowFormButtonClick}
-            className="btn btn-outline-primary d-flex align-items-center"
-                                size="sm"
-                                style={{ height:'45px' }}
-
-                            >
-            <FaPlusCircle className="me-2" />
-            Ajouter une société
-                            </Button>
-                        </div>
+                <div className="mt-4">
+                  <div className="section-header mb-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <span className="section-title mb-1">
+                          <i className="fas fa-calendar-times me-2"></i>
+                          Détails Société
+                        </span>
+                        <p className="section-description text-muted mb-0">
+                          {produits.length} société
+                          {produits.length > 1 ? "s" : ""} actuellement
+                          enregistrée{produits.length > 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleShowFormButtonClick}
+                        className="btn btn-outline-primary d-flex align-items-center"
+                        size="sm"
+                        style={{ height: "45px" }}
+                      >
+                        <FaPlusCircle className="me-2" />
+                        Ajouter une société
+                      </Button>
                     </div>
                   </div>
+                </div>
 
-
-
-
-
-
-
-
-
-
-
-<ExpandRTable
+                <ExpandRTable
                   columns={[
-                    { key: 'RaisonSocial', label: 'Raison Sociale' },
-                    { key: 'ICE', label: 'ICE' },
-                    { key: 'NumeroCNSS', label: 'Numéro CNSS' },
-                    { key: 'NumeroFiscale', label: 'Numéro Fiscale' },
-                    { key: 'RegistreCommercial', label: 'Registre Commercial' },
-                    { key: 'AdresseSociete', label: 'Adresse' }
+                    { key: "RaisonSocial", label: "Raison Sociale" },
+                    { key: "ICE", label: "ICE" },
+                    { key: "NumeroCNSS", label: "Numéro CNSS" },
+                    { key: "NumeroFiscale", label: "Numéro Fiscale" },
+                    { key: "RegistreCommercial", label: "Registre Commercial" },
+                    { key: "AdresseSociete", label: "Adresse" },
                   ]}
                   data={produits}
                   filteredData={filteredProduits}
@@ -664,72 +668,60 @@ const Societe = () => {
                   handleChangePage={handleChangePage}
                   handleChangeRowsPerPage={handleChangeRowsPerPage}
                 />
-
               </div>
-          </div>
-
-
-
-
+            </div>
+          </Box>
         </Box>
-      </Box>
-    </ThemeProvider>
-    <style jsx>{`     
-            
-            /* Styles de section header */
-            .section-header {
-                border-bottom: none;
-                padding-bottom: 15px;
-margin: 0.5% 1% 1%;
+      </ThemeProvider>
+      <style jsx>{`
+        /* Styles de section header */
+        .section-header {
+          border-bottom: none;
+          padding-bottom: 15px;
+          margin: 0.5% 1% 1%;
+        }
 
-            }
+        .section-title {
+          color: #2c3e50;
+          font-weight: 600;
+          margin-bottom: 5px;
+          display: flex;
+          align-items: center;
+          font-size: 19px;
+        }
 
-            .section-title {
-                color: #2c3e50;
-                font-weight: 600;
-                margin-bottom: 5px;
-                display: flex;
-                align-items: center;
-                font-size: 19px;
-            }
+        .section-title i {
+          color: rgba(8, 179, 173, 0.02);
+          background: #3a8a90;
+          padding: 6px;
+          border-radius: 60%;
+          margin-right: 10px;
+        }
 
-            .section-title i {
-                color: rgba(8, 179, 173, 0.02);
-                background: #3a8a90;
-                padding: 6px;
-                border-radius: 60%;
-                margin-right: 10px;
-            }
+        .section-description {
+          color: #6c757d;
+          font-size: 16px;
+          margin-bottom: 0;
+        }
 
-            .section-description {
-                color: #6c757d;
-                font-size: 16px;
-                margin-bottom: 0;
-            }
+        .btn-primary {
+          background-color: #3a8a90;
+          border-color: #3a8a90;
+          color: white;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          padding: 0.5rem 1rem;
+          transition: background-color 0.15s ease-in-out;
+        }
 
-                .btn-primary {
-    background-color: #3a8a90;
-    border-color: #3a8a90;
-    color: white;
-    border-radius: 0.375rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: background-color 0.15s ease-in-out;
-}
-
-            .content-title {
-font-size: 1.2rem;
-    font-weight: 600;
-    color: #4b5563;
-    margin-bottom: 5px;            }
-    
-
-`}</style>
-
-
-
-</>
-
+        .content-title {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: #4b5563;
+          margin-bottom: 5px;
+        }
+      `}</style>
+    </>
   );
 };
 

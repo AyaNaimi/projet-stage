@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
+import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
 
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import Navigation from "../Acceuil/Navigation";
-import '../App.css';
+import "../App.css";
 import {
   Autocomplete,
   Button,
@@ -54,7 +54,7 @@ const PreparationLogo = () => {
   const csrfTokenMeta = document.head.querySelector('meta[name="csrf-token"]');
   const csrfToken = csrfTokenMeta ? csrfTokenMeta.content : null;
   const [showForm, setShowForm] = useState(false);
-  const[content,setContent]=useState(false)
+  const [content, setContent] = useState(false);
   const [
     existingLignePreparationCommandes,
     setExistingLignePreparationCommandes,
@@ -90,8 +90,8 @@ const PreparationLogo = () => {
   }, [editingCommandesId]);
 
   const fetchExistingLigneCommandes = async (commandId) => {
-    axios
-      .get(`http://localhost:8000/api/ligneCommandes/${commandId}`)
+    axiosInstance
+      .get(`/api/ligneCommandes/${commandId}`)
       .then((ligneCommandesResponse) => {
         const existingLigneCommandes =
           ligneCommandesResponse.data.ligneCommandes;
@@ -100,8 +100,8 @@ const PreparationLogo = () => {
       });
   };
   const fetchExistingLignePreparationCommandes = async (commandId) => {
-    axios
-      .get(`http://localhost:8000/api/lignePreparationCommandes/${commandId}`)
+    axiosInstance
+      .get(`/api/lignePreparationCommandes/${commandId}`)
       .then((lignePreparationCommandesResponse) => {
         const existingLignePreparationCommandes =
           lignePreparationCommandesResponse.data.lignePreparationCommandes;
@@ -117,10 +117,10 @@ const PreparationLogo = () => {
         siteClientResponse,
         produitsResponse,
       ] = await Promise.all([
-        axios.get("http://localhost:8000/api/commandes"),
-        axios.get("http://localhost:8000/api/clients"),
-        axios.get("http://localhost:8000/api/siteclients"),
-        axios.get("http://localhost:8000/api/produits"),
+        axiosInstance.get("/api/commandes"),
+        axiosInstance.get("/api/clients"),
+        axiosInstance.get("/api/siteclients"),
+        axiosInstance.get("/api/produits"),
       ]);
       setCommandes(commandesResponse.data.commandes);
       setClients(clientsResponse.data.client);
@@ -141,91 +141,93 @@ const PreparationLogo = () => {
       }));
     }
   }, [editingCommandes]);
-  const [status ,setStatus]=useState();
-  function changeStatus(status){
-    setStatus(status)
+  const [status, setStatus] = useState();
+  function changeStatus(status) {
+    setStatus(status);
   }
-  const [clientid , setClientid]=useState();
-   function hndelid (id){
-    setClientid(id)
+  const [clientid, setClientid] = useState();
+  function hndelid(id) {
+    setClientid(id);
   }
   const fetchOrdersByClientAndStatus = async (clientId) => {
     setClientid(clientId);
     try {
-      console.log(status)
-      const response = await axios.get(`http://localhost:8000/api/clients/${clientId}/commandes`);
+      console.log(status);
+      const response = await axios.get(
+        `http://localhost:8000/api/clients/${clientId}/commandes`,
+      );
 
       const orders = response.data.commandes;
-      console.log('comde',response.data.
-      preparations
-      );
-      
+      console.log("comde", response.data.preparations);
+
       // Filtrer les commandes par statut
-      const filteredOrders = orders.filter(order => order.status === status);
-      console.log('status',status)
+      const filteredOrders = orders.filter((order) => order.status === status);
+      console.log("status", status);
       // Afficher les commandes filtrées par statut
       console.log("Commandes filtrées par statut", filteredOrders);
-     
+
       // Mettre à jour l'état avec les commandes filtrées
       setSelectedOrder(filteredOrders);
     } catch (error) {
       console.error("Erreur lors de la récupération des commandes :", error);
     }
-};
-const [filtredatacmd,setFiltredatacmd]=useState([]);
-const filtredata = async ( id,clientid) => {
-  try {
+  };
+  const [filtredatacmd, setFiltredatacmd] = useState([]);
+  const filtredata = async (id, clientid) => {
+    try {
       // Logging the status for debugging purposes
-      console.log('Status:', status ,clientid);
-      
+      console.log("Status:", status, clientid);
+
       // Making the API request to fetch orders by client ID
-      const response = await axios.get(`http://localhost:8000/api/clients/${clientid}/commandes`);
+      const response = await axios.get(
+        `http://localhost:8000/api/clients/${clientid}/commandes`,
+      );
       const orders = response.data.commandes;
 
       // Logging preparations for debugging purposes
-      console.log('Preparations:', response.data.preparations);
+      console.log("Preparations:", response.data.preparations);
 
       // Filtering the orders by status and id
-      const filteredOrders = orders.filter(order => order.status === status && order.id === id);
-      console.log(id)
+      const filteredOrders = orders.filter(
+        (order) => order.status === status && order.id === id,
+      );
+      console.log(id);
       // Logging the status and filtered orders for debugging purposes
-      console.log('Filtered by Status:', status);
+      console.log("Filtered by Status:", status);
       console.log("Filtered Orders:", filteredOrders);
 
       // Updating the state with the filtered orders
       setFiltredatacmd(filteredOrders);
-  } catch (error) {
+    } catch (error) {
       console.error("Error fetching orders:", error);
-  }
-};
-const [filtrecmd ,setFiltrecmd]=useState([])
-const filtrecmddata = async () => {
-  try {
+    }
+  };
+  const [filtrecmd, setFiltrecmd] = useState([]);
+  const filtrecmddata = async () => {
+    try {
       // Logging the status for debugging purposes
-      console.log('Status:', status ,clientid);
-      
+      console.log("Status:", status, clientid);
+
       // Making the API request to fetch orders by client ID
-     
 
       // Filtering the orders by status and id
-      const filteredOrders = selectedOrder.filter(selectedOrder => selectedOrder.id === id);
-      console.log(id)
+      const filteredOrders = selectedOrder.filter(
+        (selectedOrder) => selectedOrder.id === id,
+      );
+      console.log(id);
       // Logging the status and filtered orders for debugging purposes
-      console.log('Filtered by Status:', status);
+      console.log("Filtered by Status:", status);
       console.log("Filtered Orders:", filteredOrders);
 
       // Updating the state with the filtered orders
       setFiltrecmd(filteredOrders);
-  } catch (error) {
+    } catch (error) {
       console.error("Error fetching orders:", error);
-  }
-};
+    }
+  };
 
-// Example usage
+  // Example usage
 
-
-  
-  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -233,7 +235,6 @@ const filtrecmddata = async () => {
   const getElementValueById = (id) => {
     return document.getElementById(id)?.value || "";
   };
-
 
   const calculateTotalQuantity = (ligneCommandes) => {
     // S'assurer que ligneCommandes est un tableau
@@ -256,7 +257,7 @@ const filtrecmddata = async () => {
       if (!Array.isArray(preparation.lignes_preparation)) {
         console.error(
           "Expected an array but received:",
-          preparation.lignes_preparation
+          preparation.lignes_preparation,
         );
         return total; // Ignorer cette préparation si les lignes de préparation ne sont pas un tableau
       }
@@ -274,7 +275,7 @@ const filtrecmddata = async () => {
       console.error(
         "Expected arrays but received:",
         ligne_commandes,
-        preparations
+        preparations,
       );
       return "#FF8787"; // Retourner rouge en cas d'erreur ou d'absence de préparations
     }
@@ -285,7 +286,7 @@ const filtrecmddata = async () => {
     console.log("Total des lignes de commande:", totalCommandes);
     console.log(
       "Total des lignes de préparation pour la commande:",
-      totalPreparation
+      totalPreparation,
     );
     return totalCommandes === totalPreparation ? "#87A922" : "#FCDC2A";
   };
@@ -306,10 +307,10 @@ const filtrecmddata = async () => {
   const populateProductInputs = (id, inputType) => {
     console.log(
       "existing LignePreparationCommande",
-      existingLignePreparationCommandes
+      existingLignePreparationCommandes,
     );
     const existingLignePreparationCommande = selectedProductsData.find(
-      (data) => data.id === id
+      (data) => data.id === id,
     );
     if (existingLignePreparationCommande) {
       return existingLignePreparationCommande[inputType];
@@ -331,7 +332,7 @@ const filtrecmddata = async () => {
   const handleOrderClick = (filteredOrders) => {
     // Utiliser un objet pour enregistrer les clients uniques
     const clientsWithOrders = {};
-    filteredOrders.forEach(order => {
+    filteredOrders.forEach((order) => {
       if (!clientsWithOrders[order.client.id]) {
         clientsWithOrders[order.client.id] = order.client;
         setContent(true);
@@ -347,7 +348,7 @@ const filtrecmddata = async () => {
     setExpandedOrderRows((prevRows) =>
       prevRows.includes(commandeId)
         ? prevRows.filter((row) => row !== commandeId)
-        : [...prevRows, commandeId]
+        : [...prevRows, commandeId],
     );
   };
 
@@ -355,7 +356,7 @@ const filtrecmddata = async () => {
     setExpandedPrepRows((prevRows) =>
       prevRows.includes(preparationId)
         ? prevRows.filter((row) => row !== preparationId)
-        : [...prevRows, preparationId]
+        : [...prevRows, preparationId],
     );
   };
 
@@ -417,7 +418,7 @@ const filtrecmddata = async () => {
       prix_unitaire: "",
       quantite: "",
     });
-    setWidth('90%')
+    setWidth("90%");
     setEditingCommandes(null); // Clear editing client
   };
   //---------------------------Produit--------------------------
@@ -454,11 +455,11 @@ const filtrecmddata = async () => {
     ]);
     console.log("selectedProductData", selectedProductsData);
   };
-const [width ,setWidth]=useState('90%');
+  const [width, setWidth] = useState("90%");
 
   const handleShowPreparationForm = (commande) => {
-console.log('id',id)
-    console.log('addcomd',commande)
+    console.log("id", id);
+    console.log("addcomd", commande);
     setFormData({
       reference: commande.reference,
       dateCommande: commande.dateCommande,
@@ -473,8 +474,8 @@ console.log('id',id)
       quantite: "",
       lot: "",
     });
-    console.log("datafram",formData ,formData.status_preparation)
-setWidth("63%")
+    console.log("datafram", formData, formData.status_preparation);
+    setWidth("63%");
     setSelectedProductsData([]); // Reset selected products data
     setEditingCommandes(commande); // Clear editing command
     setIsEditing(false); // Set to adding mode
@@ -486,16 +487,18 @@ setWidth("63%")
       closeForm();
     }
   };
-  const [id ,setId]=useState();
-        function changeId(id){
-          const filteredOrders = selectedOrder.filter(selectedOrder => selectedOrder.id === id);
-      console.log(id)
-      // Logging the status and filtered orders for debugging purposes 
-      setId(id)
+  const [id, setId] = useState();
+  function changeId(id) {
+    const filteredOrders = selectedOrder.filter(
+      (selectedOrder) => selectedOrder.id === id,
+    );
+    console.log(id);
+    // Logging the status and filtered orders for debugging purposes
+    setId(id);
 
-      setFiltrecmd(filteredOrders);
-        }
-        
+    setFiltrecmd(filteredOrders);
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -514,31 +517,31 @@ setWidth("63%")
 
       if (isEditing && editingCommandes) {
         // Update existing preparation
-console.log('id',id)
+        console.log("id", id);
         await axios.put(
           `http://localhost:8000/api/PreparationCommandes/${id}`,
           {
-            commande_id:id,
+            commande_id: id,
             datePreparationCommande: formData.datePreparationCommande,
             status_preparation: formData.status_preparation,
             CodePreparation: formData.codePreparation,
-
-          }
+          },
         );
-         
+
         preparationId = editingCommandes.id;
       } else {
-        console.log("stat",formData)
+        console.log("stat", formData);
 
-        console.log('Selected order:', selectedOrder);
+        console.log("Selected order:", selectedOrder);
 
-        console.log('Creating new preparation with:',
-        id,
+        console.log(
+          "Creating new preparation with:",
+          id,
           formData.datePreparationCommande,
           formData.status_preparation,
-          formData.codePreparation
+          formData.codePreparation,
         );
-        
+
         const preparationResponse = await axios.post(
           `http://localhost:8000/api/PreparationCommandes`,
           {
@@ -546,34 +549,29 @@ console.log('id',id)
             datePreparationCommande: formData.datePreparationCommande,
             status_preparation: formData.status_preparation,
             CodePreparation: formData.codePreparation,
-          }
-          
+          },
         );
-        console.log('datafram ',preparationResponse)
+        console.log("datafram ", preparationResponse);
 
-        console.log("form",formData)
-        await axios.put(
-          `http://localhost:8000/api/commandes/${id}`,
-          {
-            status: formData.status_preparation,
-           
-          }
-        );
-        handleEditPreparationForm(preparationId) 
-        fetchOrdersByClientAndStatus(clientid)        
+        console.log("form", formData);
+        await axios.put(`http://localhost:8000/api/commandes/${id}`, {
+          status: formData.status_preparation,
+        });
+        handleEditPreparationForm(preparationId);
+        fetchOrdersByClientAndStatus(clientid);
         preparationId = preparationResponse.data.id;
       }
 
       // Get existing lignePreparationCommandes
       const existingLignePreparationCommandesResponse = await axios.get(
-        `http://localhost:8000/api/PreparationCommandes/${preparationId}/lignePreparationCommandes`
+        `http://localhost:8000/api/PreparationCommandes/${preparationId}/lignePreparationCommandes`,
       );
       const existingLignePreparationCommandes = Array.isArray(
-        existingLignePreparationCommandesResponse.data
+        existingLignePreparationCommandesResponse.data,
       )
         ? existingLignePreparationCommandesResponse.data
         : [];
-      
+
       // Map selectedProductsData to include existing ids if they exist
       const selectedPrdsData = selectedProductsData.map(
         (selectedProduct, index) => {
@@ -581,7 +579,7 @@ console.log('id',id)
             existingLignePreparationCommandes.find(
               (lignePreparationCommande) =>
                 lignePreparationCommande.produit_id ===
-                selectedProduct.produit_id
+                selectedProduct.produit_id,
             );
 
           return {
@@ -592,13 +590,13 @@ console.log('id',id)
             produit_id: selectedProduct.produit_id,
             prix_unitaire: 12,
             quantite: getElementValueById(
-              `quantite_${index}_${selectedProduct.produit_id}`
+              `quantite_${index}_${selectedProduct.produit_id}`,
             ),
             lot: getElementValueById(
-              `lot_${index}_${selectedProduct.produit_id}`
+              `lot_${index}_${selectedProduct.produit_id}`,
             ),
           };
-        }
+        },
       );
 
       console.log("selectedPrdsData", selectedPrdsData);
@@ -618,7 +616,7 @@ console.log('id',id)
             headers: {
               "X-CSRF-TOKEN": csrfToken,
             },
-          }
+          },
         );
       }
 
@@ -633,7 +631,7 @@ console.log('id',id)
               headers: {
                 "X-CSRF-TOKEN": csrfToken,
               },
-            }
+            },
           );
         } else {
           await axios.post(
@@ -644,7 +642,7 @@ console.log('id',id)
               headers: {
                 "X-CSRF-TOKEN": csrfToken,
               },
-            }
+            },
           );
         }
       }
@@ -666,7 +664,7 @@ console.log('id',id)
         quantite: "",
         lot: "",
       });
-      console.log("stat",formData)
+      console.log("stat", formData);
 
       setShowForm(false);
       setIsEditing(false); // Reset editing mode
@@ -687,21 +685,21 @@ console.log('id',id)
   };
 
   const handleEditPreparationForm = async (preparation) => {
-    console.log("pr",preparation.preparations.id)
-const preparations = preparation.preparations
-const maxId = preparations.reduce((max, preparation) => {
-  return (preparation.id > max) ? preparation.id : max;
-}, preparations[0].id);
+    console.log("pr", preparation.preparations.id);
+    const preparations = preparation.preparations;
+    const maxId = preparations.reduce((max, preparation) => {
+      return preparation.id > max ? preparation.id : max;
+    }, preparations[0].id);
 
-console.log(maxId);
+    console.log(maxId);
     try {
       // Récupérer les données de la préparation et de la commande associée
       const response = await axios.get(
-        `http://localhost:8000/api/PreparationCommandes/${maxId}`
+        `http://localhost:8000/api/PreparationCommandes/${maxId}`,
       );
       const { preparation: preparationData, commande: commandeData } =
         response.data;
-      console.log("data",response.data);
+      console.log("data", response.data);
 
       // Mettre à jour les états avec les données récupérées
       setFormData({
@@ -715,7 +713,7 @@ console.log(maxId);
         status_preparation: preparationData.status_preparation,
         codePreparation: preparationData.CodePreparation,
       });
-      setWidth('63%')
+      setWidth("63%");
       setSelectedProductsData(preparationData.lignes_preparation);
       console.log(preparationData.lignes_preparation);
       setEditingCommandes(preparation);
@@ -753,7 +751,7 @@ console.log(maxId);
             headers: {
               "X-CSRF-TOKEN": csrfToken,
             },
-          }
+          },
         );
         fetchData(); // Re-fetch data to update the UI
         Swal.fire({
@@ -764,7 +762,7 @@ console.log(maxId);
       } catch (error) {
         console.error(
           "Erreur lors de la suppression de la préparation :",
-          error
+          error,
         );
         Swal.fire({
           icon: "error",
@@ -787,11 +785,9 @@ console.log(maxId);
     }
   };
   return (
-    <ThemeProvider theme={createTheme()} >
-      <Box sx={{ position:'absolute',
-        top:'0px',
-        left:'220px',
-        width:'90%' }}
+    <ThemeProvider theme={createTheme()}>
+      <Box
+        sx={{ position: "absolute", top: "0px", left: "220px", width: "90%" }}
       >
         <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 4 }}>
           {/* <Toolbar /> */}
@@ -804,166 +800,167 @@ console.log(maxId);
               display: "flex",
               alignItems: "center",
               marginBottom: "10px",
-              marginTop:"30px"
+              marginTop: "30px",
             }}
           >
-            <PeopleIcon sx={{ fontSize: "24px", marginRight: "8px"}} />
+            <PeopleIcon sx={{ fontSize: "24px", marginRight: "8px" }} />
             Liste des clients avec les logos
           </Typography>
           <div style={{ width: "100%" }}>
-    <div className="d-flex flex-wrap">
-      {["en_attente", "En cours", "Valide"].map((status) => {
-        const filteredOrders = commandes.filter(
-          (order) => order.status === status
-        );
-        const orderCount = filteredOrders.length;
-        const color = getColorByStatus(status);
+            <div className="d-flex flex-wrap">
+              {["en_attente", "En cours", "Valide"].map((status) => {
+                const filteredOrders = commandes.filter(
+                  (order) => order.status === status,
+                );
+                const orderCount = filteredOrders.length;
+                const color = getColorByStatus(status);
 
-        return (
-          <div
-            key={status}
-            style={{ marginLeft: "40px", marginBottom: "-20px", width: "30%" }}
-          >
-            <Card
+                return (
+                  <div
+                    key={status}
+                    style={{
+                      marginLeft: "40px",
+                      marginBottom: "-20px",
+                      width: "30%",
+                    }}
+                  >
+                    <Card
+                      sx={{
+                        width: "100%",
+                        padding: "5px",
+                        backgroundColor: color,
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      }}
+                    >
+                      <CardContent>
+                        <Typography
+                          variant="h5"
+                          component="div"
+                          sx={{
+                            color: "#333",
+                            fontWeight: "bold",
+                            textTransform: "capitalize",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          {status.replace("_", " ") === "En cours"
+                            ? "prépare"
+                            : status.replace("_", " ")}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: "#333",
+                            marginBottom: "5px",
+                            marginTop: "-35px",
+                            marginLeft: "250px",
+                          }}
+                        >
+                          Nombre de commandes : {orderCount}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            color: "#1976d2",
+                            cursor: "pointer",
+                            "&:hover": { color: "#1976d2" },
+                          }}
+                          onClick={() => {
+                            handleOrderClick(filteredOrders);
+                            changeStatus(status);
+                          }}
+                        >
+                          Voir les détails
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {content && (
+            <Typography
+              variant="h5"
+              gutterBottom
+              component="div"
               sx={{
-                width: "100%",
-                padding: "5px",
-                backgroundColor: color,
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                color: "grey",
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "10px",
+                marginTop: "40px",
+                marginLeft: "-px",
               }}
             >
-              <CardContent>
-                <Typography
-                  variant="h5"
-                  component="div"
-                  sx={{
-                    color: "#333",
-                    fontWeight: "bold",
-                    textTransform: "capitalize",
-                    marginBottom: "10px",
-                  }}
-                >
-                  {status.replace("_", " ") === "En cours" ? "prépare" : status.replace("_", " ")}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: "#333",
-                    marginBottom: "5px",
-                    marginTop: "-35px",
-                    marginLeft: "250px",
-                  }}
-                >
-                  Nombre de commandes : {orderCount}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: "#1976d2",
-                    cursor: "pointer",
-                    "&:hover": { color: "#1976d2" },
-                  }}
-                  onClick={() => {
-                    handleOrderClick(filteredOrders);
-                    changeStatus(status);
-                  }}
-                >
-                  Voir les détails
-                </Typography>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-      {content &&
-      <Typography
-      variant="h5"
-      gutterBottom
-      component="div"
-      sx={{
-        color: "grey",
-        display: "flex",
-        alignItems: "center",
-        marginBottom: "10px",
-        marginTop:"40px",
-        marginLeft:"-px"
+              <PeopleIcon sx={{ fontSize: "24px", marginRight: "8px" }} />
+              {status === "en_attente" ? "En attente" : status}
+            </Typography>
+          )}
 
-      }}
-    >
-      <PeopleIcon sx={{ fontSize: "24px", marginRight: "8px"}} />
-       {status === "en_attente" ? "En attente" : status}
-    </Typography>
-      }
-          
-    
-   <div
-       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: 'scroll',
-        height: '750px',
-
-        alignItems: 'flex-start',
-        width: '120px', // Ajuster selon vos besoins
-        scrollbarColor: '#F5F5F5 #F5F5F5', // Couleur de la barre de défilement et du fond
-      }}
-    >
-      {selectedClients.map((client) => (
-        <div
-          key={client.id}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%', // Pour que l'élément prenne toute la largeur disponible
-            paddingBottom: '10px',
-            cursor: 'pointer',
-            borderBottom: '1px solid #ccc', // Bordure inférieure entre les clients
-          }}
-        onClick={() =>{ handleClientClick(client.id);
-          hndelid(client.id)
-        }}
-        >
-           <img
-            src={client.logoC}
-            alt="Logo"
+          <div
             style={{
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              marginTop:'5px'
-            }}
-          />
-          <Typography variant="subtitle1" gutterBottom style={{ textAlign: 'center' }}>
-            {client.raison_sociale}
-          </Typography>
-         
-          
-        </div>
-        
-      ))}
-     
-      
-    </div>
-    {
-        content && 
-        <div 
-        style={{
-          border:'1px solid #ddd',
-          backgroundColor:'#ddd',
-          width:'5px',
-          height:'700px',
-          position:'absolute',
-          top:'250px',
-          left:'170px'
-        }}
-        >
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "scroll",
+              height: "750px",
 
-        </div>
-      }
+              alignItems: "flex-start",
+              width: "120px", // Ajuster selon vos besoins
+              scrollbarColor: "#F5F5F5 #F5F5F5", // Couleur de la barre de défilement et du fond
+            }}
+          >
+            {selectedClients.map((client) => (
+              <div
+                key={client.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "100%", // Pour que l'élément prenne toute la largeur disponible
+                  paddingBottom: "10px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #ccc", // Bordure inférieure entre les clients
+                }}
+                onClick={() => {
+                  handleClientClick(client.id);
+                  hndelid(client.id);
+                }}
+              >
+                <img
+                  src={client.logoC}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginTop: "5px",
+                  }}
+                />
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  style={{ textAlign: "center" }}
+                >
+                  {client.raison_sociale}
+                </Typography>
+              </div>
+            ))}
+          </div>
+          {content && (
+            <div
+              style={{
+                border: "1px solid #ddd",
+                backgroundColor: "#ddd",
+                width: "5px",
+                height: "700px",
+                position: "absolute",
+                top: "250px",
+                left: "170px",
+              }}
+            ></div>
+          )}
           {selectedOrder && (
             <>
               <div
@@ -973,25 +970,26 @@ console.log(maxId);
                   padding: "50px",
                   overflow: "auto",
                   maxHeight: "500px",
-                  marginRight:'-2%'
-                  
+                  marginRight: "-2%",
                 }}
               >
                 {" "}
-                <Form className="row" style={{
-                  marginTop:'-400px',
-                  position:'fixed',
-                  width:'25%',
-                  top:'670px',
-                  zIndex:'1000',
-                  border:'2px solid #ddd',
-                  borderRadius:'10px',
-                  backgroundColor:'#ffffff',
-                  overflowY: 'scroll',
-                  maxHeight:'700px',
-
-                  
-                }} onSubmit={handleSubmit}>
+                <Form
+                  className="row"
+                  style={{
+                    marginTop: "-400px",
+                    position: "fixed",
+                    width: "25%",
+                    top: "670px",
+                    zIndex: "1000",
+                    border: "2px solid #ddd",
+                    borderRadius: "10px",
+                    backgroundColor: "#ffffff",
+                    overflowY: "scroll",
+                    maxHeight: "700px",
+                  }}
+                  onSubmit={handleSubmit}
+                >
                   <Form.Label className="text-center m-2">
                     <h4
                       style={{
@@ -1012,10 +1010,12 @@ console.log(maxId);
                     style={{
                       fontSize: "25px",
                       color: "black",
-                      backgroundColor:'#ddd',
+                      backgroundColor: "#ddd",
                     }}
-                    >information client :</h5>
-                    <div className="col-md-12">
+                  >
+                    information client :
+                  </h5>
+                  <div className="col-md-12">
                     <div className="row mb-3">
                       <div className="col-sm-6">
                         <label htmlFor="client_id" className="col-form-label">
@@ -1030,7 +1030,7 @@ console.log(maxId);
                           name="client_id"
                           value={getClientValue(
                             formData.client_id,
-                            "raison_sociale"
+                            "raison_sociale",
                           )}
                           readOnly // Make the input read-only
                         />
@@ -1078,7 +1078,7 @@ console.log(maxId);
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="col-md-12">
                     <div className="row mb-3">
                       <div className="col-sm-6">
@@ -1100,7 +1100,7 @@ console.log(maxId);
                             formData.site_id
                               ? getSiteClientValue(
                                   formData.site_id,
-                                  "raison_sociale"
+                                  "raison_sociale",
                                 )
                               : "aucun site"
                           }
@@ -1109,7 +1109,7 @@ console.log(maxId);
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="col-md-12">
                     <div className="row mb-3">
                       <div className="col-sm-6">
@@ -1132,14 +1132,16 @@ console.log(maxId);
                       </div>
                     </div>
                   </div>
-                 
+
                   <h5
                     style={{
                       fontSize: "25px",
                       color: "black",
-                      backgroundColor:'#ddd',
+                      backgroundColor: "#ddd",
                     }}
-                    >information commande :</h5>
+                  >
+                    information commande :
+                  </h5>
                   <div className="col-md-12">
                     <div className="row mb-3">
                       <div className="col-sm-6">
@@ -1208,207 +1210,338 @@ console.log(maxId);
                       </div>
                     </div>
                   </div>
-                 
-                    <>
-                      {/* {calculateTotalQuantity(
+
+                  <>
+                    {/* {calculateTotalQuantity(
                         editingCommandes.ligne_preparation_commandes
                       ) !==
                         calculateTotalQuantity(
                           editingCommandes.ligne_commandes
                         ) && ( */}
-                      <div>
-                        <Button
-                          className="btn btn-sm mb-2"
-                          variant="primary"
-                          onClick={handleAddEmptyRow}
-                        >
-                          <FontAwesomeIcon icon={faPlus} />
-                        </Button>
-                        <strong>Ajouter Produit</strong>
-                      </div>
-                      {/* )} */}
+                    <div>
+                      <Button
+                        className="btn btn-sm mb-2"
+                        variant="primary"
+                        onClick={handleAddEmptyRow}
+                      >
+                        <FontAwesomeIcon icon={faPlus} />
+                      </Button>
+                      <strong>Ajouter Produit</strong>
+                    </div>
+                    {/* )} */}
 
-                      {/* Add other JSX elements with the same condition */}
-                    </>
-                
+                    {/* Add other JSX elements with the same condition */}
+                  </>
 
                   <div className="col-md-12">
                     {console.log("selectedProductsData:", selectedProductsData)}
                     <Form.Group controlId="selectedProduitTable">
                       <div className="table-responsive">
-                      <table className="table table-bordered">
-  <thead>
-    <tr>
-      <th>Code Produit</th>
-      <th>Designation</th>
-      <th>Calibre</th>
-      <th>Quantité</th>
-      <th>Lot</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    {isEditing ? (
-      selectedProductsData.map((productData, index) => (
-        <tr key={index}>
-          <td>
-            <Autocomplete
-              value={produits.find((prod) => prod.id === productData.produit_id)}
-              options={produits}
-              getOptionLabel={(option) => option.Code_produit || ""}
-              onChange={(event, newValue) => {
-                const updatedSelectedProductsData = [...selectedProductsData];
-                updatedSelectedProductsData[index] = {
-                  ...productData,
-                  produit_id: newValue ? newValue.id : "",
-                  Code_produit: newValue ? newValue.Code_produit : "",
-                  designation: newValue ? newValue.designation : "",
-                  calibre_id: newValue ? newValue.calibre_id : "",
-                };
-                setSelectedProductsData(updatedSelectedProductsData);
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select a product"
-                  variant="outlined"
-                  size="small"
-                />
-              )}
-            />
-          </td>
-          <td>{productData.designation || "N/A"}</td>
-          <td>{productData.calibre_id || "N/A"}</td>
-          <td>
-            <input
-              type="text"
-              className={warningIndexes.includes(index) ? "input-warning" : ""}
-              style={{ width: '60px', border: 'none' }}
-              id={`quantite_${index}_${productData.produit_id}`}
-              placeholder={productData.quantite}
-              value={
-                modifiedQuantiteValues[`${index}_${productData.produit_id}`] ||
-                populateProductInputs(productData.id, "quantite")
-              }
-              onChange={(event) => handleInputChange(index, "quantite", event)}
-            />
-          </td>
-          <td>
-            <input
-              type="text"
-              style={{ width: '60px', border: 'none' }}
-              id={`lot_${index}_${productData.produit_id}`}
-              className="lotInput"
-              placeholder="Lot"
-              value={
-                modifiedLotValues[`${index}_${productData.produit_id}`] ||
-                populateProductInputs(productData.id, "lot")
-              }
-              onChange={(event) => handleInputChange(index, "lot", event)}
-            />
-          </td>
-          <td>
-            <Button
-              className="btn btn-danger btn-sm m-1"
-              onClick={() => handleDeleteProduct(index, productData.id)}
-            >
-              <FontAwesomeIcon icon={faTrash} />
-            </Button>
-          </td>
-        </tr>
-      ))
-    ) : (
-      
-      console.log('selec', selectedOrder),
-      filtrecmd.map((order, orderIndex) => (
-        <React.Fragment key={order.id}>
-          {order.ligne_commandes.map((ligneCommande, ligneIndex) => {
-            const produit = produits.find(prod => prod.id === ligneCommande.produit_id);
-            return (
-              <tr key={`${order.id}-${ligneCommande.id}`}>
-                          <td>
-            <Autocomplete
-              value={produits.find((prod) => prod.id === order.produit_id)}
-              options={produits}
-              getOptionLabel={(option) => option.Code_produit || ""}
-              onChange={(event, newValue) => {
-                const updatedSelectedProductsData = [...selectedProductsData];
-                updatedSelectedProductsData[index] = {
-                  ...order,
-                  produit_id: newValue ? newValue.id : "",
-                  Code_produit: newValue ? newValue.Code_produit : "",
-                  designation: newValue ? newValue.designation : "",
-                  calibre_id: newValue ? newValue.calibre_id : "",
-                };
-                setSelectedProductsData(updatedSelectedProductsData);
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={produit.Code_produit}
-                  variant="outlined"
-                  size="small"
-                />
-              )}
-            />
-          </td>
-                <td>{produit ? produit.designation : "N/A"}</td>
-                <td>{produit ? produit.calibre_id : "N/A"}</td>
-                <td>
-                  <input
-                    type="text"
-                    className={warningIndexes.includes(orderIndex) ? "input-warning" : ""}
-                    style={{ width: '60px', border: 'none' }}
-                    id={`quantite_${orderIndex}_${ligneCommande.produit_id}`}
-                    placeholder={ligneCommande.quantite}
-                    value={
-                      modifiedQuantiteValues[`${orderIndex}_${ligneCommande.produit_id}`] ||
-                      populateProductInputs(ligneCommande.id, "quantite")
-                    }
-                    onChange={(event) => handleInputChange(orderIndex, "quantite", event)}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    style={{ width: '60px', border: 'none' }}
-                    id={`lot_${orderIndex}_${ligneCommande.produit_id}`}
-                    className="lotInput"
-                    placeholder="Lot"
-                    value={
-                      modifiedLotValues[`${orderIndex}_${ligneCommande.produit_id}`] ||
-                      populateProductInputs(ligneCommande.id, "lot")
-                    }
-                    onChange={(event) => handleInputChange(orderIndex, "lot", event)}
-                  />
-                </td>
-                <td>
-                  <Button
-                    className="btn btn-danger btn-sm m-1"
-                    onClick={() => handleDeleteProduct(orderIndex, ligneCommande.id)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </Button>
-                </td>
-              </tr>
-            );
-          })}
-        </React.Fragment>
-      ))
-    
-    )}
-  </tbody>
-</table>
-
-
-
+                        <table className="table table-bordered">
+                          <thead>
+                            <tr>
+                              <th>Code Produit</th>
+                              <th>Designation</th>
+                              <th>Calibre</th>
+                              <th>Quantité</th>
+                              <th>Lot</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {isEditing
+                              ? selectedProductsData.map(
+                                  (productData, index) => (
+                                    <tr key={index}>
+                                      <td>
+                                        <Autocomplete
+                                          value={produits.find(
+                                            (prod) =>
+                                              prod.id ===
+                                              productData.produit_id,
+                                          )}
+                                          options={produits}
+                                          getOptionLabel={(option) =>
+                                            option.Code_produit || ""
+                                          }
+                                          onChange={(event, newValue) => {
+                                            const updatedSelectedProductsData =
+                                              [...selectedProductsData];
+                                            updatedSelectedProductsData[index] =
+                                              {
+                                                ...productData,
+                                                produit_id: newValue
+                                                  ? newValue.id
+                                                  : "",
+                                                Code_produit: newValue
+                                                  ? newValue.Code_produit
+                                                  : "",
+                                                designation: newValue
+                                                  ? newValue.designation
+                                                  : "",
+                                                calibre_id: newValue
+                                                  ? newValue.calibre_id
+                                                  : "",
+                                              };
+                                            setSelectedProductsData(
+                                              updatedSelectedProductsData,
+                                            );
+                                          }}
+                                          renderInput={(params) => (
+                                            <TextField
+                                              {...params}
+                                              label="Select a product"
+                                              variant="outlined"
+                                              size="small"
+                                            />
+                                          )}
+                                        />
+                                      </td>
+                                      <td>
+                                        {productData.designation || "N/A"}
+                                      </td>
+                                      <td>{productData.calibre_id || "N/A"}</td>
+                                      <td>
+                                        <input
+                                          type="text"
+                                          className={
+                                            warningIndexes.includes(index)
+                                              ? "input-warning"
+                                              : ""
+                                          }
+                                          style={{
+                                            width: "60px",
+                                            border: "none",
+                                          }}
+                                          id={`quantite_${index}_${productData.produit_id}`}
+                                          placeholder={productData.quantite}
+                                          value={
+                                            modifiedQuantiteValues[
+                                              `${index}_${productData.produit_id}`
+                                            ] ||
+                                            populateProductInputs(
+                                              productData.id,
+                                              "quantite",
+                                            )
+                                          }
+                                          onChange={(event) =>
+                                            handleInputChange(
+                                              index,
+                                              "quantite",
+                                              event,
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="text"
+                                          style={{
+                                            width: "60px",
+                                            border: "none",
+                                          }}
+                                          id={`lot_${index}_${productData.produit_id}`}
+                                          className="lotInput"
+                                          placeholder="Lot"
+                                          value={
+                                            modifiedLotValues[
+                                              `${index}_${productData.produit_id}`
+                                            ] ||
+                                            populateProductInputs(
+                                              productData.id,
+                                              "lot",
+                                            )
+                                          }
+                                          onChange={(event) =>
+                                            handleInputChange(
+                                              index,
+                                              "lot",
+                                              event,
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td>
+                                        <Button
+                                          className="btn btn-danger btn-sm m-1"
+                                          onClick={() =>
+                                            handleDeleteProduct(
+                                              index,
+                                              productData.id,
+                                            )
+                                          }
+                                        >
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                      </td>
+                                    </tr>
+                                  ),
+                                )
+                              : (console.log("selec", selectedOrder),
+                                filtrecmd.map((order, orderIndex) => (
+                                  <React.Fragment key={order.id}>
+                                    {order.ligne_commandes.map(
+                                      (ligneCommande, ligneIndex) => {
+                                        const produit = produits.find(
+                                          (prod) =>
+                                            prod.id ===
+                                            ligneCommande.produit_id,
+                                        );
+                                        return (
+                                          <tr
+                                            key={`${order.id}-${ligneCommande.id}`}
+                                          >
+                                            <td>
+                                              <Autocomplete
+                                                value={produits.find(
+                                                  (prod) =>
+                                                    prod.id ===
+                                                    order.produit_id,
+                                                )}
+                                                options={produits}
+                                                getOptionLabel={(option) =>
+                                                  option.Code_produit || ""
+                                                }
+                                                onChange={(event, newValue) => {
+                                                  const updatedSelectedProductsData =
+                                                    [...selectedProductsData];
+                                                  updatedSelectedProductsData[
+                                                    index
+                                                  ] = {
+                                                    ...order,
+                                                    produit_id: newValue
+                                                      ? newValue.id
+                                                      : "",
+                                                    Code_produit: newValue
+                                                      ? newValue.Code_produit
+                                                      : "",
+                                                    designation: newValue
+                                                      ? newValue.designation
+                                                      : "",
+                                                    calibre_id: newValue
+                                                      ? newValue.calibre_id
+                                                      : "",
+                                                  };
+                                                  setSelectedProductsData(
+                                                    updatedSelectedProductsData,
+                                                  );
+                                                }}
+                                                renderInput={(params) => (
+                                                  <TextField
+                                                    {...params}
+                                                    label={produit.Code_produit}
+                                                    variant="outlined"
+                                                    size="small"
+                                                  />
+                                                )}
+                                              />
+                                            </td>
+                                            <td>
+                                              {produit
+                                                ? produit.designation
+                                                : "N/A"}
+                                            </td>
+                                            <td>
+                                              {produit
+                                                ? produit.calibre_id
+                                                : "N/A"}
+                                            </td>
+                                            <td>
+                                              <input
+                                                type="text"
+                                                className={
+                                                  warningIndexes.includes(
+                                                    orderIndex,
+                                                  )
+                                                    ? "input-warning"
+                                                    : ""
+                                                }
+                                                style={{
+                                                  width: "60px",
+                                                  border: "none",
+                                                }}
+                                                id={`quantite_${orderIndex}_${ligneCommande.produit_id}`}
+                                                placeholder={
+                                                  ligneCommande.quantite
+                                                }
+                                                value={
+                                                  modifiedQuantiteValues[
+                                                    `${orderIndex}_${ligneCommande.produit_id}`
+                                                  ] ||
+                                                  populateProductInputs(
+                                                    ligneCommande.id,
+                                                    "quantite",
+                                                  )
+                                                }
+                                                onChange={(event) =>
+                                                  handleInputChange(
+                                                    orderIndex,
+                                                    "quantite",
+                                                    event,
+                                                  )
+                                                }
+                                              />
+                                            </td>
+                                            <td>
+                                              <input
+                                                type="text"
+                                                style={{
+                                                  width: "60px",
+                                                  border: "none",
+                                                }}
+                                                id={`lot_${orderIndex}_${ligneCommande.produit_id}`}
+                                                className="lotInput"
+                                                placeholder="Lot"
+                                                value={
+                                                  modifiedLotValues[
+                                                    `${orderIndex}_${ligneCommande.produit_id}`
+                                                  ] ||
+                                                  populateProductInputs(
+                                                    ligneCommande.id,
+                                                    "lot",
+                                                  )
+                                                }
+                                                onChange={(event) =>
+                                                  handleInputChange(
+                                                    orderIndex,
+                                                    "lot",
+                                                    event,
+                                                  )
+                                                }
+                                              />
+                                            </td>
+                                            <td>
+                                              <Button
+                                                className="btn btn-danger btn-sm m-1"
+                                                onClick={() =>
+                                                  handleDeleteProduct(
+                                                    orderIndex,
+                                                    ligneCommande.id,
+                                                  )
+                                                }
+                                              >
+                                                <FontAwesomeIcon
+                                                  icon={faTrash}
+                                                />
+                                              </Button>
+                                            </td>
+                                          </tr>
+                                        );
+                                      },
+                                    )}
+                                  </React.Fragment>
+                                )))}
+                          </tbody>
+                        </table>
                       </div>
                     </Form.Group>
                   </div>
 
                   <Form.Group className="col m-3 text-center ">
-                    <Button type="submit" className="btn btn-danger col-md-4 m-3"
- >
+                    <Button
+                      type="submit"
+                      className="btn btn-danger col-md-4 m-3"
+                    >
                       {isEditing ? "mise à jour" : "Ajouter"}
                     </Button>
                     <Button
@@ -1417,8 +1550,6 @@ console.log(maxId);
                         closeForm();
                         hndelid(client.id);
                       }}
-
-                      
                     >
                       Annuler
                     </Button>
@@ -1426,164 +1557,272 @@ console.log(maxId);
                 </Form>
               </div>
               <div
-    id="tableContainer"
-    className="table-responsive-sm"
-    style={{ padding: '20px', maxHeight: '500px', overflowY: 'auto',
-      marginTop:'-800px',
-      marginLeft:'150px',
-      width: width,
-     }}
-  >
-    <table className="table table-bordered">
-      <thead className="text-center ddd" >
-        <tr>
-          
-          <th>Code de Préparation</th>
-          <th>Status de Préparation</th>
-          <th>Date de Préparation</th>
-          <th>Référence Commande</th>
-          <th>Client</th>
-          <th>Site</th>
-          <th>Date Commande</th>
-          <th>Mode de payement</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody className="text-center">
-        {selectedOrder && selectedOrder.map((order) => (
-          <React.Fragment key={order.id}>
-            <tr>
-              <td>
-                <button
-                  className="btn btn-sm btn-light"
-                  style={{ marginRight: "10px" }}
-                  onClick={() => handleShowLignePreparationCommandes(order.id)}
-                >
-                  <FontAwesomeIcon icon={expandedPrepRows.includes(order.id) ? faMinus : faPlus} />
-                </button>
-                {order.CodePreparation}
-              </td>
-              <td>{order.status_preparation}</td>
-              <td>{order.datePreparationCommande}</td>
-              <td>
-                {order.reference}
-                <button
-                  className="btn btn-sm btn-light"
-                  onClick={() => handleShowLigneCommandes(order.id)}
-                >
-                  <FontAwesomeIcon icon={faList} />
-                </button>
-              </td>
-              <td>{selectedClient?.id || 'N/A'}</td>
-              <td className={order.site_id ? "" : "text-danger"}>
-                {order.site_id ? getSiteClientValue(order.site_id, "raison_sociale") : "Aucun site"}
-              </td>
-              <td>{order.dateCommande}</td>
-              <td>{order.mode_payement}</td>
-              <td>{order.status}</td>
-              <td>
-                <div className="d-inline-flex text-center">
-                  <FontAwesomeIcon
-                    onClick={() => {
-                      changeId(order.id);
-                      handleShowPreparationForm(order);
-                      
-                    }}
-                    icon={faPlus}
-                    style={{ margin: "0 10px", cursor: "pointer", color: "blue" }}
-                  />
-                  <FontAwesomeIcon
-                    onClick={() => {handleEditPreparationForm(order);
-                      changeId(order.id);
-
-                    }}
-                    
-                    icon={faEdit}
-                    style={{ margin: "0 10px", cursor: "pointer", color: "green" }}
-                  />
-                  <FontAwesomeIcon
-                    onClick={() => handleDeletePreparation(order.id)}
-                    icon={faTrash}
-                    style={{ margin: "0 10px", cursor: "pointer", color: "red" }}
-                  />
-                </div>
-              </td>
-            </tr>
-            {expandedPrepRows.includes(order.id) && (
-              <tr>
-                <td colSpan="11" style={{ padding: "0" }}>
-                  <div id="lignesCommandes">
-                    <table className="table-bordered" style={{ borderCollapse: "collapse", width: "100%" }}>
-                      <thead>
-                        <tr>
-                          <th colSpan="8" style={{ backgroundColor: "#EEEEEE" }}>Liste des Préparation de Commande</th>
-                        </tr>
-                        <tr>
-                          <th style={{ backgroundColor: "#ddd" }}>Code Produit</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Designation</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Quantite</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Calibre</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Prix Unitaire</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Lot</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.preparations.map((preparation) =>
-                          preparation.lignes_preparation.map((lignePreparationCommande) => {
-                            const produit = produits.find(prod => prod.id === lignePreparationCommande.produit_id);
-                            return (
-                              <tr key={lignePreparationCommande.id}>
-                                <td>{produit?.Code_produit}</td>
-                                <td>{produit?.designation}</td>
-                                <td>{lignePreparationCommande.quantite}</td>
-                                <td>{produit?.calibre.calibre}</td>
-                                <td>{lignePreparationCommande.prix_unitaire} DH</td>
-                                <td>{lignePreparationCommande.lot}</td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </td>
-              </tr>
-            )}
-            {expandedOrderRows.includes(order.id) && order.ligne_commandes && (
-              <tr>
-                <td colSpan="12" style={{ padding: "0" }}>
-                  <div id="lignesCommandes">
-                    <table className="table-bordered" style={{ borderCollapse: "collapse", width: "100%" }}>
-                      <thead>
-                        <tr>
-                          <th colSpan="4" style={{ backgroundColor: "#EEEEEE" }}>Liste des lignes de Commandes</th>
-                        </tr>
-                        <tr>
-                          <th style={{ backgroundColor: "#ddd" }}>Produit</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Quantite</th>
-                          <th style={{ backgroundColor: "#ddd" }}>Prix Vente</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.ligne_commandes.map((ligneCommande) => (
-                          <tr key={ligneCommande.id}>
-                            <td>{ligneCommande.produit_id}</td>
-                            <td>{ligneCommande.quantite}</td>
-                            <td>{ligneCommande.prix_unitaire} DH</td>
+                id="tableContainer"
+                className="table-responsive-sm"
+                style={{
+                  padding: "20px",
+                  maxHeight: "500px",
+                  overflowY: "auto",
+                  marginTop: "-800px",
+                  marginLeft: "150px",
+                  width: width,
+                }}
+              >
+                <table className="table table-bordered">
+                  <thead className="text-center ddd">
+                    <tr>
+                      <th>Code de Préparation</th>
+                      <th>Status de Préparation</th>
+                      <th>Date de Préparation</th>
+                      <th>Référence Commande</th>
+                      <th>Client</th>
+                      <th>Site</th>
+                      <th>Date Commande</th>
+                      <th>Mode de payement</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-center">
+                    {selectedOrder &&
+                      selectedOrder.map((order) => (
+                        <React.Fragment key={order.id}>
+                          <tr>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-light"
+                                style={{ marginRight: "10px" }}
+                                onClick={() =>
+                                  handleShowLignePreparationCommandes(order.id)
+                                }
+                              >
+                                <FontAwesomeIcon
+                                  icon={
+                                    expandedPrepRows.includes(order.id)
+                                      ? faMinus
+                                      : faPlus
+                                  }
+                                />
+                              </button>
+                              {order.CodePreparation}
+                            </td>
+                            <td>{order.status_preparation}</td>
+                            <td>{order.datePreparationCommande}</td>
+                            <td>
+                              {order.reference}
+                              <button
+                                className="btn btn-sm btn-light"
+                                onClick={() =>
+                                  handleShowLigneCommandes(order.id)
+                                }
+                              >
+                                <FontAwesomeIcon icon={faList} />
+                              </button>
+                            </td>
+                            <td>{selectedClient?.id || "N/A"}</td>
+                            <td className={order.site_id ? "" : "text-danger"}>
+                              {order.site_id
+                                ? getSiteClientValue(
+                                    order.site_id,
+                                    "raison_sociale",
+                                  )
+                                : "Aucun site"}
+                            </td>
+                            <td>{order.dateCommande}</td>
+                            <td>{order.mode_payement}</td>
+                            <td>{order.status}</td>
+                            <td>
+                              <div className="d-inline-flex text-center">
+                                <FontAwesomeIcon
+                                  onClick={() => {
+                                    changeId(order.id);
+                                    handleShowPreparationForm(order);
+                                  }}
+                                  icon={faPlus}
+                                  style={{
+                                    margin: "0 10px",
+                                    cursor: "pointer",
+                                    color: "blue",
+                                  }}
+                                />
+                                <FontAwesomeIcon
+                                  onClick={() => {
+                                    handleEditPreparationForm(order);
+                                    changeId(order.id);
+                                  }}
+                                  icon={faEdit}
+                                  style={{
+                                    margin: "0 10px",
+                                    cursor: "pointer",
+                                    color: "green",
+                                  }}
+                                />
+                                <FontAwesomeIcon
+                                  onClick={() =>
+                                    handleDeletePreparation(order.id)
+                                  }
+                                  icon={faTrash}
+                                  style={{
+                                    margin: "0 10px",
+                                    cursor: "pointer",
+                                    color: "red",
+                                  }}
+                                />
+                              </div>
+                            </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </React.Fragment>
-        ))}
-      </tbody>
-    </table>
-  </div>
+                          {expandedPrepRows.includes(order.id) && (
+                            <tr>
+                              <td colSpan="11" style={{ padding: "0" }}>
+                                <div id="lignesCommandes">
+                                  <table
+                                    className="table-bordered"
+                                    style={{
+                                      borderCollapse: "collapse",
+                                      width: "100%",
+                                    }}
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th
+                                          colSpan="8"
+                                          style={{ backgroundColor: "#EEEEEE" }}
+                                        >
+                                          Liste des Préparation de Commande
+                                        </th>
+                                      </tr>
+                                      <tr>
+                                        <th style={{ backgroundColor: "#ddd" }}>
+                                          Code Produit
+                                        </th>
+                                        <th style={{ backgroundColor: "#ddd" }}>
+                                          Designation
+                                        </th>
+                                        <th style={{ backgroundColor: "#ddd" }}>
+                                          Quantite
+                                        </th>
+                                        <th style={{ backgroundColor: "#ddd" }}>
+                                          Calibre
+                                        </th>
+                                        <th style={{ backgroundColor: "#ddd" }}>
+                                          Prix Unitaire
+                                        </th>
+                                        <th style={{ backgroundColor: "#ddd" }}>
+                                          Lot
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {order.preparations.map((preparation) =>
+                                        preparation.lignes_preparation.map(
+                                          (lignePreparationCommande) => {
+                                            const produit = produits.find(
+                                              (prod) =>
+                                                prod.id ===
+                                                lignePreparationCommande.produit_id,
+                                            );
+                                            return (
+                                              <tr
+                                                key={
+                                                  lignePreparationCommande.id
+                                                }
+                                              >
+                                                <td>{produit?.Code_produit}</td>
+                                                <td>{produit?.designation}</td>
+                                                <td>
+                                                  {
+                                                    lignePreparationCommande.quantite
+                                                  }
+                                                </td>
+                                                <td>
+                                                  {produit?.calibre.calibre}
+                                                </td>
+                                                <td>
+                                                  {
+                                                    lignePreparationCommande.prix_unitaire
+                                                  }{" "}
+                                                  DH
+                                                </td>
+                                                <td>
+                                                  {lignePreparationCommande.lot}
+                                                </td>
+                                              </tr>
+                                            );
+                                          },
+                                        ),
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          {expandedOrderRows.includes(order.id) &&
+                            order.ligne_commandes && (
+                              <tr>
+                                <td colSpan="12" style={{ padding: "0" }}>
+                                  <div id="lignesCommandes">
+                                    <table
+                                      className="table-bordered"
+                                      style={{
+                                        borderCollapse: "collapse",
+                                        width: "100%",
+                                      }}
+                                    >
+                                      <thead>
+                                        <tr>
+                                          <th
+                                            colSpan="4"
+                                            style={{
+                                              backgroundColor: "#EEEEEE",
+                                            }}
+                                          >
+                                            Liste des lignes de Commandes
+                                          </th>
+                                        </tr>
+                                        <tr>
+                                          <th
+                                            style={{ backgroundColor: "#ddd" }}
+                                          >
+                                            Produit
+                                          </th>
+                                          <th
+                                            style={{ backgroundColor: "#ddd" }}
+                                          >
+                                            Quantite
+                                          </th>
+                                          <th
+                                            style={{ backgroundColor: "#ddd" }}
+                                          >
+                                            Prix Vente
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {order.ligne_commandes.map(
+                                          (ligneCommande) => (
+                                            <tr key={ligneCommande.id}>
+                                              <td>
+                                                {ligneCommande.produit_id}
+                                              </td>
+                                              <td>{ligneCommande.quantite}</td>
+                                              <td>
+                                                {ligneCommande.prix_unitaire} DH
+                                              </td>
+                                            </tr>
+                                          ),
+                                        )}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                        </React.Fragment>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
         </Box>

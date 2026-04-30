@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { alpha, styled } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
@@ -34,7 +34,8 @@ import { useOpen } from "./OpenProvider";
 import { useHeader } from "./HeaderContext";
 
 const drawerWidth = 220;
-const AUTH_API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
+const AUTH_API_URL =
+  import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -127,7 +128,14 @@ const navItems = [
 
 const Navigation = () => {
   const { open, toggleOpen } = useOpen();
-  const { title, searchQuery, setSearchQuery, onPrint, onExportPDF, onExportExcel } = useHeader();
+  const {
+    title,
+    searchQuery,
+    setSearchQuery,
+    onPrint,
+    onExportPDF,
+    onExportExcel,
+  } = useHeader();
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -138,7 +146,9 @@ const Navigation = () => {
 
   const avatarAlt = useMemo(() => {
     if (!user) return "User";
-    return user.name || `${user.nom || ""} ${user.prenom || ""}`.trim() || "User";
+    return (
+      user.name || `${user.nom || ""} ${user.prenom || ""}`.trim() || "User"
+    );
   }, [user]);
 
   useEffect(() => {
@@ -151,7 +161,7 @@ const Navigation = () => {
     let cancelled = false;
 
     const fetchUser = async () => {
-      const token = localStorage.getItem("API_TOKEN");
+      const token = localStorage.getItem("token");
 
       if (!token) {
         setUser(null);
@@ -159,16 +169,15 @@ const Navigation = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:8000/api/user', {
+        const response = await axiosInstance.get("/api/user", {
           withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         });
 
         if (cancelled) return;
 
-        const payload = Array.isArray(response.data) ? response.data[0] : response.data;
+        const payload = Array.isArray(response.data)
+          ? response.data[0]
+          : response.data;
         setUser(payload || null);
       } catch (error) {
         if (!cancelled) {
@@ -247,7 +256,10 @@ const Navigation = () => {
             />
           </Search>
 
-          <IconButton color="inherit" onClick={(event) => setAnchorEl(event.currentTarget)}>
+          <IconButton
+            color="inherit"
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+          >
             <MoreVertIcon />
           </IconButton>
 
@@ -284,7 +296,11 @@ const Navigation = () => {
             </MenuItem>
           </Menu>
 
-          <Avatar alt={avatarAlt} src={user?.photo || ""} sx={{ width: 40, height: 40 }} />
+          <Avatar
+            alt={avatarAlt}
+            src={user?.photo || ""}
+            sx={{ width: 40, height: 40 }}
+          />
         </Toolbar>
       </AppBar>
 
@@ -323,7 +339,14 @@ const Navigation = () => {
 
         <Divider />
 
-        <List sx={{ pt: 1, display: "flex", flexDirection: "column", height: "100%" }}>
+        <List
+          sx={{
+            pt: 1,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
           {navItems.map((item) => (
             <NavItem
               key={item.to}

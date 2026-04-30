@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Navigation from "../Acceuil/Navigation";
@@ -16,8 +16,8 @@ const DetailsPreparation = () => {
   };
   useEffect(() => {
     Promise.all([
-      axios.get("http://localhost:8000/api/commandes"),
-      axios.get("http://localhost:8000/api/produits"),
+      axiosInstance.get("/api/commandes"),
+      axiosInstance.get("/api/produits"),
     ])
       .then(([commandesResponse, produitsResponse]) => {
         console.log("Commandes response:", commandesResponse.data);
@@ -32,10 +32,9 @@ const DetailsPreparation = () => {
 
   return (
     <ThemeProvider theme={createTheme()}>
-      <Box sx={{  position:'absolute',
-        top:'0px',
-        left:'220px',
-        width:'90%' }}>
+      <Box
+        sx={{ position: "absolute", top: "0px", left: "220px", width: "90%" }}
+      >
         <Box
           component="main"
           sx={{ display: "flex", flexGrow: 1, p: 3, mt: 4 }}
@@ -140,8 +139,8 @@ const DetailsPreparation = () => {
                           {ligne.lot}
                         </td>
                       </tr>
-                    ))
-                  )
+                    )),
+                  ),
                 )}
               </tbody>
             </table>

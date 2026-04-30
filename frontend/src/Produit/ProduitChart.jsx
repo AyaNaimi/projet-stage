@@ -1,28 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import axios from "axios";
+import API_BASE_URL, { getApiRequestConfig } from "../utils/api/baseUrl";
 
 const CategoryProductChart = () => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/statistique-chartProduitData`
-        );
-        setChartData(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError("Error fetching data");
-        setLoading(false);
-      }
-    };
+   useEffect(() => {
+     const fetchData = async () => {
+       try {
+         const response = await axios.get(
+           `${API_BASE_URL}/api/produits/chart-data`,
+           getApiRequestConfig()
+         );
+         setChartData(response.data);
+         setLoading(false);
+       } catch (err) {
+         setError("Error fetching data");
+         setLoading(false);
+       }
+     };
 
-    fetchData();
-  }, []);
+     fetchData();
+   }, []);
 
   const processData = () => {
     if (!chartData?.Categorie) return [];

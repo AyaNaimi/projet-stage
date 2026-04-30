@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -52,8 +52,8 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/login",
+      const response = await axiosInstance.post(
+        "/api/login",
         {
           email: email,
           password: password,
@@ -62,16 +62,16 @@ export default function Login() {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
+            Accept: "application/json",
           },
-        }
+        },
       );
 
-      const existingToken = localStorage.getItem("API_TOKEN");
-
-      if (!existingToken) {
-        localStorage.setItem("API_TOKEN", response.data.token);
-      } else {
-        localStorage.setItem("API_TOKEN", response.data.token);
+      // Save bearer token for API calls
+      const token = response.data.token;
+      if (token) {
+        localStorage.setItem("token", token);
+        console.log("Saved token:", token);
       }
 
       const userData = response.data.user;
@@ -121,7 +121,12 @@ export default function Login() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
+          <Box
+            component="form"
+            onSubmit={handleLogin}
+            noValidate
+            sx={{ mt: 1 }}
+          >
             <TextField
               margin="normal"
               required
@@ -160,11 +165,7 @@ export default function Login() {
                       cursor: "pointer",
                     }}
                   >
-                    {showPassword ? (
-                      <VisibilityOffIcon />
-                    ) : (
-                      <VisibilityIcon />
-                    )}
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                   </button>
                 ),
               }}
@@ -181,7 +182,12 @@ export default function Login() {
             >
               Sign In
             </Button>
-            <Typography variant="body2" color="error" sx={{ mt: 1 }} onChange={handleEror}>
+            <Typography
+              variant="body2"
+              color="error"
+              sx={{ mt: 1 }}
+              onChange={handleEror}
+            >
               {error}
             </Typography>
           </Box>
