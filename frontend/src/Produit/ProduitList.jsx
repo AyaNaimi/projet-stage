@@ -49,6 +49,30 @@ import TableContainer from "../components/TableContainer";
 import SortableColumn from "../components/SortableColumn";
 import useSortableData from "../hooks/useSortableData";
 import { useAuth } from "../AuthContext";
+import API_BASE_URL, { getApiRequestConfig } from "../utils/api/baseUrl";
+
+const getErrorMessage = (error, fallbackMessage) => {
+  if (error?.response?.data?.error) return error.response.data.error;
+  if (error?.response?.data?.message) return error.response.data.message;
+
+  const validationErrors = error?.response?.data?.errors;
+  if (validationErrors && typeof validationErrors === "object") {
+    const firstError = Object.values(validationErrors)[0];
+    if (Array.isArray(firstError) && firstError[0]) return firstError[0];
+    if (typeof firstError === "string") return firstError;
+  }
+
+  return fallbackMessage;
+};
+
+const createEmptyPriceRow = () => ({
+  id: null,
+  date_debut: "",
+  date_fin: "",
+  prixProduit: "",
+  type: "",
+  unite: "",
+});
 
 const ProduitList = () => {
   const dispatch = useDispatch();
@@ -60,7 +84,7 @@ const ProduitList = () => {
   const { user, loading: userLoading } = useAuthRedux();
   
   // Local state for UI
-  let isEdit = false;
+  const [isEdit, setIsEdit] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredProduits, setFilteredProduits] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -129,14 +153,11 @@ const ProduitList = () => {
     user_id: "",
     categorie_id: "",
   });
-  const fetchCalibres = async () => {
-    dispatch(fetchCalibresRedux());
-  };
   const [categories2, setCategories2] = useState([]);
-
   const fetchCategories = async () => {
     dispatch(fetchCategoriesRedux());
   };
+
   useEffect(() => {
     fetchCategories(); // Cela pourrait être appelé lorsque le composant se monte
   }, []);
@@ -151,13 +172,11 @@ const ProduitList = () => {
 console.log('cattest',)
 useEffect(() => {
   // Load all data from Redux on component mount
-  if (!produits || produits.length === 0) {
-    dispatch(fetchProduitsRedux());
-  }
+  dispatch(fetchProduitsRedux());
   dispatch(fetchCategoriesRedux());
   dispatch(fetchCalibresRedux());
   dispatch(fetchAuthenticatedUser());
-}, [dispatch, produits]);
+}, [dispatch]);
 
 
   useEffect(() => {
@@ -328,9 +347,10 @@ const [genreFiltre, setGenreFiltre] = useState("");
     if (result.isConfirmed) {
         try {
             // Supprimer les produits sélectionnés via API
-            await axios.delete(`${import.meta.env.VITE_API_URL}/api/deleteSelectProd`, {
+            const response = await axios.delete(`${API_BASE_URL}/api/deleteSelectProd`, {
+                ...getApiRequestConfig(),
                 data: { ids: selectedItems }
-            });
+              });
 
             // Supprimer les données du IndexedDB
             for (const id of selectedItems) {
@@ -380,7 +400,7 @@ const [genreFiltre, setGenreFiltre] = useState("");
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${import.meta.env.VITE_API_URL}/api/produits/${id}`)
+          .delete(`${API_BASE_URL}/api/produits/${id}`, getApiRequestConfig())
           .then((response) => {
             dispatch(fetchProduitsRedux());
             deleteDataFromIndexedDB('produits',id)
@@ -495,12 +515,14 @@ const [genreFiltre, setGenreFiltre] = useState("");
 
     setSelectedProductsDataRep([]);
     setEditingProduit(null); // Clear editing client
+    setIsEdit(false);
   };
 
   const handleEdit = (produit,boolen) => {
     setChart(boolen)
 
     setEditingProduit(produit);
+    setIsEdit(true);
     setFormData({
       Code_produit: produit.Code_produit,
       designation: produit.designation,
@@ -525,13 +547,16 @@ const [genreFiltre, setGenreFiltre] = useState("");
 
 
     });
-    setSelectedProductsDataRep(produit?.prix_produits?.map(prix => ({ 
-       id:prix.id,
-       date_debut: prix.dateDebut,
-       date_fin: prix.dateFin,
-       type: prix.typeQte,
-       unite: prix.Unite,
-      prixProduit: prix.prixProduit })));
+    setSelectedProductsDataRep(
+      produit?.prix_produits?.map((prix) => ({
+        id: prix.id ?? null,
+        date_debut: prix.dateDebut || prix.date_debut || "",
+        date_fin: prix.dateFin || prix.date_fin || "",
+        type: prix.typeQte || "",
+        unite: prix.Unite || prix.unite || "",
+        prixProduit: prix.prixProduit || "",
+      })) || []
+    );
     if (formContainerStyle.right === "-100%") {
       setFormContainerStyle({ right: "0" });
       setTableContainerStyle({ marginRight: "48%" });
@@ -594,6 +619,39 @@ const [genreFiltre, setGenreFiltre] = useState("");
       setTimeout(() => {
         setErrors({});
       }, 3000);
+      Swal.fire({
+        icon: "warning",
+        title: "Formulaire incomplet",
+        text: "Veuillez corriger les champs obligatoires.",
+      });
+      return;
+    }
+
+    const validPrixProduits = (selectedProductsDataRep || [])
+      .filter((prix) => prix && (prix.prixProduit || prix.date_debut || prix.date_fin || prix.type || prix.unite))
+      .map((prix) => ({
+        id: prix.id || null,
+        dateDebut: prix.date_debut || "",
+        dateFin: prix.date_fin || "",
+        prixProduit: prix.prixProduit || "",
+        typeQte:
+          formData.type_quantite === 'kg'
+            ? 'K'
+            : formData.type_quantite === 'litre'
+              ? 'L'
+              : formData.type_quantite === 'unite'
+                ? 'U'
+                : prix.type || "",
+        Unite: prix.unite || "",
+      }))
+      .filter((prix) => prix.prixProduit && prix.dateDebut);
+
+    if (!editingProduit && validPrixProduits.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Prix manquant",
+        text: "Ajoutez au moins un prix valide avec une date de début.",
+      });
       return;
     }
 
@@ -607,8 +665,8 @@ const [genreFiltre, setGenreFiltre] = useState("");
       }
   });
     const url = editingProduit
-      ? `${import.meta.env.VITE_API_URL}/api/produits/${editingProduit.id}`
-      : `${import.meta.env.VITE_API_URL}/api/produits`;
+      ? `${API_BASE_URL}/api/produits/${editingProduit.id}`
+      : `${API_BASE_URL}/api/produits`;
     const method = editingProduit ? "put" : "post";
   
     let requestData;
@@ -634,14 +692,7 @@ const [genreFiltre, setGenreFiltre] = useState("");
 
         categorie_id: formData.categorie_id,
         suCat_id: formData.suCat_id,
-        prixProduits: selectedProductsDataRep.map(prix => ({
-          id:prix.id||null,
-          dateDebut: prix.date_debut,
-          dateFin: prix.date_fin,
-          prixProduit: prix.prixProduit,
-          typeQte: formData.type_quantite==='kg'?'K':formData.type_quantite==='litre'?'L':formData.type_quantite==='unite'?'U': prix.type,
-          Unite: prix.unite
-      }))
+        prixProduits: validPrixProduits
       };
       console.log('requestData',requestData)
       if (formData.logoP) {
@@ -650,8 +701,11 @@ const [genreFiltre, setGenreFiltre] = useState("");
     formData2.append('logoP', formData.logoP);
 
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/produit/${editingProduit.id}/update-logo`, {
+        const uploadConfig = getApiRequestConfig();
+        const response = await fetch(`${API_BASE_URL}/api/produit/${editingProduit.id}/update-logo`, {
             method: 'POST',
+            credentials: 'include',
+            headers: uploadConfig.headers || {},
             body: formData2, // Corrected to send formData2
         });
 
@@ -662,17 +716,37 @@ const [genreFiltre, setGenreFiltre] = useState("");
 
             if (response.ok) {
                 setMessage('Logo updated successfully!');
+                Swal.fire({
+                  icon: "success",
+                  title: "Succès!",
+                  text: data.message || "Logo mis à jour avec succès.",
+                });
             } else {
                 setMessage(`Error: ${data.message}`);
+                Swal.fire({
+                  icon: "error",
+                  title: "Erreur upload",
+                  text: data.message || "Échec de l'upload du logo.",
+                });
             }
         } else {
             const errorText = await response.text();
             setMessage('Unexpected error occurred');
             console.error('Server response:', errorText);
+            Swal.fire({
+              icon: "error",
+              title: "Erreur upload",
+              text: "Réponse inattendue du serveur pendant l'upload du logo.",
+            });
         }
     } catch (error) {
         setMessage('Error uploading the logo.');
         console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Erreur upload",
+          text: getErrorMessage(error, "Échec de l'upload du logo."),
+        });
     }
     }
 
@@ -703,16 +777,13 @@ const [genreFiltre, setGenreFiltre] = useState("");
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);
       }
-      if (selectedProductsDataRep && Array.isArray(selectedProductsDataRep)) {
-        selectedProductsDataRep.forEach((prix, index) => {
-          formDatad.append(`prixProduits[${index}][dateDebut]`, prix.date_debut||'');
-          formDatad.append(`prixProduits[${index}][dateFin]`, prix.date_fin||'');
-          formDatad.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit||'');
-          formDatad.append(`prixProduits[${index}][typeQte]`, formData.type_quantite==='kg'?'K':formData.type_quantite==='litre'?'L':formData.type_quantite==='unite'?'U':prix.type);
-          formDatad.append(`prixProduits[${index}][Unite]`, prix.unite||'');
-
-        });
-      }
+      validPrixProduits.forEach((prix, index) => {
+        formDatad.append(`prixProduits[${index}][dateDebut]`, prix.dateDebut);
+        formDatad.append(`prixProduits[${index}][dateFin]`, prix.dateFin);
+        formDatad.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit);
+        formDatad.append(`prixProduits[${index}][typeQte]`, prix.typeQte);
+        formDatad.append(`prixProduits[${index}][Unite]`, prix.Unite);
+      });
       requestData = formDatad;
       console.log(requestData)
     }
@@ -722,7 +793,7 @@ const [genreFiltre, setGenreFiltre] = useState("");
         method: method,
         url: url,
         data: requestData,
-
+        ...getApiRequestConfig(),
       });
   
 
@@ -769,12 +840,13 @@ const [genreFiltre, setGenreFiltre] = useState("");
         categorie_id: "",
       });
       setEditingProduit(null);
+      setSelectedProductsDataRep([]);
       closeForm();
     } catch (error) {
       Swal.close();
 
       if (error.response) {
-        const serverErrors = error.response.data.error;
+        const serverErrors = error.response.data.errors || error.response.data.error || {};
         console.log(error)
         setErrors({
           logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
@@ -790,6 +862,11 @@ const [genreFiltre, setGenreFiltre] = useState("");
           categorie_id: serverErrors.categorie_id ? serverErrors.categorie_id[0] : "",
         });
       }
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: getErrorMessage(error, "L'enregistrement du produit a échoué."),
+      });
     }
 };
 
@@ -814,7 +891,7 @@ const translateTypeQte = (type) => {
 const [cat,setCat]=useState([])
 const handleDeletecatgeorie = async (categorieId) => {
   try {
-    await axios.delete(`${import.meta.env.VITE_API_URL}/api/categories/${categorieId}`);
+    await axios.delete(`${API_BASE_URL}/api/categories/${categorieId}`, getApiRequestConfig());
     
     // Notification de succès
     Swal.fire({
@@ -883,8 +960,9 @@ console.log('image',selectedCategoryId.categorie,image )
     formData.append("_method", 'put'); // Note : Vous n'avez peut-être pas besoin de cette ligne si vous utilisez une méthode PUT directement
     formData.append("categorie", selectedCategoryId.categorie);
     formData.append("logoP", newCategory.imageFile);
-    await axios.post(`${import.meta.env.VITE_API_URL}/api/categories/${selectedCategoryId.id}`,
-      formData
+    const response = await axios.post(`${API_BASE_URL}/api/categories/${selectedCategoryId.id}`,
+      formData,
+      getApiRequestConfig()
     );
     dispatch(fetchCategoriesRedux()); // Refresh the categories list
     setShowEditModal(false)
@@ -902,11 +980,12 @@ const handleSaveClibre = async () => {
 
   console.log('image',selectedCategoryId.categorie,image )
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/calibres/${selectedCategoryId.id}`,
-        {
-          calibre:selectedCategoryId.calibre,
-        }
-      );
+      await axios.put(`${API_BASE_URL}/api/calibres/${selectedCategoryId.id}`,
+          {
+            calibre:selectedCategoryId.calibre,
+          },
+          getApiRequestConfig()
+        );
       dispatch(fetchCalibresRedux()); // Refresh calibres
       setShowEditClibreModal(false); // Close the modal
       Swal.fire({
@@ -931,8 +1010,10 @@ const handleAddCategory = async () => {
     formData.append("categorie", newCategory.categorie);
     formData.append("logoP", newCategory.imageFile);
 
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/categories`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/api/categories`, formData, {
+      ...getApiRequestConfig(),
       headers: {
+        ...getApiRequestConfig().headers,
         "Content-Type": "multipart/form-data",
       },
     });
@@ -940,6 +1021,7 @@ const handleAddCategory = async () => {
     console.log(response.data);
     dispatch(fetchCategoriesRedux()); // Refresh categories after adding
     setShowAddCategory(false);
+    setNewCategory({ categorie: "", imageFile: null });
     Swal.fire({
                 icon: "success",
                 title: "Succès!",
@@ -947,6 +1029,11 @@ const handleAddCategory = async () => {
               }); // Hide the modal after success
   } catch (error) {
     console.error("Error adding category:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Erreur",
+      text: getErrorMessage(error, "L'ajout de la catégorie a échoué."),
+    });
   }
 };
 const handleAddSousCategory = async () => {
@@ -955,19 +1042,22 @@ const handleAddSousCategory = async () => {
 
     const formData = new FormData();
     formData.append("categorie", newCategory.categorie);
-    formData.append("idCatMer", idSucategorie);
+     formData.append("parent_id", idSucategorie);
 
     formData.append("logoP", newCategory.imageFile);
 
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/categories`, formData, {
+    const response = await axios.post(`${API_BASE_URL}/api/categories`, formData, {
+      ...getApiRequestConfig(),
       headers: {
+        ...getApiRequestConfig().headers,
         "Content-Type": "multipart/form-data",
       },
     });
 
     console.log(response.data);
     dispatch(fetchCategoriesRedux()); // Refresh categories after adding
-    setShowAddCategory(false);
+    setShowSuModal(false);
+    setNewCategory({ categorie: "", imageFile: null });
     Swal.fire({
                 icon: "success",
                 title: "Succès!",
@@ -975,6 +1065,11 @@ const handleAddSousCategory = async () => {
               }); // Hide the modal after success
   } catch (error) {
     console.error("Error adding category:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Erreur",
+      text: getErrorMessage(error, "L'ajout du sous-type a échoué."),
+    });
   }
 }; 
   
@@ -995,22 +1090,17 @@ const handleAddSousCategory = async () => {
 
   const handleAddClibre = async () => {
     try {
-      console.log('idSucategorie',idSucategorie)
-  
-      const formData = new FormData();
-      formData.append("calibre", newCategory.categorie);
-
-  
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/calibres`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/calibres`,
+        { calibre: newCategory.categorie },
+        getApiRequestConfig()
+      );
   
       console.log(response.data);
       dispatch(fetchCalibresRedux()); // Refresh calibres after adding
       // Refresh categories after adding
       setShowAddCalibre(false);
+      setNewCategory({ categorie: "", imageFile: null });
       Swal.fire({
                   icon: "success",
                   title: "Succès!",
@@ -1018,6 +1108,11 @@ const handleAddSousCategory = async () => {
                 }); // Hide the modal after success
     } catch (error) {
       console.error("Error adding category:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: getErrorMessage(error, "L'ajout du calibre a échoué."),
+      });
     }
   }; 
 
@@ -1098,7 +1193,7 @@ const exportToPDF = () => {
 
 const exportToExcel = () => {
   const ws = XLSX.utils.json_to_sheet(
-    produitsFiltres.map((produit) => ({
+    (produitsFiltres || []).map((produit) => ({
       Logo: produit.logoP || "",
       Code: produit.Code_produit,
       Désignation: produit.designation,
@@ -1160,7 +1255,7 @@ const printTable = () => {
             </tr>
           </thead>
           <tbody>
-            ${produitsFiltres.map(produit => `
+            ${(produitsFiltres || []).map(produit => `
               <tr>
                 <td>${produit.logoP ? `<img src="${produit.logoP}" alt="Logo" style="width:50px;height:50px;border-radius:50%"/>` : ''}</td>
                 <td>${produit.Code_produit}</td>
@@ -1174,7 +1269,7 @@ const printTable = () => {
                 <td>${produit.calibre ? produit.calibre.calibre : ''}</td>
                 <td>${produit.prix_vente || ''}</td>
                 <td>${produit.tva || ''}</td>
-                <td>${produit.categorie.categorie || ''}</td>
+                <td>${produit.categorie?.categorie || ''}</td>
                 <td>${produit.souscategorie?.categorie || ''}</td>
                
               </tr>
@@ -1200,7 +1295,7 @@ const printTable = () => {
 
 console.log('produit333',produitsFiltres,sortedData)
 const handleAddEmptyRowRep = () => {
-  setSelectedProductsDataRep([...selectedProductsDataRep, {}]);
+  setSelectedProductsDataRep([...selectedProductsDataRep, createEmptyPriceRow()]);
   console.log("selectedProductDatarap", selectedProductsDataRep);
 };
 
@@ -1243,9 +1338,21 @@ const handleDeleteProductRap = async (index, id) => {
 
     if (id) {
       axios
-        .delete(`${import.meta.env.VITE_API_URL}/api/prixProduit/${id}`)
+        .delete(`${API_BASE_URL}/api/prixProduit/${id}`, getApiRequestConfig())
         .then(() => {
           dispatch(fetchProduitsRedux());
+          Swal.fire({
+            icon: "success",
+            title: "Succès!",
+            text: "Prix supprimé avec succès.",
+          });
+        })
+        .catch((error) => {
+          Swal.fire({
+            icon: "error",
+            title: "Erreur",
+            text: getErrorMessage(error, "La suppression du prix a échoué."),
+          });
         });
     }
   } else if (result.isDenied) {

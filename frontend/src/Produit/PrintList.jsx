@@ -94,13 +94,13 @@ const PrintList = ({ tableId, title, produitList, filteredProduits }) => {
           </tr>
         </thead>
         <tbody>
-          ${filteredProduits.map((produit) => `
+          ${(filteredProduits || []).map((produit) => `
             <tr key=${produit.id}>
               <td>${produit.Code_produit}</td>
               <td>${produit.designation}</td>
               <td>${produit.type_quantite}</td>
-              <td>${produit.calibre}</td>
-              <td>${produit.categorie.categorie}</td>
+              <td>${produit.calibre?.calibre || produit.calibre || 'N/A'}</td>
+              <td>${produit.categorie?.categorie || 'N/A'}</td>
 
             </tr>
           `).join("")}

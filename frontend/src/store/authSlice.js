@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import API_BASE_URL, { getApiRequestConfig } from '../utils/api/baseUrl';
 
 export const fetchAuthenticatedUser = createAsyncThunk(
   'auth/fetchAuthenticatedUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user`);
+      const response = await axios.get(`${API_BASE_URL}/api/user`, getApiRequestConfig());
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Error fetching user');
