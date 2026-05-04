@@ -859,6 +859,8 @@ Route::apiResource('groupe-arrondi', GroupeArrondiController::class);
 
      //produits
      Route::get('produits', [ProduitController::class, 'index']);
+     Route::get('produits/search', [ProduitController::class, 'search']);
+     Route::get('produits/categorie/{categorieId}', [ProduitController::class, 'byCategorie']);
      Route::get('produits/chart-data', [ProduitController::class, 'chartProduitData']);
      Route::get('produits/{produit}', [ProduitController::class, 'show']);
     Route::post('produit/{id}/update-logo', [ProduitController::class, 'updateLogo']);

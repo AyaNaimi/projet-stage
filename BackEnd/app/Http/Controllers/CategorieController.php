@@ -53,10 +53,18 @@ class CategorieController extends Controller
     public function show(string $id)
     {
         try {
-            $categorie = Categorie::findOrFail($id);
-            return response()->json($categorie, 200);
+            $categorie = Categorie::with('produits')->findOrFail($id);
+            return response()->json([
+                'success' => true,
+                'data' => $categorie,
+                'message' => 'Catégorie récupérée avec succès'
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 404);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Catégorie non trouvée'
+            ], 404);
         }
     }
 
@@ -101,6 +109,14 @@ class CategorieController extends Controller
         try {
             $categorie = Categorie::findOrFail($id);
 
+            if ($categorie->produits()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Impossible de supprimer cette catégorie car elle contient des produits'
+                ], 400);
+            }
+
             if ($categorie->logoP) {
                 $filePath = str_replace('/storage/', 'public/', $categorie->logoP);
                 if (Storage::exists($filePath)) {
@@ -110,13 +126,23 @@ class CategorieController extends Controller
 
             $categorie->delete();
 
-            return response()->json(['message' => 'Categorie supprimée avec succès'], 200);
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'message' => 'Catégorie supprimée avec succès'
+            ], 200);
         } catch (QueryException $e) {
             return response()->json([
-                'error' => 'Impossible de supprimer cette catégorie car elle est déjà utilisée.',
+                'success' => false,
+                'data' => null,
+                'message' => 'Impossible de supprimer cette catégorie car elle est déjà utilisée'
             ], 400);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

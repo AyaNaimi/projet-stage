@@ -13,9 +13,17 @@ class CalibreController extends Controller
         try {
             $calibres = Calibre::orderBy('id', 'desc')->get();
 
-            return response()->json($calibres, 200);
+            return response()->json([
+                'success' => true,
+                'data' => $calibres,
+                'message' => 'Liste des calibres'
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -29,22 +37,35 @@ class CalibreController extends Controller
             $calibre = Calibre::create($validated);
 
             return response()->json([
-                'message' => 'Calibre ajouté avec succès',
-                'calibre' => $calibre,
+                'success' => true,
+                'data' => $calibre,
+                'message' => 'Calibre créé avec succès'
             ], 201);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function show(string $id)
     {
         try {
-            $calibre = Calibre::findOrFail($id);
+            $calibre = Calibre::with('produits')->findOrFail($id);
 
-            return response()->json($calibre, 200);
+            return response()->json([
+                'success' => true,
+                'data' => $calibre,
+                'message' => 'Calibre récupéré avec succès'
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 404);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Calibre non trouvé'
+            ], 404);
         }
     }
 
@@ -59,11 +80,16 @@ class CalibreController extends Controller
             $calibre->update($validated);
 
             return response()->json([
-                'message' => 'Calibre modifié avec succès',
-                'calibre' => $calibre,
+                'success' => true,
+                'data' => $calibre,
+                'message' => 'Calibre mis à jour avec succès'
             ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -71,15 +97,34 @@ class CalibreController extends Controller
     {
         try {
             $calibre = Calibre::findOrFail($id);
+
+            if ($calibre->produits()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Impossible de supprimer ce calibre car il est utilisé par des produits'
+                ], 400);
+            }
+
             $calibre->delete();
 
-            return response()->json(['message' => 'Calibre supprimé avec succès'], 200);
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'message' => 'Calibre supprimé avec succès'
+            ], 200);
         } catch (QueryException $e) {
             return response()->json([
-                'error' => 'Impossible de supprimer ce calibre car il est déjà utilisé.',
+                'success' => false,
+                'data' => null,
+                'message' => 'Impossible de supprimer ce calibre car il est déjà utilisé'
             ], 400);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

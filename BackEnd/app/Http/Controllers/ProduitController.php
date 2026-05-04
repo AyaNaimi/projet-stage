@@ -368,4 +368,62 @@ class ProduitController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function search(Request $request)
+    {
+        try {
+            $query = $request->query('q', '');
+
+            if (empty($query)) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Le paramètre de recherche est requis'
+                ], 400);
+            }
+
+            $produits = Produit::where(function ($q) use ($query) {
+                    $q->where('designation', 'like', "%{$query}%")
+                      ->orWhere('reference', 'like', "%{$query}%")
+                      ->orWhere('Code_produit', 'like', "%{$query}%");
+                })
+                ->with('categorie', 'calibre')
+                ->orderBy('designation', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $produits,
+                'message' => 'Résultats de recherche'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function byCategorie($categorieId)
+    {
+        try {
+            $produits = Produit::where('categorie_id', $categorieId)
+                ->with('categorie', 'calibre')
+                ->orderBy('designation', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $produits,
+                'message' => 'Produits par catégorie'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
