@@ -1393,8 +1393,14 @@ const toggleDetail = (rowId, section) => {
   return (
     <ThemeProvider theme={createTheme()}>
       <Box sx={{...dynamicStyles  }}>
-     
-        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 6}}>
+      <Header
+  nom="Liste des Produits"
+  handleSearch={handleSearch}
+  printTable={printTable}
+  exportToPDF={exportToPDF}
+  exportToExcel={exportToExcel}
+/>
+        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 0}}>
           {/* <Toolbar /> */}       
 
      

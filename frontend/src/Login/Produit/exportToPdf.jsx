@@ -1,0 +1,104 @@
+import React from 'react';
+import { Button } from 'react-bootstrap';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import jsPDF from "jspdf";
+
+const exportToPdf = (produits, selectedItems) => {
+  if (!produits || produits.length === 0) {
+    alert("Aucune donnée à exporter !");
+    return;
+  }
+
+  const pdf = new jsPDF();
+
+  const columns = [
+    "Code Produit",
+    "Designation",
+    "Type de Quantité",
+    "Calibre",
+    "Categorie",
+  ];
+
+  const selectedProduits = produits.filter((produit) =>
+    selectedItems.includes(produit.id)
+  );
+
+  const rows = selectedProduits.map((produit) => [
+
+    produit.Code_produit,
+    produit.designation,
+    produit.type_quantite,
+    produit.calibre,
+    produit.categorie.categorie,
+  ]);
+
+  const margin = 10;
+  const padding = 5;
+  const rowHeight = 10;
+
+  const columnWidths = columns.map(
+    (col) => pdf.getStringUnitWidth(col) * 5 + padding * 2
+  );
+  const tableWidth = columnWidths.reduce((total, width) => total + width, 0);
+  const tableHeight = rows.length * rowHeight;
+
+  const startX = (pdf.internal.pageSize.width - tableWidth) / 2;
+  const startY = margin;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.rect(startX, startY, tableWidth, rowHeight, "F");
+  pdf.autoTable({
+    head: [columns],
+    body: rows,
+    startY: startY + padding,
+    styles: {
+      textColor: [0, 0, 0], // Couleur du texte
+      fontSize: 12, // Taille de la police
+      fontStyle: 'bold', // Style de police
+      cellPadding: padding, // Remplissage de la cellule
+      valign: 'middle', // Alignement vertical
+      halign: 'center', // Alignement horizontal
+    },
+    columnStyles: {
+      0: { fillColor: [200, 220, 255] }, // Couleur de remplissage de la première colonne
+      1: { fillColor: [255, 255, 255] }, // Couleur de remplissage de la deuxième colonne
+      2: { fillColor: [200, 220, 255] }, // Couleur de remplissage de la troisième colonne
+      3: { fillColor: [200, 220, 255] }, // Couleur de remplissage de la quatrieme colonne
+    },
+    theme: 'striped', // Thème de la table
+    headStyles: {
+      fillColor: [150, 150, 150], // Couleur de remplissage de l'en-tête
+      textColor: [255, 255, 255], // Couleur du texte de l'en-tête
+      fontSize: 14, // Taille de la police de l'en-tête
+      fontStyle: 'bold', // Style de police de l'en-tête
+      halign: 'center', // Alignement horizontal de l'en-tête
+      valign: 'middle', // Alignement vertical de l'en-tête
+    },
+  });
+
+  const filename = `produits_${new Date().toISOString()}.pdf`;
+  pdf.save(filename);
+};
+
+const ExportPdfButton = ({ produits, selectedItems }) => {
+    const isDisabled = !selectedItems || selectedItems.length === 0;
+return(
+     <FontAwesomeIcon
+     style={{
+       cursor: "pointer",
+       color: "red",
+       fontSize: "2rem",
+       marginLeft: "15px",
+
+     }}
+     disabled={isDisabled}
+     onClick={() => exportToPdf(produits, selectedItems)}
+     icon={faFilePdf}
+   />
+)
+   
+}
+ 
+
+export default ExportPdfButton;
