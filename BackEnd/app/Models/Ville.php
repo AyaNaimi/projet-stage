@@ -2,24 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Ville extends Model
 {
     use HasFactory;
 
-    protected $table = 'gp_villes';
+    protected $fillable = [
+        'ville', 'region_id',
+    ];
 
-    protected $fillable = ['nom', 'pays_id'];
-
-    public function pays()
+    // Define a relationship with the Region model (assuming Region exists).
+    public function region()
     {
-        return $this->belongsTo(Pays::class);
-    }
-
-    public function communes()
-    {
-        return $this->hasMany(Commune::class);
+        return $this->belongsTo(Region::class);
     }
 }

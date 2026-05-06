@@ -3,146 +3,121 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categorie;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class CategorieController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        try {
-            $categories = Categorie::orderBy('id', 'desc')->get();
-            return response()->json($categories, 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        $categories = Categorie::orderBy('id', 'desc')->get();
+        return response()->json($categories);
+    }
+
+    public function show($id)
+    {
+        $categorie = Categorie::find($id);
+        return response()->json($categorie);
     }
 
     public function store(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'categorie' => 'required|string|max:255',
-                'logoP'     => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'parent_id' => 'nullable|exists:categories,id',
-            ]);
+        // Check if the user has permission to create a category
 
-            $data = [
-                'categorie' => $validated['categorie'],
-                'logoP'     => '',
-                'parent_id' => $request->input('parent_id'),
-            ];
+            try {
+                // Validate the incoming request
+                $validator = Validator::make($request->all(), [
+                    'categorie' => 'required',
+                    'idCatMer' => 'nullable',
 
-            if ($request->hasFile('logoP')) {
-                $path = $request->file('logoP')->store('public/categories');
-                $data['logoP'] = Storage::url($path);
+                    'logoP' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Category logo validation
+                ]);
+    
+                // If validation fails, return error response
+                if ($validator->fails()) {
+                    return response()->json(['error' => $validator->errors()], 400);
+                }
+    
+                // Create a new Category instance
+                $category = new Categorie();
+                $category->categorie = $request->input('categorie');
+                $category->idCatMer = $request->input('idCatMer');
+
+    
+                // Handle logo image upload
+                if ($request->hasFile('logoP')) {
+                    $logoPath = $request->file('logoP')->store('public/logoP'); // Store logo in public/logoc directory
+                    $category->logoP = Storage::url($logoPath); // Save the public path to the logo
+                }
+    
+                // Save the category to the database
+                $category->save();
+    
+                // Return success response
+                return response()->json(['message' => 'Catégorie ajoutée avec succès', 'category' => $category], 200);
+    
+            } catch (\Exception $e) {
+                // Handle any errors and return a JSON response
+                return response()->json(['error' => $e->getMessage()], 500);
             }
-
-            $categorie = Categorie::create($data);
-
-            return response()->json([
-                'message'   => 'Categorie ajoutée avec succès',
-                'categorie' => $categorie,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+       
     }
 
-    public function show(string $id)
+    public function update(Request $request, $id)
     {
+        // Find the category by ID or fail if not found
+        $categorie = Categorie::findOrFail($id);
+    
         try {
-            $categorie = Categorie::with('produits')->findOrFail($id);
-            return response()->json([
-                'success' => true,
-                'data' => $categorie,
-                'message' => 'Catégorie récupérée avec succès'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'data' => null,
-                'message' => 'Catégorie non trouvée'
-            ], 404);
-        }
-    }
-
-    public function update(Request $request, string $id)
-    {
-        try {
-            $categorie = Categorie::findOrFail($id);
-
-            $validated = $request->validate([
-                'categorie' => 'required|string|max:255',
-                'logoP'     => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'parent_id' => 'nullable|exists:categories,id',
+            // Validate the incoming request
+            $validator = Validator::make($request->all(), [
+                'categorie' => 'required|string', // Ensure category name is required
+                'idCatMer' => 'nullable',
+                'logoP' => 'nullable|image', // Make the logo optional, but validate if provided
             ]);
-
-            $categorie->categorie = $validated['categorie'];
-            $categorie->parent_id = $request->input('parent_id');
-
+    
+            // If validation fails, return error response
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
+    
+            // Update the category name
+            $categorie->categorie = $request->input('categorie');
+    
+            // Handle logo image upload if a new logo is provided
             if ($request->hasFile('logoP')) {
+                // Delete the old logo if it exists
                 if ($categorie->logoP) {
-                    $oldFilePath = str_replace('/storage/', 'public/', $categorie->logoP);
-                    if (Storage::exists($oldFilePath)) {
-                        Storage::delete($oldFilePath);
-                    }
+                    $oldLogoPath = str_replace('/storage/', 'public/', $categorie->logoP);
+                    Storage::delete($oldLogoPath); // Delete the old logo file
                 }
-                $path = $request->file('logoP')->store('public/categories');
-                $categorie->logoP = Storage::url($path);
+    
+                // Store the new logo
+                $logoPath = $request->file('logoP')->store('public/logoP'); // Store logo in public/logoP directory
+                $categorie->logoP = Storage::url($logoPath); // Save the public path to the new logo
             }
-
+    
+            // Save the updated category to the database
             $categorie->save();
-
-            return response()->json([
-                'message'   => 'Categorie modifiée avec succès',
-                'categorie' => $categorie,
-            ], 200);
+    
+            // Return success response
+            return response()->json(['message' => 'Catégorie modifiée avec succès', 'category' => $categorie], 200);
+    
         } catch (\Exception $e) {
+            // Handle any errors and return a JSON response
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    
+    
 
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        try {
-            $categorie = Categorie::findOrFail($id);
-
-            if ($categorie->produits()->count() > 0) {
-                return response()->json([
-                    'success' => false,
-                    'data' => null,
-                    'message' => 'Impossible de supprimer cette catégorie car elle contient des produits'
-                ], 400);
-            }
-
-            if ($categorie->logoP) {
-                $filePath = str_replace('/storage/', 'public/', $categorie->logoP);
-                if (Storage::exists($filePath)) {
-                    Storage::delete($filePath);
-                }
-            }
-
-            $categorie->delete();
-
-            return response()->json([
-                'success' => true,
-                'data' => null,
-                'message' => 'Catégorie supprimée avec succès'
-            ], 200);
-        } catch (QueryException $e) {
-            return response()->json([
-                'success' => false,
-                'data' => null,
-                'message' => 'Impossible de supprimer cette catégorie car elle est déjà utilisée'
-            ], 400);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'data' => null,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        Categorie::findOrFail($id)->delete();
+        return response()->json(null, 204);
     }
 }

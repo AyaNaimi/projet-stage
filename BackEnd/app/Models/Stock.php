@@ -9,11 +9,24 @@ class Stock extends Model
 {
     use HasFactory;
     protected $table = 'stock';
-    protected $guarded=[];
+    // Define the table name (optional, if different from 'stocks')
 
-
-    public function produit()
+    // Allow mass assignment for these fields
+    protected $fillable = [
+        'Unite',
+        'ClassPoid','dateArivage',
+        'quantite'
+    ];
+    public function ligneBonEntreUnite()
     {
-        return $this->belongsTo(Produit::class);
+        return $this->hasMany(ligneBonEntreUnite::class, 'Unite_id');
+    }
+    public function ligneBonSortieUnite()
+    {
+        return $this->hasMany(ligne_bon_sortie_unites::class, 'Unite_id');
+    }
+    public function stockligne()
+    {
+        return $this->hasMany(StockLinge::class, 'Unite_id');
     }
 }
