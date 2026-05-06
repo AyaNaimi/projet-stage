@@ -11,6 +11,7 @@ import Login from "./Login/Login.jsx";
 import EmpHistorique from "./Zakaria/EmpHistorique.jsx";
 import DepartementManager from "./Zakaria/Employe/DepartementManager";
 import ProduitList from "./Produit/ProduitList.jsx";
+import MatierePremiereList from "./MatierePremiere/MatierePremiereList.jsx";
 
 const App = () => {
   const location = useLocation();
@@ -26,6 +27,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/employes" element={<DepartementManager />} />
             <Route path="/produits" element={<ProduitList />} />
+            <Route path="/matieres-premieres" element={<MatierePremiereList />} />
             <Route path="/emphistorique" element={<EmpHistorique />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             

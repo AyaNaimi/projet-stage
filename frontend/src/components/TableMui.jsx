@@ -45,7 +45,7 @@ export default function TableMui({
   page = 1,
   handleChangePage,
   handleChangeRowsPerPage,
-  heightOffset = { trueOffset, falseOffset },
+  heightOffset = { trueOffset: 0, falseOffset: 0 },
   AddButton,
   ChartActionButton,
   handleShowFormButtonClickChart,
@@ -60,7 +60,8 @@ export default function TableMui({
   handleShowFormButtonClickSC,
   handleSelectItem,
   width,
-  getRowStyle // Ajout du support pour getRowStyle
+  getRowStyle, // Ajout du support pour getRowStyle
+  addButtonText
 }) {
   // Gestion de la visibilité des colonnes en interne
   const defaultVisibility = React.useMemo(() => {
@@ -156,6 +157,7 @@ hasChart={hasChart}
         showColumnMenu={showColumnMenu}
         handleToggleColumnMenu={handleToggleColumnMenu}
         columnMenuRef={columnMenuRef}
+        addButtonText={addButtonText}
       />
       {FiltreInput}
       <div

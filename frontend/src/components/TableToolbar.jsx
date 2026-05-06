@@ -16,7 +16,8 @@ export default function TableToolbar({
   handleToggleColumnMenu,
   columnMenuRef,
   handleShowFormButtonClickChart,
-  hasChart
+  hasChart,
+  addButtonText
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px 0 0' }}>
@@ -42,7 +43,7 @@ export default function TableToolbar({
        {AddButton && handleShowFormButtonClick && (
         <AddButton
           onClick={() => handleShowFormButtonClick(false)}
-          text="Ajouter Produits"
+          text={addButtonText || "Ajouter"}
           align="right"
         />
       )}

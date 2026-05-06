@@ -45,7 +45,7 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
               color: "white",
             }}
           />
-          {"Ajouter"}
+          {text || "Ajouter"}
         </button>
       </div>
     </div>

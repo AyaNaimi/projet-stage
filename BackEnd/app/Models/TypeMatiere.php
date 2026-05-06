@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Fournisseur extends Model
+class TypeMatiere extends Model
 {
     use HasFactory;
     protected $guarded = [];
-    
-    public function user() {
-        return $this->belongsTo(User::class, 'user_id');
-    }
 
+    public function matieres()
+    {
+        return $this->hasMany(MatierePremiere::class, 'type_id');
+    }
 }

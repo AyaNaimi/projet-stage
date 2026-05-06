@@ -1,0 +1,409 @@
+import React, { useState, useEffect } from "react";
+import axios from "../axiosInstance";
+import Swal from "sweetalert2";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import Box from "@mui/material/Box";
+import Navigation from "../Acceuil/Navigation";
+import MatierePremiereListHeader from "./MatierePremiereListHeader";
+import TableMui from "../components/TableMui";
+import { useOpen } from "../Acceuil/OpenProvider";
+import { useHeader } from "../Acceuil/HeaderContext";
+import MatierePremiereForm from "./MatierePremiereForm";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faList } from "@fortawesome/free-solid-svg-icons";
+import AddButton from "../components/AddButton";
+import FilterToggleButton from "../components/FilterToggleButton";
+import FamilleTypeCarousels from "../components/FamilleTypeCarousels";
+import ExportPdfButton from "./exportToPdf";
+import PrintList from "./PrintList";
+import MatierePremiereChart from "./MatierePremiereChart";
+import "./All.css";
+
+const theme = createTheme();
+
+const MatierePremiereList = () => {
+  const [matieres, setMatieres] = useState([]);
+  const [fournisseurs, setFournisseurs] = useState([]);
+  const [filteredMatieres, setFilteredMatieres] = useState([]);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [openDetails, setOpenDetails] = useState({});
+
+  const [formData, setFormData] = useState({
+    id: null,
+    nom: "",
+    prix_achat: "",
+    unite: "",
+    fournisseur_id: "",
+    logoP: null,
+    historiques: []
+  });
+  const [errors, setErrors] = useState({});
+  const [formContainerStyle, setFormContainerStyle] = useState({ right: "-100%" });
+  const [tableContainerStyle, setTableContainerStyle] = useState({ width: "100%" });
+  const [showFilters, setShowFilters] = useState(false);
+
+  const toggleFilters = () => setShowFilters(!showFilters);
+
+  const { open, dynamicStyles } = useOpen();
+  const { title, setTitle, searchQuery, setOnPrint, setOnExportPDF } = useHeader();
+
+  useEffect(() => {
+    setTitle("Gestion des Matières Premières");
+    setOnPrint(() => printTable);
+    setOnExportPDF(() => exportToPDF);
+    return () => {
+      setOnPrint(null);
+      setOnExportPDF(null);
+    };
+  }, [setTitle, setOnPrint, setOnExportPDF, filteredMatieres]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndexSuCat, setActiveIndexSuCat] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('tout');
+  const [sousCatFiltre, setSousCatFiltre] = useState('tout');
+  const [chunks, setChunks] = useState([[]]);
+  const [chunksSucat, setChunksSucat] = useState([[]]);
+  const [familles, setFamilles] = useState([]);
+  const [types, setTypes] = useState([]);
+
+  const handleSelect = (selectedIndex) => setActiveIndex(selectedIndex);
+  const handleSelectSousCat = (selectedIndex) => setActiveIndexSuCat(selectedIndex);
+
+  useEffect(() => {
+    setTitle("Gestion des Matières Premières");
+  }, [setTitle]);
+
+  const fetchMatieres = async () => {
+    try {
+      const response = await axios.get("/api/matiere-premieres");
+      setMatieres(response.data.data);
+    } catch (error) {
+      console.error("Error fetching matieres:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const resFam = await axios.get("/api/famille-matieres");
+      const resTyp = await axios.get("/api/type-matieres");
+      
+      const famData = resFam.data.map(f => ({ id: f.id, categorie: f.nom, logoP: f.image_url }));
+      const typData = resTyp.data.map(t => ({ id: t.id, categorie: t.nom, logoP: t.image_url }));
+      
+      setFamilles(resFam.data);
+      setTypes(resTyp.data);
+
+      // Chunking for carousel (6 items per slide as seen in component)
+      const chunkArray = (arr, size) => {
+        const chunks = [];
+        for (let i = 0; i < arr.length; i += size) {
+          chunks.push(arr.slice(i, i + size));
+        }
+        return chunks.length ? chunks : [[]];
+      };
+
+      setChunks(chunkArray(famData, 6));
+      setChunksSucat(chunkArray(typData, 6));
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchFournisseurs = async () => {
+    try {
+      const response = await axios.get("/api/fournisseurs");
+      setFournisseurs(response.data.data || response.data);
+    } catch (error) {
+      console.error("Error fetching fournisseurs:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatieres();
+    fetchCategories();
+    fetchFournisseurs();
+  }, []);
+
+  useEffect(() => {
+    const filtered = matieres.filter((m) => {
+      const matchesSearch = 
+        m.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (m.fournisseur?.nom && m.fournisseur.nom.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (m.fournisseur?.raison_sociale && m.fournisseur.raison_sociale.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesCategory = selectedCategory === 'tout' || m.famille_id === selectedCategory;
+      const matchesType = sousCatFiltre === 'tout' || m.type_id === sousCatFiltre;
+      
+      return matchesSearch && matchesCategory && matchesType;
+    });
+    setFilteredMatieres(filtered);
+  }, [matieres, searchQuery, selectedCategory, sousCatFiltre]);
+
+  const handleEdit = (matiere) => {
+    setFormData({
+      id: matiere.id,
+      nom: matiere.nom,
+      prix_achat: matiere.prix_achat,
+      unite: matiere.unite,
+      fournisseur_id: matiere.fournisseur_id,
+      famille_id: matiere.famille_id || '',
+      type_id: matiere.type_id || '',
+      photo_url: matiere.photo_url,
+      logoP: null,
+      historiques: matiere.historiques || []
+    });
+    setFormContainerStyle({ right: "0" });
+    setTableContainerStyle({ width: "65%" });
+  };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Supprimer cette matière première ?",
+      text: "Cette action est irréversible !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios.delete(`/api/matiere-premieres/${id}`)
+          .then(() => {
+            fetchMatieres();
+            Swal.fire("Supprimé !", "La matière première a été supprimée.", "success");
+          })
+          .catch((error) => {
+            Swal.fire("Erreur", "Impossible de supprimer la matière première.", "error");
+          });
+      }
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const url = formData.id 
+      ? `/api/matiere-premieres/${formData.id}` 
+      : `/api/matiere-premieres`;
+    
+    const data = new FormData();
+    Object.keys(formData).forEach(key => {
+      if (key === 'historiques') return;
+      if (formData[key] !== null && formData[key] !== undefined) {
+        data.append(key, formData[key]);
+      }
+    });
+
+    if (formData.id) {
+      data.append('_method', 'PUT');
+    }
+
+    try {
+      await axios.post(url, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      fetchMatieres();
+      closeForm();
+      Swal.fire("Succès", `Matière première ${formData.id ? 'modifiée' : 'ajoutée'} avec succès.`, "success");
+    } catch (error) {
+      console.error("Error submitting material:", error);
+      if (error.response && error.response.status === 422) {
+        setErrors(error.response.data.errors);
+      } else {
+        const message = error.response?.data?.error || error.response?.data?.message || "Une erreur est survenue.";
+        Swal.fire("Erreur", message, "error");
+      }
+    }
+  };
+
+  const closeForm = () => {
+    setFormData({ id: null, nom: "", prix_achat: "", unite: "", fournisseur_id: "", famille_id: "", type_id: "", logoP: null, historiques: [] });
+    setErrors({});
+    setFormContainerStyle({ right: "-100%" });
+    setTableContainerStyle({ width: "100%" });
+  };
+
+  const handleShowFormButtonClick = () => {
+    if (formContainerStyle.right === "-100%") {
+      setFormContainerStyle({ right: "0" });
+      setTableContainerStyle({ width: "65%" });
+    } else {
+      closeForm();
+    }
+  };
+
+  const exportToPDF = () => {
+    const pdf = new jsPDF();
+    const columns = ["Nom", "Prix d'achat", "Unité", "Fournisseur"];
+    const rows = filteredMatieres.map(m => [
+      m.nom, 
+      `${m.prix_achat} DH`, 
+      m.unite, 
+      m.fournisseur?.raison_sociale || m.fournisseur?.nom || 'N/A'
+    ]);
+    pdf.text("Liste des Matières Premières", 14, 15);
+    pdf.autoTable({ head: [columns], body: rows, startY: 25 });
+    pdf.save("matieres_premieres.pdf");
+  };
+
+  const printTable = () => {
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <html>
+        <head><title>Imprimer</title></head>
+        <body>
+          <h1>Liste des Matières Premières</h1>
+          <table border="1" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr><th>Nom</th><th>Prix</th><th>Unité</th><th>Fournisseur</th></tr>
+            </thead>
+            <tbody>
+              ${filteredMatieres.map(m => `
+                <tr>
+                  <td>${m.nom}</td>
+                  <td>${m.prix_achat} DH</td>
+                  <td>${m.unite}</td>
+                  <td>${m.fournisseur?.raison_sociale || m.fournisseur?.nom || 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <script>window.print(); setTimeout(() => window.close(), 500);</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const toggleDetail = (id) => {
+    setOpenDetails(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <Box sx={{ ...dynamicStyles }}>
+        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 6 }}>
+
+          <FamilleTypeCarousels
+            activeIndex={activeIndex}
+            handleSelect={handleSelect}
+            chunks={chunks}
+            selectedCategory={selectedCategory}
+            handleCategoryFilterChange={setSelectedCategory}
+            activeIndexSuCat={activeIndexSuCat}
+            handleSelectSousCat={handleSelectSousCat}
+            chunksSucat={chunksSucat}
+            sousCatFiltre={sousCatFiltre}
+            handleSousCategoryFilterChange={setSousCatFiltre}
+          />
+
+          <div style={{ position: 'relative', overflow: 'hidden', marginTop: '20px' }}>
+            <MatierePremiereForm
+              formData={formData}
+              setFormData={setFormData}
+              handleChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
+              handleSubmit={handleSubmit}
+              errors={errors}
+              fournisseurs={fournisseurs}
+              familles={familles}
+              types={types}
+              closeForm={closeForm}
+              formContainerStyle={formContainerStyle}
+              fetchFournisseurs={fetchFournisseurs}
+            />
+
+            <TableMui
+              columns={[
+                { 
+                  id: 'photo_url', 
+                  label: 'LOGO', 
+                  minWidth: 70,
+                  render: (row) => row.photo_url ? (
+                    <img src={row.photo_url} alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '40px', height: '40px', background: '#f3f4f6', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#9ca3af' }}>No Img</div>
+                  )
+                },
+                { id: 'nom', label: 'NOM', minWidth: 150 },
+                { 
+                  id: 'prix_achat', 
+                  label: 'PRIX D\'ACHAT', 
+                  minWidth: 120,
+                  render: (row) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {row.prix_achat} DH
+                      <FontAwesomeIcon 
+                        icon={faList} 
+                        style={{ cursor: 'pointer', color: '#00afaa' }} 
+                        onClick={() => toggleDetail(row.id)}
+                        title="Voir l'historique"
+                      />
+                    </div>
+                  )
+                },
+                { id: 'unite', label: 'UNITÉ', minWidth: 100 },
+                { 
+                  id: 'fournisseur', 
+                  label: 'FOURNISSEUR', 
+                  minWidth: 150,
+                  render: (row) => row.fournisseur?.nom || row.fournisseur?.raison_sociale || 'N/A'
+                }
+              ]}
+              rows={filteredMatieres.slice((page - 1) * rowsPerPage, page * rowsPerPage)}
+              hasActions={true}
+              handleEdit={handleEdit}
+              handleDelete={handleDelete}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              handleChangePage={(event, newPage) => setPage(newPage)}
+              handleChangeRowsPerPage={(event) => setRowsPerPage(parseInt(event.target.value, 10))}
+              produitsFiltres={filteredMatieres}
+              handleShowFormButtonClick={handleShowFormButtonClick}
+              tableContainerStyle={{
+                ...tableContainerStyle,
+                transition: "width 0.3s ease"
+              }}
+              heightOffset={{ trueOffset: 388, falseOffset: 338 }}
+              AddButton={AddButton}
+              FilterToggleButton={FilterToggleButton}
+              showFilters={showFilters}
+              toggleFilters={toggleFilters}
+              exportToPDF={exportToPDF}
+              printTable={printTable}
+              addButtonText="Ajouter"
+              openDetails={openDetails}
+              renderDetail={(row) => (
+                <div style={{ padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+                  <h6>Historique des prix pour {row.nom}</h6>
+                  <table className="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Prix</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.historiques?.map((h, i) => (
+                        <tr key={i}>
+                          <td>{new Date(h.created_at).toLocaleDateString()}</td>
+                          <td>{h.prix} DH</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            />
+          </div>
+        </Box>
+      </Box>
+    </ThemeProvider>
+  );
+};
+
+export default MatierePremiereList;

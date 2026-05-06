@@ -119,6 +119,12 @@ const navItems = [
     match: (pathname) => pathname === "/produits",
   },
   {
+    to: "/matieres-premieres",
+    label: "Matières Premières",
+    icon: <ShoppingBagIcon />, // Using same icon for now
+    match: (pathname) => pathname === "/matieres-premieres",
+  },
+  {
     to: "/emphistorique",
     label: "Historique",
     icon: <HistoryIcon />,
@@ -196,6 +202,9 @@ const Navigation = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("token");
+    localStorage.removeItem("API_TOKEN");
+    localStorage.removeItem("user");
     navigate("/login");
   };
 

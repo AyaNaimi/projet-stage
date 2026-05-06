@@ -407,6 +407,7 @@
 
 
 
+use App\Http\Controllers\MatierePremiereController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutorisationController;
 use App\Http\Controllers\BonLivraisonController;
@@ -664,6 +665,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post("/register", [AuthController::class, 'register']);
     Route::get("/user", [AuthController::class, 'user']);
+    Route::apiResource('matiere-premieres', MatierePremiereController::class);
+    Route::apiResource('famille-matieres', FamilleMatiereController::class);
+    Route::apiResource('type-matieres', TypeMatiereController::class);
     Route::apiResource('calendrie', CalendrieController::class);
 
 
