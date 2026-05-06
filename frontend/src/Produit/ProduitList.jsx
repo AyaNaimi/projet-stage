@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import Swal from "sweetalert2";
 import { Form, Button, Modal, DropdownButton, Col, Row } from "react-bootstrap";
 import Navigation from "../Acceuil/Navigation";
@@ -127,7 +127,7 @@ const ProduitList = () => {
   });
   const fetchCalibres = async () => {
     try {
-      const responseCalibre = await axios.get(`http://${import.meta.env.VITE_API_URL}/api/calibres`);
+      const responseCalibre = await axiosInstance.get('/api/calibres');
       setCalibres(responseCalibre.data);
       localStorage.setItem('calibres', JSON.stringify(responseCalibre.data));
       console.log("calibres", responseCalibre);
@@ -139,7 +139,7 @@ const ProduitList = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`http://${import.meta.env.VITE_API_URL}/api/categories`);
+      const response = await axiosInstance.get('/api/categories');
       setCategories(response.data); // Met à jour le state avec les nouvelles catégories
       console.log('fetsh data')
     } catch (error) {
@@ -151,18 +151,18 @@ const ProduitList = () => {
   }, []);
   const fetchProduits = async () => {
     try {
-      const response = await axios.get(`http://${import.meta.env.VITE_API_URL}/api/produits`);
+      const response = await axiosInstance.get('/api/produits');
       setProduits(response.data.produit);
       // Store produits in IndexedDB
       await storeDataInIndexedDB(response.data.produit, 'produits');
       console.log('produit', response.data.produit);
   
-      const usersResponse = await axios.get(`http://${import.meta.env.VITE_API_URL}/api/user`);
+      const usersResponse = await axiosInstance.get('/user');
       const authenticatedUserId = usersResponse.data.id;
       setUser(authenticatedUserId);
       console.log("user authentifié", authenticatedUserId);
   
-      const responseCategories = await axios.get(`http://${import.meta.env.VITE_API_URL}/api/categories`);
+      const responseCategories = await axiosInstance.get('/api/categories');
       setCategories(responseCategories.data);
       // Store categories in IndexedDB
       await storeDataInIndexedDB(responseCategories.data, 'famille');
@@ -380,8 +380,8 @@ useEffect(() => {
     }).then((result) => {
       if (result.isConfirmed) {
         selectedItems.forEach((id) => {
-          axios
-            .delete(`http://${import.meta.env.VITE_API_URL}/api/produits/${id}`)
+          axiosInstance
+            .delete(`/api/produits/${id}`)
             .then((response) => {
               fetchProduits();
              deleteDataFromIndexedDB('produits',id)
@@ -429,8 +429,8 @@ useEffect(() => {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        axios
-          .delete(`http://${import.meta.env.VITE_API_URL}/api/produits/${id}`)
+        axiosInstance
+          .delete(`/api/produits/${id}`)
           .then((response) => {
             fetchProduits();
             deleteDataFromIndexedDB('produits',id)
@@ -639,8 +639,8 @@ useEffect(() => {
       }
   });
     const url = editingProduit
-      ? `http://${import.meta.env.VITE_API_URL}/api/produits/${editingProduit.id}`
-      : `http://${import.meta.env.VITE_API_URL}/api/produits`;
+      ? `/api/produits/${editingProduit.id}`
+      : `/api/produits`;
     const method = editingProduit ? "put" : "post";
   
     let requestData;
@@ -691,26 +691,10 @@ useEffect(() => {
     formData2.append('logoP', formData.logoP);
 
     try {
-        const response = await fetch(`http://${import.meta.env.VITE_API_URL}/api/produit/${editingProduit.id}/update-logo`, {
-            method: 'POST',
-            body: formData2, // Corrected to send formData2
+        const token = localStorage.getItem('token') || localStorage.getItem('API_TOKEN');
+        const response = await axiosInstance.post(`/produit/${editingProduit.id}/update-logo`, formData2, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
-
-        // Ensure the response is JSON
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-
-            if (response.ok) {
-                setMessage('Logo updated successfully!');
-            } else {
-                setMessage(`Error: ${data.message}`);
-            }
-        } else {
-            const errorText = await response.text();
-            setMessage('Unexpected error occurred');
-            console.error('Server response:', errorText);
-        }
     } catch (error) {
         setMessage('Error uploading the logo.');
         console.error(error);
@@ -866,7 +850,7 @@ const translateTypeQte = (type) => {
 const [cat,setCat]=useState([])
 const handleDeletecatgeorie = async (categorieId) => {
   try {
-    await axios.delete(`http://${import.meta.env.VITE_API_URL}/api/categories/${categorieId}`);
+    await axiosInstance.delete(`/api/categories/${categorieId}`);
     
     // Notification de succès
     Swal.fire({
@@ -935,7 +919,7 @@ console.log('image',selectedCategoryId.categorie,image )
     formData.append("_method", 'put'); // Note : Vous n'avez peut-être pas besoin de cette ligne si vous utilisez une méthode PUT directement
     formData.append("categorie", selectedCategoryId.categorie);
     formData.append("logoP", newCategory.imageFile);
-    await axios.post(`http://${import.meta.env.VITE_API_URL}/api/categories/${selectedCategoryId.id}`,
+    await axiosInstance.post(`/api/categories/${selectedCategoryId.id}`,
       formData
     );
     fetchCategories(); // Refresh the categories list
@@ -954,7 +938,7 @@ const handleSaveClibre = async () => {
 
   console.log('image',selectedCategoryId.categorie,image )
     try {
-      await axios.put(`http://${import.meta.env.VITE_API_URL}/api/calibres/${selectedCategoryId.id}`,
+      await axiosInstance.put(`/api/calibres/${selectedCategoryId.id}`,
         {
           calibre:selectedCategoryId.calibre,
         }
@@ -983,7 +967,7 @@ const handleAddCategory = async () => {
     formData.append("categorie", newCategory.categorie);
     formData.append("logoP", newCategory.imageFile);
 
-    const response = await axios.post(`http://${import.meta.env.VITE_API_URL}/api/categories`, formData, {
+    const response = await axiosInstance.post('/api/categories', formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -1011,7 +995,7 @@ const handleAddSousCategory = async () => {
 
     formData.append("logoP", newCategory.imageFile);
 
-    const response = await axios.post(`http://${import.meta.env.VITE_API_URL}/api/categories`, formData, {
+    const response = await axiosInstance.post('/api/categories', formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -1053,7 +1037,7 @@ const handleAddSousCategory = async () => {
       formData.append("calibre", newCategory.categorie);
 
   
-      const response = await axios.post(`http://${import.meta.env.VITE_API_URL}/api/calibres`, formData, {
+      const response = await axiosInstance.post('/api/calibres', formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -1288,8 +1272,8 @@ const handleDeleteProductRap = async (index, id) => {
     setSelectedProductsDataRep(updatedSelectedProductsData);
 
     if (id) {
-      axios
-        .delete(`http://${import.meta.env.VITE_API_URL}/api/prixProduit/${id}`)
+      axiosInstance
+        .delete(`/prixProduit/${id}`)
         .then(() => {
           fetchProduits();
         });
