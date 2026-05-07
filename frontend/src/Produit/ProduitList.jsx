@@ -1489,37 +1489,14 @@ const chunksSucat = chunkArray(
               handleSave={handleSave}
               showEditSousModal={showEditSousModal}
               setShowEditSousModal={setShowEditSousModal}
-              // handleSaveSous prop removed (was undefined and unused)
               handleSuCategorie={handleSuCategorie}
               handleAddEmptyRowRep={handleAddEmptyRowRep}
               selectedProductsDataRep={selectedProductsDataRep}
               handleInputChangeRep={handleInputChangeRep}
               handleDeleteProductRap={handleDeleteProductRap}
-              AddButton={AddButton}
               closeForm={closeForm}
               editingProduit={editingProduit}
-              showFilters={showFilters}
               formContainerStyle={formContainerStyle}
-              FilterToggleButton={FilterToggleButton}
-              toggleFilters={toggleFilters}
-              allColumns={allColumns}
-              columnVisibility={columnVisibility}
-              toggleColumnVisibility={toggleColumnVisibility}
-              genreFiltre={genreFiltre}
-              setGenreFiltre={setGenreFiltre}
-              produitsFiltres={produitsFiltres}
-              selectAll={selectAll}
-              handleSelectAllChange={handleSelectAllChange}
-              selectedItems={selectedItems}
-              handleCheckboxChange={handleCheckboxChange}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              handleChangePage={handleChangePage}
-              handleChangeRowsPerPage={handleChangeRowsPerPage}
-              TableContainer={TableContainer}
-              expandedRowsRepresantant={expandedRowsRepresantant}
-              toggleRowRepresantant={toggleRowRepresantant}
-              translateTypeQte={translateTypeQte}
             />
 
             {/* Bouton Ajouter Produits */}

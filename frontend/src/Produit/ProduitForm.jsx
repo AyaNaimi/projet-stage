@@ -1085,7 +1085,7 @@ const ProduitForm = ({
                 <Form.Control
                   type="text"
                   name="sous_categorie"
-                  value={newCategory.sous_categorie}
+                  value={newCategory.sous_categorie || ''}
                   onChange={(e) => setNewCategory({ ...newCategory, sous_categorie: e.target.value })}
                   placeholder="Ex: Fruits Frais, Fruits Secs, Légumes"
                   isInvalid={!!errors.sous_categorie}
@@ -1101,7 +1101,7 @@ const ProduitForm = ({
                 <Form.Control
                   type="text"
                   name="description"
-                  value={newCategory.description}
+                  value={newCategory.description || ''}
                   onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
                   placeholder="Description de la sous-catégorie"
                   className="styled-input"
@@ -1130,7 +1130,7 @@ const ProduitForm = ({
                 <Form.Control
                   type="text"
                   name="sous_categorie"
-                  value={newCategory.sous_categorie}
+                  value={newCategory.sous_categorie || ''}
                   onChange={(e) => setNewCategory({ ...newCategory, sous_categorie: e.target.value })}
                   placeholder="Ex: Fruits Frais, Fruits Secs, Légumes"
                   isInvalid={!!errors.sous_categorie}
@@ -1146,7 +1146,7 @@ const ProduitForm = ({
                 <Form.Control
                   type="text"
                   name="description"
-                  value={newCategory.description}
+                  value={newCategory.description || ''}
                   onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
                   placeholder="Description de la sous-catégorie"
                   className="styled-input"
