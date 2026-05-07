@@ -18,7 +18,7 @@ class FournisseurController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'raison_sociale' => 'required|string|max:255',
+                'raison_sociale' => 'nullable|string|max:255',
                 'nom' => 'nullable|string|max:255',
                 'CodeFournisseur' => 'required|string|max:255|unique:fournisseurs,CodeFournisseur',
                 'email' => 'nullable|email|max:255',
@@ -36,7 +36,7 @@ class FournisseurController extends Controller
             }
 
             $fournisseur = Fournisseur::create([
-                'raison_sociale' => $request->raison_sociale,
+                'raison_sociale' => $request->raison_sociale ?? $request->nom,
                 'nom' => $request->nom,
                 'CodeFournisseur' => $request->CodeFournisseur,
                 'adresse' => $request->adresse ?? '-',
