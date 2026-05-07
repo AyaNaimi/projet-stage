@@ -111,6 +111,9 @@ class ProduitController extends Controller
                 $produit->produit_Etiq_id = $request->input('produit_Etiq_id') ?: null;
                 $produit->produit_Embalg_id = $request->input('produit_Embalg_id') ?: null;
                 $produit->produit_Embalg_S_id = $request->input('produit_Embalg_S_id') ?: null;
+                $produit->unite_etiquette = $request->input('unite_etiquette');
+                $produit->unite_embalage_primaire = $request->input('unite_embalage_primaire');
+                $produit->unite_embalage_secondaire = $request->input('unite_embalage_secondaire');
 
 
                 $produit->user_id = Auth::id(); 
@@ -162,9 +165,9 @@ class ProduitController extends Controller
             if ($request->hasFile('logoP')) {
                 // Delete the old logo if it exists
                 if ($produit->logoP) {
-                    $oldFilePath = str_replace('storage/', '', $produit->logoP);
-                    if (Storage::exists($oldFilePath)) {
-                        Storage::delete($oldFilePath);
+                    $oldFilePath = str_replace('storage/', '', parse_url($produit->logoP, PHP_URL_PATH));
+                    if (Storage::disk('public')->exists($oldFilePath)) {
+                        Storage::disk('public')->delete($oldFilePath);
                     }
                 }
     
@@ -254,7 +257,9 @@ class ProduitController extends Controller
                 if ($request->has('prixProduits')) {
                     foreach ($request->input('prixProduits') as $prix) {
                         if (isset($prix['id'])) {
-                            $prixProduit = PrixProduit::findOrFail($prix['id']);
+                            $prixProduit = PrixProduit::where('id', $prix['id'])
+                                ->where('produit_id', $produit->id)
+                                ->firstOrFail();
                             $prixProduit->update([
                                 'dateDebut' => $prix['dateDebut']??null,
                                 'dateFin' => $prix['dateFin'],
@@ -381,3 +386,6 @@ class ProduitController extends Controller
         }
     }
 }
+
+
+

@@ -380,7 +380,7 @@ const ProduitList = () => {
   const handleChangeRowsPerPage = (event) => {
     const selectedRows = parseInt(event.target.value, 10);
     setRowsPerPage(selectedRows);
-    localStorage.setItem("rowsPerPage", selectedRows); // Store in localStorage
+    localStorage.setItem("rowsPerPage", selectedRows);
     setPage(1);
   };
 
@@ -414,37 +414,37 @@ const ProduitList = () => {
         confirmButton: "order-2",
         denyButton: "order-3",
       },
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        selectedItems.forEach((id) => {
-          axiosInstance.delete(`/api/produits/${id}`).then((response) => {
-            fetchProduits();
-            deleteDataFromIndexedDB("produits", id);
+        const deletePromises = selectedItems.map((id) =>
+          axiosInstance
+            .delete(`/api/produits/${id}`)
+            .then(() => deleteDataFromIndexedDB("produits", id))
+            .catch((err) => ({
+              error: true,
+              id,
+              msg: err.response?.data?.error,
+            })),
+        );
+        const results = await Promise.all(deletePromises);
+        const failed = results.filter((r) => r?.error);
+        fetchProduits();
+        setSelectedItems([]);
+        if (failed.length > 0) {
+          Swal.fire({
+            icon: "error",
+            title: "Erreur",
+            text: `${failed.length} produit(s) non supprimé(s).`,
           });
+        } else {
           Swal.fire({
             icon: "success",
-            title: "Success!",
-            text: "produit supprimé avec succès.",
-          }).catch((error) => {
-            console.error("Error deleting product:", error);
-            if (error.response && error.response.status === 403) {
-              Swal.fire({
-                icon: "error",
-                title: "Accès refusé",
-                text: "Vous n'avez pas l'autorisation de supprimer ce produit.",
-              });
-            } else {
-              Swal.fire({
-                icon: "error",
-                title: "Error!",
-                text: "Échec de la suppression du produit.",
-              });
-            }
+            title: "Succès!",
+            text: "Produits supprimés avec succès.",
           });
-        });
+        }
       }
     });
-    setSelectedItems([]);
   };
 
   const handleDelete = (id) => {
@@ -464,7 +464,7 @@ const ProduitList = () => {
       if (result.isConfirmed) {
         axiosInstance
           .delete(`/api/produits/${id}`)
-          .then((response) => {
+          .then(() => {
             fetchProduits();
             deleteDataFromIndexedDB("produits", id);
 
@@ -483,7 +483,6 @@ const ProduitList = () => {
                 text: "Vous n'avez pas l'autorisation de supprimer ce produit.",
               });
             } else if (error.response && error.response.status === 400) {
-              // Afficher le message d'erreur dans Swal.fire()
               Swal.fire({
                 icon: "error",
                 title: "Erreur",
@@ -502,6 +501,7 @@ const ProduitList = () => {
       }
     });
   };
+
   const handleShowFormButtonClick = () => {
     if (formContainerStyle.right === "-100%") {
       setFormContainerStyle({ right: "0" });
@@ -514,49 +514,24 @@ const ProduitList = () => {
   const closeForm = () => {
     setFormContainerStyle({ right: "-100%" });
     setTableContainerStyle({ marginRight: "0" });
-    setShowForm(false); // Hide the form
+    setShowForm(false);
     setFormData({
-      logoP: "",
-      marque: "Ovotec",
-
-      Code_produit: "",
-      designation: "",
-      type_quantite: "",
-      unite: "",
-      seuil_alerte: "",
-      prix_vente: "",
-      stock_initial: "",
-      etat_produit: "",
-      calibre_id: "",
-      user_id: "",
-      categorie_id: "",
-      suCat_id: "",
-      reference: "",
-      produit_Embalg_S_id: "",
-      // Réinitialiser les nouveaux champs
-      unite_etiquette: "",
-      unite_embalage_primaire: "",
-      unite_embalage_secondaire: "",
+      Code_produit: "", designation: "", type_quantite: "", unite: "",
+      seuil_alerte: "", stock_initial: "", etat_produit: "", calibre_id: "",
+      user_id: "", categorie_id: "", prix_vente: "", marque: "Ovotec",
+      logoP: "", suCat_id: "", reference: "", produit_Embalg_S_id: "",
+      unite_etiquette: "", unite_embalage_primaire: "", unite_embalage_secondaire: "",
+      type_produit: "", produit_Etiq_id: "", produit_Embalg_id: "",
+      genre: "", Dvie: "", tva: "",
     });
     setErrors({
-      Code_produit: "",
-      designation: "",
-      type_quantite: "",
-      unite: "",
-      seuil_alerte: "",
-      stock_initial: "",
-      etat_produit: "",
-      calibre_id: "",
-      user_id: "",
-      categorie_id: "",
-      // Réinitialiser les nouveaux champs
-      unite_etiquette: "",
-      unite_embalage_primaire: "",
-      unite_embalage_secondaire: "",
+      Code_produit: "", designation: "", type_quantite: "", unite: "",
+      seuil_alerte: "", stock_initial: "", etat_produit: "", calibre_id: "",
+      user_id: "", categorie_id: "", unite_etiquette: "",
+      unite_embalage_primaire: "", unite_embalage_secondaire: "",
     });
-
     setSelectedProductsDataRep([]);
-    setEditingProduit(null); // Clear editing client
+    setEditingProduit(null);
   };
 
   const handleEdit = (produit) => {
@@ -850,20 +825,29 @@ const ProduitList = () => {
       setFormData({
         Code_produit: "",
         designation: "",
-        calibre_id: "",
         type_quantite: "",
         unite: "",
         seuil_alerte: "",
         stock_initial: "",
         etat_produit: "",
-        marque: "Ovotec",
-
+        calibre_id: "",
+        user_id: "",
         categorie_id: "",
-        logoP: null,
+        prix_vente: "",
+        marque: "Ovotec",
+        logoP: "",
         suCat_id: "",
-        genre: "",
         reference: "",
         produit_Embalg_S_id: "",
+        unite_etiquette: "",
+        unite_embalage_primaire: "",
+        unite_embalage_secondaire: "",
+        type_produit: "",
+        produit_Etiq_id: "",
+        produit_Embalg_id: "",
+        genre: "",
+        Dvie: "",
+        tva: "",
       });
       setErrors({
         Code_produit: "",
@@ -1368,7 +1352,7 @@ const chunksSucat = chunkArray(
       setSelectedProductsDataRep(updatedSelectedProductsData);
 
       if (id) {
-        axiosInstance.delete(`/prixProduit/${id}`).then(() => {
+        axiosInstance.delete(`/api/prixProduit/${id}`).then(() => {
           fetchProduits();
         });
       }
@@ -1841,3 +1825,4 @@ const tableCellStyle = {
 };
 
 export default ProduitList;
+
