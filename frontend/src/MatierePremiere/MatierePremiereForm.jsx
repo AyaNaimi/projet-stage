@@ -48,8 +48,8 @@ const MatierePremiereForm = ({
 
   const handleAddFournisseur = async () => {
     try {
-      if (!newFournisseur.raison_sociale || !newFournisseur.CodeFournisseur) {
-        Swal.fire("Erreur", "Veuillez remplir les champs obligatoires", "error");
+      if (!newFournisseur.nom || !newFournisseur.CodeFournisseur) {
+        Swal.fire("Erreur", "Veuillez remplir les champs obligatoires (Nom et Code)", "error");
         return;
       }
 
@@ -60,7 +60,7 @@ const MatierePremiereForm = ({
         await axios.post(`/api/fournisseurs`, newFournisseur);
         Swal.fire("Succès", "Fournisseur ajouté", "success");
       }
-      
+
       setNewFournisseur({ nom: '', raison_sociale: '', CodeFournisseur: '', tele: '', email: '' });
       setEditingFournisseur(null);
       if (fetchFournisseurs) fetchFournisseurs();
@@ -75,7 +75,6 @@ const MatierePremiereForm = ({
     setEditingFournisseur(f);
     setNewFournisseur({
       nom: f.nom || '',
-      raison_sociale: f.raison_sociale,
       CodeFournisseur: f.CodeFournisseur,
       tele: f.tele || '',
       email: f.email || ''
@@ -125,13 +124,13 @@ const MatierePremiereForm = ({
 
       <div
         id="formContainerMatiere"
-        style={{ 
-          ...formContainerStyle, 
-          marginTop: '10px', 
-          height: `calc(100vh - 250px)`, 
-          overflow: 'auto', 
-          background: '#f9fafb', 
-          padding: '20px', 
+        style={{
+          ...formContainerStyle,
+          marginTop: '0px',
+          height: `calc(100vh - 70px)`,
+          overflow: 'auto',
+          background: '#f9fafb',
+          padding: '20px',
           borderLeft: '1px solid #e5e7eb',
           borderRadius: '1rem',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
@@ -149,93 +148,12 @@ const MatierePremiereForm = ({
             {formData.id ? 'Modifier' : 'Ajouter'} une Matière Première
           </h4>
 
-          <div 
-            className="image-upload-container"
-            onClick={() => document.getElementById('logoP-input').click()}
-            style={{
-              width: '180px',
-              height: '180px',
-              border: '2px dashed #d1d5db',
-              borderRadius: '1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              marginBottom: '2rem',
-              overflow: 'hidden',
-              backgroundColor: '#f9fafb',
-              position: 'relative',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            {formData.photo_url || (formData.logoP && typeof formData.logoP !== 'string') ? (
-              <img 
-                src={formData.logoP && typeof formData.logoP !== 'string' ? URL.createObjectURL(formData.logoP) : formData.photo_url} 
-                alt="Preview" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-              />
-            ) : (
-              <div style={{ textAlign: 'center', padding: '10px' }}>
-                <div style={{ color: '#9ca3af', marginBottom: '8px' }}>
-                  <Package size={40} />
-                </div>
-                <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>
-                  Appuyer pour sélectionner une image
-                </span>
-              </div>
-            )}
-            <input 
-              id="logoP-input"
-              type="file" 
-              accept="image/*" 
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) setFormData({ ...formData, logoP: file });
-              }}
-            />
-          </div>
+
 
           <Form onSubmit={handleSubmit}>
-            <div className="row">
-              <div className="col-md-6">
-                <StyledFormGroup icon={<Package size={18} />} label="Famille" htmlFor="famille_id">
-                  <select
-                    id="famille_id"
-                    name="famille_id"
-                    value={formData.famille_id}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    className="form-select"
-                  >
-                    <option value="">Sélectionner une famille</option>
-                    {familles.map(f => (
-                      <option key={f.id} value={f.id}>{f.nom}</option>
-                    ))}
-                  </select>
-                </StyledFormGroup>
-              </div>
-              <div className="col-md-6">
-                <StyledFormGroup icon={<Tag size={18} />} label="Type" htmlFor="type_id">
-                  <select
-                    id="type_id"
-                    name="type_id"
-                    value={formData.type_id}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    className="form-select"
-                  >
-                    <option value="">Sélectionner un type</option>
-                    {types.map(t => (
-                      <option key={t.id} value={t.id}>{t.nom}</option>
-                    ))}
-                  </select>
-                </StyledFormGroup>
-              </div>
-            </div>
 
-            <StyledFormGroup icon={<Tag size={18} />} label="Nom de la matière" htmlFor="nom">
+
+            <StyledFormGroup icon={<Tag size={18} />} label="Nom de la matière *" htmlFor="nom">
               <input
                 id="nom"
                 className={`form-control styled-input ${errors.nom ? 'is-invalid' : ''}`}
@@ -249,7 +167,7 @@ const MatierePremiereForm = ({
               {errors.nom && <div className="text-danger" style={{ fontSize: 13 }}>{errors.nom}</div>}
             </StyledFormGroup>
 
-            <StyledFormGroup icon={<DollarSign size={18} />} label="Prix d'achat" htmlFor="prix_achat">
+            <StyledFormGroup icon={<DollarSign size={18} />} label="Prix d'achat *" htmlFor="prix_achat">
               <input
                 id="prix_achat"
                 className={`form-control styled-input ${errors.prix_achat ? 'is-invalid' : ''}`}
@@ -264,7 +182,7 @@ const MatierePremiereForm = ({
               {errors.prix_achat && <div className="text-danger" style={{ fontSize: 13 }}>{errors.prix_achat}</div>}
             </StyledFormGroup>
 
-            <StyledFormGroup icon={<Scale size={18} />} label="Unité" htmlFor="unite">
+            <StyledFormGroup icon={<Scale size={18} />} label="Unité *" htmlFor="unite">
               <select
                 id="unite"
                 name="unite"
@@ -281,20 +199,20 @@ const MatierePremiereForm = ({
               {errors.unite && <div className="text-danger" style={{ fontSize: 13 }}>{errors.unite}</div>}
             </StyledFormGroup>
 
-            <StyledFormGroup 
-              icon={<Truck size={18} />} 
-              label="Fournisseur" 
+            <StyledFormGroup
+              icon={<Truck size={18} />}
+              label="Fournisseur *"
               htmlFor="fournisseur_id"
               extra={
-                <div 
-                  className="cursor-pointer" 
+                <div
+                  className="cursor-pointer"
                   onClick={() => setShowFournisseurModal(true)}
-                  style={{ 
-                    color: '#00afaa', 
-                    border: '1px solid #00afaa', 
-                    borderRadius: '50%', 
-                    width: 24, height: 24, 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                  style={{
+                    color: '#00afaa',
+                    border: '1px solid #00afaa',
+                    borderRadius: '50%',
+                    width: 24, height: 24,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}
                 >
                   <FontAwesomeIcon icon={faPlus} size="xs" />
@@ -328,14 +246,14 @@ const MatierePremiereForm = ({
             </StyledFormGroup>
 
             <div className="d-flex justify-content-center gap-3 mt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 style={{ backgroundColor: '#00afaa', border: 'none', padding: '0.6rem 2.5rem', borderRadius: '0.5rem', fontWeight: 600 }}
               >
                 Valider
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={closeForm}
                 style={{ padding: '0.6rem 2.5rem', borderRadius: '0.5rem', fontWeight: 600 }}
               >
@@ -373,13 +291,13 @@ const MatierePremiereForm = ({
           <div className="row mb-4">
             <div className="col-md-6 mb-2">
               <label className="form-label small fw-bold">Code</label>
-              <input type="text" className="form-control" value={newFournisseur.CodeFournisseur} onChange={e => setNewFournisseur({...newFournisseur, CodeFournisseur: e.target.value})} />
+              <input type="text" className="form-control" value={newFournisseur.CodeFournisseur} onChange={e => setNewFournisseur({ ...newFournisseur, CodeFournisseur: e.target.value })} />
             </div>
             <div className="col-md-6">
               <div className="row g-3">
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <Form.Group className="mb-2">
-                    <Form.Label>Nom</Form.Label>
+                    <Form.Label>Nom *</Form.Label>
                     <Form.Control
                       type="text"
                       value={newFournisseur.nom}
@@ -387,21 +305,11 @@ const MatierePremiereForm = ({
                     />
                   </Form.Group>
                 </div>
-                <div className="col-md-6">
-                  <Form.Group className="mb-2">
-                    <Form.Label>Raison Sociale *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={newFournisseur.raison_sociale}
-                      onChange={(e) => setNewFournisseur({ ...newFournisseur, raison_sociale: e.target.value })}
-                    />
-                  </Form.Group>
-                </div>
               </div>
             </div>
             <div className="col-md-12 text-center mt-3">
               <Button variant="primary" size="sm" onClick={handleAddFournisseur}>{editingFournisseur ? 'Modifier' : 'Ajouter'}</Button>
-              {editingFournisseur && <Button variant="link" size="sm" onClick={() => {setEditingFournisseur(null); setNewFournisseur({nom: '', raison_sociale:'', CodeFournisseur:'', tele:'', email:''})}}>Annuler</Button>}
+              {editingFournisseur && <Button variant="link" size="sm" onClick={() => { setEditingFournisseur(null); setNewFournisseur({ nom: '', raison_sociale: '', CodeFournisseur: '', tele: '', email: '' }) }}>Annuler</Button>}
             </div>
           </div>
           <div style={{ maxHeight: 300, overflowY: 'auto' }}>
@@ -410,7 +318,7 @@ const MatierePremiereForm = ({
                 <tr>
                   <th>Code</th>
                   <th>Nom</th>
-                  <th>Raison Sociale</th>
+
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -419,7 +327,7 @@ const MatierePremiereForm = ({
                   <tr key={f.id}>
                     <td>{f.CodeFournisseur}</td>
                     <td>{f.nom}</td>
-                    <td>{f.raison_sociale}</td>
+
                     <td>
                       <FontAwesomeIcon icon={faEdit} className="text-primary me-2 cursor-pointer" onClick={() => handleEditFournisseur(f)} />
                       <FontAwesomeIcon icon={faTrash} className="text-danger cursor-pointer" onClick={() => handleDeleteFournisseur(f.id)} />

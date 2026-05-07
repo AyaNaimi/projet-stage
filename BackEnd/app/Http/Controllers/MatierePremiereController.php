@@ -35,7 +35,9 @@ class MatierePremiereController extends Controller
                 'nom' => 'required|string|max:255',
                 'prix_achat' => 'required|numeric|min:0',
                 'unite' => 'required|string',
-                'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+                'fournisseur_id' => 'required|exists:fournisseurs,id',
+                'famille_id' => 'nullable|exists:famille_matieres,id',
+                'type_id' => 'nullable|exists:type_matieres,id',
                 'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
@@ -85,7 +87,9 @@ class MatierePremiereController extends Controller
                 'nom' => 'required|string|max:255',
                 'prix_achat' => 'required|numeric|min:0',
                 'unite' => 'required|string',
-                'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+                'fournisseur_id' => 'required|exists:fournisseurs,id',
+                'famille_id' => 'nullable|exists:famille_matieres,id',
+                'type_id' => 'nullable|exists:type_matieres,id',
                 'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 

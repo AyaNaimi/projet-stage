@@ -21,9 +21,6 @@ const TableContainer = ({
   selectedFactures,
   handlePrintSelected
 }) => {
-  console.log('aa',page,(Math.ceil(produitsFiltres.length / rowsPerPage)),
-  page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-  console.log('produitsFiltres',produitsFiltres)
   return (
     <>
         <div

@@ -408,6 +408,8 @@
 
 
 use App\Http\Controllers\MatierePremiereController;
+use App\Http\Controllers\FamilleMatiereController;
+use App\Http\Controllers\TypeMatiereController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutorisationController;
 use App\Http\Controllers\BonLivraisonController;
