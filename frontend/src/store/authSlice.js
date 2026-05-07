@@ -5,7 +5,7 @@ export const fetchAuthenticatedUser = createAsyncThunk(
   'auth/fetchAuthenticatedUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/user');
+      const response = await axiosInstance.get('/api/user');
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Error fetching user');

@@ -103,9 +103,9 @@ class ProduitController extends Controller
                 $produit->reference = $request->input('reference');
 
 
-                $produit->produit_Etiq_id = $request->input('produit_Etiq_id');
-                $produit->produit_Embalg_id = $request->input('produit_Embalg_id');
-                $produit->produit_Embalg_S_id = $request->input('produit_Embalg_S_id');
+                $produit->produit_Etiq_id = $request->input('produit_Etiq_id') ?: null;
+                $produit->produit_Embalg_id = $request->input('produit_Embalg_id') ?: null;
+                $produit->produit_Embalg_S_id = $request->input('produit_Embalg_S_id') ?: null;
 
 
                 $produit->user_id = Auth::id(); 
@@ -244,6 +244,10 @@ class ProduitController extends Controller
                 $produit = Produit::findOrFail($id);
                 $data = $request->except('prixProduits');  // Exclure 'prixProduits'
 
+                $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
+                $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
+                $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
+
                 $produit->update($data);
                 if ($request->has('prixProduits')) {
                     foreach ($request->input('prixProduits') as $prix) {
@@ -307,22 +311,22 @@ class ProduitController extends Controller
         $ids = $request->input('ids'); // Récupère les IDs sélectionnés
 
         if (!empty($ids)) {
-            for ($i = 0; $i < count($ids); $i++) {
- try {
-                $produit = Produit::findOrFail($ids[$i]);
-                $produit->delete();
-    
-                return response()->json(['message' => 'Produit supprimé avec succès'], 200);
-            } catch (\Illuminate\Database\QueryException $e) {
-                // Vérifier si l'erreur est liée à une contrainte d'intégrité
-                if ($e->errorInfo[1] === 1451) {
-                    // Renvoyer le message d'erreur spécifique
-                    return response()->json(['error' => 'Impossible de supprimer un produit car il est utilisé dans d\'autres plateformes.'], 400);
-                } else {
-                    // Renvoyer l'erreur par défaut
-                    return response()->json(['error' => $e->getMessage()], 500);
+            $errors = [];
+            foreach ($ids as $id) {
+                try {
+                    $produit = Produit::findOrFail($id);
+                    $produit->delete();
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->errorInfo[1] === 1451) {
+                        $errors[] = "Produit #$id est utilisé dans d'autres plateformes.";
+                    } else {
+                        $errors[] = "Produit #$id: " . $e->getMessage();
+                    }
                 }
-            }            }
+            }
+            if (!empty($errors)) {
+                return response()->json(['errors' => $errors], 400);
+            }
             return response()->json(['message' => 'Éléments supprimés avec succès']);
         }
 

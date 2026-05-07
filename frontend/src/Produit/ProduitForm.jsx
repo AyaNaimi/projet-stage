@@ -52,7 +52,6 @@ const ProduitForm = ({
   setShowAddCategory,
   handleAddCategory,
   handleEditCategorie,
-  handleDeletecatgeorieCat,
   showSuModal,
   setShowSuModal,
   handleAddSousCategory,
@@ -63,37 +62,14 @@ const ProduitForm = ({
   handleSave,
   showEditSousModal,
   setShowEditSousModal,
-  handleSaveSous,
   handleSuCategorie,
   handleAddEmptyRowRep,
   selectedProductsDataRep,
   handleInputChangeRep,
   handleDeleteProductRap,
-  AddButton,
   closeForm,
   editingProduit,
-  showFilters,
-  formContainerStyle,
-  FilterToggleButton,
-  toggleFilters,
-  allColumns,
-  columnVisibility,
-  toggleColumnVisibility,
-  genreFiltre,
-  setGenreFiltre,
-  produitsFiltres,
-  selectAll,
-  handleSelectAllChange,
-  selectedItems,
-  handleCheckboxChange,
-  page,
-  rowsPerPage,
-  handleChangePage,
-  handleChangeRowsPerPage,
-  TableContainer,
-  expandedRowsRepresantant,
-  toggleRowRepresantant,
-  translateTypeQte
+  formContainerStyle
 }) => {
   const [tabKey, setTabKey] = React.useState('infoProduit');
   const [logoPreview, setLogoPreview] = useState(formData.logoP ? (typeof formData.logoP === 'string' ? formData.logoP : URL.createObjectURL(formData.logoP)) : null);
@@ -658,12 +634,12 @@ const ProduitForm = ({
                       }}
                       value={formData.produit_Etiq_id ? produits.find((prod) => prod.id === formData.produit_Etiq_id) : null}
                       renderInput={(params) => {
-                        const hasError = '' || !formData.produit_Etiq_id;
+                        const hasError = !formData.produit_Etiq_id;
                         return (
                           <TextField
                             {...params}
                             placeholder="Code ..."
-                            error={''}
+                            error={false}
                             variant="outlined"
                             sx={{
                               '& .MuiInputBase-root': {
@@ -722,12 +698,12 @@ const ProduitForm = ({
                       }}
                       value={formData.produit_Embalg_S_id ? produits.find((prod) => prod.id === formData.produit_Embalg_S_id) : null}
                       renderInput={(params) => {
-                        const hasError = '' || !formData.produit_Embalg_id;
+                        const hasError = !formData.produit_Embalg_S_id;
                         return (
                           <TextField
                             {...params}
                             placeholder="Code ..."
-                            error={''}
+                            error={false}
                             variant="outlined"
                             sx={{
                               '& .MuiInputBase-root': {
@@ -786,12 +762,12 @@ const ProduitForm = ({
                       }}
                       value={formData.produit_Embalg_id ? produits.find((prod) => prod.id === formData.produit_Embalg_id) : null}
                       renderInput={(params) => {
-                        const hasError = '' || !formData.produit_Embalg_id;
+                        const hasError = !formData.produit_Embalg_id;
                         return (
                           <TextField
                             {...params}
                             placeholder="Code ..."
-                            error={''}
+                            error={false}
                             variant="outlined"
                             sx={{
                               '& .MuiInputBase-root': {
