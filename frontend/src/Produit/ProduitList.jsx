@@ -1013,19 +1013,41 @@ const ProduitList = () => {
       setCategories(latestCategories);
       await storeDataInIndexedDB(latestCategories, "famille");
     } catch (error) {
-      console.error("Error deleting categorie:", error);
+      console.error("Error deleting calibre:", error);
       Swal.fire({
         icon: "error",
         title: "Erreur!",
-        text: "Échec de la suppression de la categorie.",
+        text: "Échec de la suppression du calibre.",
       });
     }
-  };
+    };
 
-  console.log("cat", cat);
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showEditClibreModal, setShowEditClibreModal] = useState(false);
+    const handleDeleteCalibre = async (calibreId) => {
+    try {
+      await axiosInstance.delete(`/api/calibres/${calibreId}`);
+
+      // Notification de succès
+      Swal.fire({
+        icon: "success",
+        title: "Succès!",
+        text: "Calibre supprimé avec succès.",
+      });
+      // Récupérer les nouveaux calibres après suppression
+      await fetchCalibres();
+    } catch (error) {
+      console.error("Error deleting calibre:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: "Échec de la suppression du calibre.",
+      });
+    }
+    };
+
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showEditClibreModal, setShowEditClibreModal] = useState(false);
+
 
   const [showEditSousModal, setShowEditSousModal] = useState(false);
 
@@ -1697,6 +1719,7 @@ const ProduitList = () => {
               setShowAddCalibre={setShowAddCalibre}
               handleAddClibre={handleAddClibre}
               handleEditClibre={handleEditClibre}
+              handleDeleteCalibre={handleDeleteCalibre}
               handleDeletecatgeorie={handleDeletecatgeorie}
               showEditClibreModal={showEditClibreModal}
               setShowEditClibreModal={setShowEditClibreModal}

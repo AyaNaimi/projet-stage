@@ -889,6 +889,28 @@ const handleDeletecatgeorie = async (categorieId) => {
   }
 };
 
+const handleDeleteCalibre = async (calibreId) => {
+  try {
+    await axiosInstance.delete(`calibres/${calibreId}`);
+
+    // Notification de succès
+    Swal.fire({
+      icon: "success",
+      title: "Succès!",
+      text: "Calibre supprimé avec succès.",
+    });
+    // Récupérer les nouveaux calibres après suppression
+    await fetchCalibres();
+  } catch (error) {
+    console.error("Error deleting calibre:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Erreur!",
+      text: "Échec de la suppression du calibre.",
+    });
+  }
+};
+
   console.log('cat',cat)
   const [isModalOpen, setModalOpen] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -1437,6 +1459,7 @@ const toggleDetail = (rowId, section) => {
   setShowAddCalibre={setShowAddCalibre}
   handleAddClibre={handleAddClibre}
   handleEditClibre={handleEditClibre}
+  handleDeleteCalibre={handleDeleteCalibre}
   handleDeletecatgeorie={handleDeletecatgeorie}
   showEditClibreModal={showEditClibreModal}
   setShowEditClibreModal={setShowEditClibreModal}

@@ -73,6 +73,7 @@ const ProduitForm = ({
   setShowAddCalibre,
   handleAddClibre,
   handleEditClibre,
+  handleDeleteCalibre,
   handleDeletecatgeorie,
   showEditClibreModal,
   setShowEditClibreModal,
@@ -923,7 +924,7 @@ const ProduitForm = ({
                             />
                             <span style={{ margin: "0 8px" }}></span>
                             <FontAwesomeIcon
-                              onClick={() => handleDeletecatgeorie(categ.id)}
+                              onClick={() => handleDeleteCalibre(categ.id)}
                               icon={faTrash}
                               style={{ color: "#ff0000", cursor: "pointer" }}
                             />
