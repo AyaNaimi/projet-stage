@@ -88,6 +88,7 @@ const ProduitForm = ({
   setShowSuModal,
   handleAddSousCategory,
   handleEditSousCategorie,
+  handleSaveSousCategorie,
   handleDeletecatgeorieSousCat,
   showEditModal,
   setShowEditModal,
@@ -1224,7 +1225,7 @@ const ProduitForm = ({
             <Modal.Title>Modifier la Sous-Catégorie</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={handleEditSousCategorie}>
+            <Form onSubmit={handleSaveSousCategorie}>
               <Form.Group className="mb-3">
                 <Form.Label>Nom de la Sous-Catégorie</Form.Label>
                 <Form.Control
@@ -1243,6 +1244,26 @@ const ProduitForm = ({
                 <Form.Text className="text-danger">
                   {errors.sous_categorie}
                 </Form.Text>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Logo de la Sous-Catégorie</Form.Label>
+                {selectedCategoryId?.logoP && (
+                  <div className="mb-2">
+                    <img
+                      src={toFullUrl(selectedCategoryId.logoP)}
+                      alt="Logo actuel"
+                      style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '50%', border: '1px solid #ddd' }}
+                    />
+                  </div>
+                )}
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setNewCategory(prev => ({ ...prev, imageFile: file }));
+                  }}
+                />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>

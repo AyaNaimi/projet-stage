@@ -27,7 +27,7 @@ class CategorieController extends Controller
             $validator = Validator::make($request->all(), [
                 'categorie' => 'required',
                 'idCatMer' => 'nullable',
-                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg,avif|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -64,7 +64,7 @@ class CategorieController extends Controller
             $validator = Validator::make($request->all(), [
                 'categorie' => 'required|string',
                 'idCatMer' => 'nullable',
-                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg,avif|max:2048',
             ]);
 
             if ($validator->fails()) {

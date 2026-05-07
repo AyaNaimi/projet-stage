@@ -1069,8 +1069,76 @@ const ProduitList = () => {
   };
   const handleEditSousCategorie = (categorieId) => {
     setSelectedCategoryId(categorieId);
-    setCategorie(categorieId.categorie);
+    setNewCategory({
+      sous_categorie: categorieId.categorie || '',
+      description: categorieId.description || '',
+      idCatMer: categorieId.idCatMer || '',
+      imageFile: null,
+    });
     setShowEditSousModal(true);
+  };
+
+  const handleSaveSousCategorie = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("_method", "put");
+      formData.append("categorie", newCategory.sous_categorie || "");
+      formData.append("description", newCategory.description || "");
+      formData.append("idCatMer", newCategory.idCatMer || "");
+      if (newCategory.imageFile instanceof File) {
+        formData.append("logoP", newCategory.imageFile);
+      }
+
+      await axiosInstance.post(
+        `/api/categories/${selectedCategoryId.id}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+
+      setShowEditSousModal(false);
+      setNewCategory({ sous_categorie: "", description: "", idCatMer: "", imageFile: null });
+
+      Swal.fire({
+        icon: "success",
+        title: "Succès!",
+        text: "Sous-catégorie modifiée avec succès.",
+      });
+    } catch (error) {
+      console.error("Erreur lors de la modification de la sous-catégorie :", error);
+      let errorMsg = "Échec de la modification de la sous-catégorie.";
+
+      if (error.response?.data?.error) {
+        if (typeof error.response.data.error === "object") {
+          errorMsg = Object.values(error.response.data.error).flat().join(", ");
+        } else {
+          errorMsg = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: errorMsg,
+      });
+    }
   };
   const [idSucategorie, setIdSucategorie] = useState(null); // State for
   const handleSuCategorie = (categorieId) => {
@@ -1734,6 +1802,7 @@ const ProduitList = () => {
               setShowSuModal={setShowSuModal}
               handleAddSousCategory={handleAddSousCategory}
               handleEditSousCategorie={handleEditSousCategorie}
+              handleSaveSousCategorie={handleSaveSousCategorie}
               handleDeletecatgeorieSousCat={handleDeletecatgeorie}
               showEditModal={showEditModal}
               setShowEditModal={setShowEditModal}
