@@ -18,9 +18,13 @@ class ProduitController extends Controller
 {
     public function index()
     {
-        // Vérifier si l'utilisateur a la permission de voir la liste des produits
             try {
-                $produits = Produit::with('categorie', 'calibre', 'user','souscategorie','prixProduits','prixProduitsLast','Embalge','etiquette','EmbalgeS','stockProduit')->orderBy('id', 'desc')->get();
+                $produits = Produit::with('categorie', 'calibre', 'user','souscategorie','prixProduits','prixProduitsLast','Embalge','etiquette','EmbalgeS','stockProduit')->orderBy('id', 'desc')->get()
+                    ->map(function ($produit) {
+                        $data = $produit->toArray();
+                        $data['logoP'] = $produit->logo_url;
+                        return $data;
+                    });
                 $count = Produit::count();
                 $Categorie=Categorie::with('produits')->get();
 
@@ -133,7 +137,7 @@ class ProduitController extends Controller
                 }
                 }
                
-                return response()->json(['message' => 'Produit ajouté avec succès', 'produit' => $produit], 200);
+                return response()->json(['message' => 'Produit ajouté avec succès', 'produit' => array_merge($produit->toArray(), ['logoP' => $produit->logo_url])], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }
@@ -193,18 +197,15 @@ class ProduitController extends Controller
 
     public function show($id)
     {
-        // Vérifier si l'utilisateur a la permission de voir un produit spécifique
-        // if (Gate::allows('view_product')) {
         try {
             $produit = Produit::with('calibre', 'categorie')->findOrFail($id);
+            $data = $produit->toArray();
+            $data['logoP'] = $produit->logo_url;
 
-            return response()->json(['produit' => $produit]);
+            return response()->json(['produit' => $data]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
-        // } else {
-        //     abort(403, 'Vous n\'avez pas l\'autorisation de voir ce produit.');
-        // }
     }
 
 
@@ -273,7 +274,7 @@ class ProduitController extends Controller
                         }
                     }
                 }
-                return response()->json(['message' => 'Produit modifié avec succès', 'produit' => $produit], 200);
+                return response()->json(['message' => 'Produit modifié avec succès', 'produit' => array_merge($produit->toArray(), ['logoP' => $produit->logo_url])], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }
