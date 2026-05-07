@@ -26,45 +26,42 @@ class CategorieController extends Controller
 
     public function store(Request $request)
     {
-        // Check if the user has permission to create a category
+        try {
+            // Validate the incoming request
+            $validator = Validator::make($request->all(), [
+                'categorie' => 'required',
+                'idCatMer' => 'nullable',
+                'logoP' => 'nullable', 
+            ]);
 
-            try {
-                // Validate the incoming request
-                $validator = Validator::make($request->all(), [
-                    'categorie' => 'required',
-                    'idCatMer' => 'nullable',
-
-                    'logoP' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Category logo validation
-                ]);
-    
-                // If validation fails, return error response
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 400);
-                }
-    
-                // Create a new Category instance
-                $category = new Categorie();
-                $category->categorie = $request->input('categorie');
-                $category->idCatMer = $request->input('idCatMer');
-
-    
-                // Handle logo image upload
-                if ($request->hasFile('logoP')) {
-                    $logoPath = $request->file('logoP')->store('public/logoP'); // Store logo in public/logoc directory
-                    $category->logoP = Storage::url($logoPath); // Save the public path to the logo
-                }
-    
-                // Save the category to the database
-                $category->save();
-    
-                // Return success response
-                return response()->json(['message' => 'Catégorie ajoutée avec succès', 'category' => $category], 200);
-    
-            } catch (\Exception $e) {
-                // Handle any errors and return a JSON response
-                return response()->json(['error' => $e->getMessage()], 500);
+            // If validation fails, return error response
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
             }
-       
+
+            // Create a new Category instance
+            $category = new Categorie();
+            $category->categorie = $request->input('categorie');
+            $category->idCatMer = $request->input('idCatMer');
+
+            // Handle logo image upload
+            if ($request->hasFile('logoP')) {
+                $logoPath = $request->file('logoP')->store('public/logoP');
+                $category->logoP = Storage::url($logoPath);
+            } else {
+                $category->logoP = ''; // Default empty if no image provided
+            }
+
+            // Save the category to the database
+            $category->save();
+
+            // Return success response
+            return response()->json(['message' => 'Catégorie ajoutée avec succès', 'category' => $category], 200);
+
+        } catch (\Exception $e) {
+            // Handle any errors and return a JSON response
+            return response()->json(['error' => ['message' => [$e->getMessage()]]], 500);
+        }
     }
 
     public function update(Request $request, $id)
@@ -75,9 +72,9 @@ class CategorieController extends Controller
         try {
             // Validate the incoming request
             $validator = Validator::make($request->all(), [
-                'categorie' => 'required|string', // Ensure category name is required
+                'categorie' => 'required|string',
                 'idCatMer' => 'nullable',
-                'logoP' => 'nullable|image', // Make the logo optional, but validate if provided
+                'logoP' => 'nullable',
             ]);
     
             // If validation fails, return error response
@@ -87,18 +84,19 @@ class CategorieController extends Controller
     
             // Update the category name
             $categorie->categorie = $request->input('categorie');
+            $categorie->idCatMer = $request->input('idCatMer');
     
             // Handle logo image upload if a new logo is provided
             if ($request->hasFile('logoP')) {
                 // Delete the old logo if it exists
                 if ($categorie->logoP) {
                     $oldLogoPath = str_replace('/storage/', 'public/', $categorie->logoP);
-                    Storage::delete($oldLogoPath); // Delete the old logo file
+                    Storage::delete($oldLogoPath);
                 }
     
                 // Store the new logo
-                $logoPath = $request->file('logoP')->store('public/logoP'); // Store logo in public/logoP directory
-                $categorie->logoP = Storage::url($logoPath); // Save the public path to the new logo
+                $logoPath = $request->file('logoP')->store('public/logoP');
+                $categorie->logoP = Storage::url($logoPath);
             }
     
             // Save the updated category to the database

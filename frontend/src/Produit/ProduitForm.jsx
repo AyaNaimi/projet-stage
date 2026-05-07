@@ -965,7 +965,10 @@ const ProduitForm = ({
                   type="text"
                   placeholder="Nom de la Famille"
                   value={newCategory.categorie}
-                  onChange={(e) => setNewCategory({ ...newCategory, categorie: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategory(prev => ({ ...prev, categorie: val }));
+                  }}
                   className="styled-input"
                   style={inputStyle}
                 />
@@ -975,7 +978,11 @@ const ProduitForm = ({
                 <Form.Control
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setNewCategory({ ...newCategory, imageFile: e.target.files[0] })}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    console.log("File selected in ProduitForm:", file);
+                    setNewCategory(prev => ({ ...prev, imageFile: file }));
+                  }}
                 />
               </Form.Group>
               <Form.Group className="mt-3">
@@ -1018,7 +1025,6 @@ const ProduitForm = ({
             <Fab
               variant="extended"
               className="btn-sm Fab mb-2 mx-2"
-              type="submit"
               onClick={handleAddCategory}
             >
               Valider
@@ -1060,7 +1066,10 @@ const ProduitForm = ({
                 <Form.Control
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setNewCategory({ ...newCategory, imageFile: e.target.files[0] })}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setNewCategory(prev => ({ ...prev, imageFile: file }));
+                  }}
                 />
               </Form.Group>
               <Form.Group className="d-flex justify-content-center">
@@ -1086,7 +1095,10 @@ const ProduitForm = ({
                   type="text"
                   name="sous_categorie"
                   value={newCategory.sous_categorie || ''}
-                  onChange={(e) => setNewCategory({ ...newCategory, sous_categorie: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategory(prev => ({ ...prev, sous_categorie: val }));
+                  }}
                   placeholder="Ex: Fruits Frais, Fruits Secs, Légumes"
                   isInvalid={!!errors.sous_categorie}
                   className="styled-input"
@@ -1102,7 +1114,10 @@ const ProduitForm = ({
                   type="text"
                   name="description"
                   value={newCategory.description || ''}
-                  onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategory(prev => ({ ...prev, description: val }));
+                  }}
                   placeholder="Description de la sous-catégorie"
                   className="styled-input"
                   style={inputStyle}
@@ -1131,7 +1146,10 @@ const ProduitForm = ({
                   type="text"
                   name="sous_categorie"
                   value={newCategory.sous_categorie || ''}
-                  onChange={(e) => setNewCategory({ ...newCategory, sous_categorie: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategory(prev => ({ ...prev, sous_categorie: val }));
+                  }}
                   placeholder="Ex: Fruits Frais, Fruits Secs, Légumes"
                   isInvalid={!!errors.sous_categorie}
                   className="styled-input"
@@ -1147,7 +1165,10 @@ const ProduitForm = ({
                   type="text"
                   name="description"
                   value={newCategory.description || ''}
-                  onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategory(prev => ({ ...prev, description: val }));
+                  }}
                   placeholder="Description de la sous-catégorie"
                   className="styled-input"
                   style={inputStyle}

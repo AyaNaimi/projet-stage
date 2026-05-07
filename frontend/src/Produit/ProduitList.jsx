@@ -955,27 +955,60 @@ const ProduitList = () => {
   };
 
   const handleSave = async () => {
-    console.log("image", selectedCategoryId.categorie, image);
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       const formData = new FormData();
-      formData.append("_method", "put"); // Note : Vous n'avez peut-être pas besoin de cette ligne si vous utilisez une méthode PUT directement
+      formData.append("_method", "put");
       formData.append("categorie", selectedCategoryId.categorie);
-      formData.append("logoP", newCategory.imageFile);
+      if (newCategory.imageFile) {
+        formData.append("logoP", newCategory.imageFile);
+      }
+
       await axiosInstance.post(
         `/api/categories/${selectedCategoryId.id}`,
-        formData,
+        formData
       );
-      fetchCategories(); // Refresh the categories list
-      await storeDataInIndexedDB(categories, "famille");
+      
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+
       setShowEditModal(false);
       setShowEditSousModal(false);
+      setNewCategory({ categorie: "", imageFile: null }); // Reset form
+
       Swal.fire({
         icon: "success",
         title: "Succès!",
-        text: " modifiée avec succès.",
+        text: "Catégorie modifiée avec succès.",
       });
     } catch (error) {
       console.error("Erreur lors de la modification de la catégorie :", error);
+      let errorMsg = "Échec de la modification de la catégorie.";
+      
+      if (error.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMsg = Object.values(error.response.data.error).flat().join(", ");
+        } else {
+          errorMsg = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: errorMsg,
+      });
     }
   };
   const handleSaveClibre = async () => {
@@ -1005,57 +1038,108 @@ const ProduitList = () => {
   });
 
   const handleAddCategory = async () => {
+    // Validate before sending
+    if (!newCategory.categorie || !newCategory.categorie.trim()) {
+      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez saisir un nom de famille." });
+      return;
+    }
+    if (!newCategory.imageFile) {
+      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez sélectionner une image." });
+      return;
+    }
+
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); },
+    });
+
     try {
+      console.log("Adding Category:", newCategory);
       const formData = new FormData();
-      formData.append("categorie", newCategory.categorie);
-      formData.append("logoP", newCategory.imageFile);
+      formData.append("categorie", newCategory.categorie.trim());
+      console.log("Appending imageFile:", newCategory.imageFile.name, newCategory.imageFile.type, newCategory.imageFile.size);
+      formData.append("logoP", newCategory.imageFile, newCategory.imageFile.name);
 
       const response = await axiosInstance.post("/api/categories", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       console.log(response.data);
-      await fetchCategories(); // Refresh categories after adding
-      await storeDataInIndexedDB(categories, "famille");
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+
       setShowAddCategory(false);
-      Swal.fire({
-        icon: "success",
-        title: "Succès!",
-        text: " ajoutée avec succès.",
-      }); // Hide the modal after success
+      setNewCategory({ categorie: "", imageFile: null });
+
+      Swal.fire({ icon: "success", title: "Succès!", text: "Famille ajoutée avec succès." });
     } catch (error) {
       console.error("Error adding category:", error);
+      let errorMsg = "Échec de l'ajout de la famille.";
+      if (error.response?.data?.error) {
+        errorMsg = typeof error.response.data.error === 'object'
+          ? Object.values(error.response.data.error).flat().join(", ")
+          : error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      Swal.fire({ icon: "error", title: "Erreur!", text: errorMsg });
     }
   };
   const handleAddSousCategory = async () => {
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       console.log("idSucategorie", idSucategorie);
 
       const formData = new FormData();
-      formData.append("categorie", newCategory.categorie);
+      formData.append("categorie", newCategory.sous_categorie);
       formData.append("idCatMer", idSucategorie);
-
       formData.append("logoP", newCategory.imageFile);
 
-      const response = await axiosInstance.post("/api/categories", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosInstance.post("/api/categories", formData);
 
       console.log(response.data);
-      await fetchCategories(); // Refresh categories after adding
-      await storeDataInIndexedDB(categories, "famille");
-      setShowAddCategory(false);
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+      
+      setShowSuModal(false);
+      setNewCategory({ categorie: "", imageFile: null }); // Reset form
+
       Swal.fire({
         icon: "success",
         title: "Succès!",
-        text: "ajoutée avec succès.",
-      }); // Hide the modal after success
+        text: "Sous-catégorie ajoutée avec succès.",
+      });
     } catch (error) {
-      console.error("Error adding category:", error);
+      console.error("Error adding sub-category:", error);
+      let errorMsg = "Échec de l'ajout de la sous-catégorie. Vérifiez que vous avez bien sélectionné une image.";
+      
+      if (error.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMsg = Object.values(error.response.data.error).flat().join(", ");
+        } else {
+          errorMsg = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: errorMsg,
+      });
     }
   };
 

@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('prix_produits', function (Blueprint $table) {
-            $table->string('typeQte')->nullable(); // Date de début
-            $table->decimal('Unite')->nullable(); 
+            if (!Schema::hasColumn('prix_produits', 'typeQte')) {
+                $table->string('typeQte')->nullable(); // Date de début
+            }
+            if (!Schema::hasColumn('prix_produits', 'Unite')) {
+                $table->decimal('Unite')->nullable(); 
+            }
         });
     }
 

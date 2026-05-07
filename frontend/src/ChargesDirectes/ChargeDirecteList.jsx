@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import Box from "@mui/material/Box";
 import TableMui from "../components/TableMui";
 import { useOpen } from "../Acceuil/OpenProvider";
@@ -21,7 +22,12 @@ const ChargeDirecteList = () => {
   const [sousCatFiltre, setSousCatFiltre] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [formContainerStyle, setFormContainerStyle] = useState({
+    right: "-100%",
+  });
+  const [tableContainerStyle, setTableContainerStyle] = useState({
+    marginRight: "0%",
+  });
 
   const [formData, setFormData] = useState({
     id: null,
@@ -41,12 +47,12 @@ const ChargeDirecteList = () => {
 
   const fetchData = async () => {
     try {
-      const baseUrl = `http://${import.meta.env.VITE_API_URL}`;
       const [prodRes, catRes] = await Promise.all([
-        axios.get(`${baseUrl}/api/produits`).catch(() => ({ data: {} })),
-        axios.get(`${baseUrl}/api/categories`).catch(() => ({ data: [] }))
+        axiosInstance.get('/api/produits').catch(() => ({ data: {} })),
+        axiosInstance.get('/api/categories').catch(() => ({ data: [] }))
       ]);
-      setProduits(prodRes.data?.produit || prodRes.data || []);
+      const prodData = prodRes.data?.produit || prodRes.data;
+      setProduits(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catRes.data) ? catRes.data : []);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -58,9 +64,10 @@ const ChargeDirecteList = () => {
   }, []);
 
   useEffect(() => {
+    const safeSearchQuery = (searchQuery || '').toLowerCase();
     let filtered = produits.filter((p) =>
-      p.designation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.Code_produit?.toLowerCase().includes(searchQuery.toLowerCase())
+      p.designation?.toLowerCase().includes(safeSearchQuery) ||
+      p.Code_produit?.toLowerCase().includes(safeSearchQuery)
     );
 
     if (selectedCategory && selectedCategory !== 'tout') {
@@ -104,11 +111,17 @@ const ChargeDirecteList = () => {
       temps_production: 0
     });
     setErrors({});
-    setShowModal(true);
+    if (formContainerStyle.right === "-100%") {
+      setFormContainerStyle({ right: "0" });
+      setTableContainerStyle({ marginRight: "48%" });
+    } else {
+      closeForm();
+    }
   };
 
   const closeForm = () => {
-    setShowModal(false);
+    setFormContainerStyle({ right: "-100%" });
+    setTableContainerStyle({ marginRight: "0" });
     setErrors({});
   };
 
@@ -120,17 +133,19 @@ const ChargeDirecteList = () => {
        cout_horaire_mod: row.cout_horaire_mod || 0,
        temps_production: row.temps_production || 0
     });
-    setShowModal(true);
- };
+    if (formContainerStyle.right === "-100%") {
+      setFormContainerStyle({ right: "0" });
+      setTableContainerStyle({ marginRight: "48%" });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const baseUrl = `http://${import.meta.env.VITE_API_URL}`;
-    const url = formData.id ? `${baseUrl}/api/produits/${formData.id}` : `${baseUrl}/api/produits`;
+    const url = formData.id ? `/api/produits/${formData.id}` : `/api/produits`;
     const method = formData.id ? "put" : "post";
 
     try {
-      await axios[method](url, formData);
+      await axiosInstance[method](url, formData);
       fetchData();
       closeForm();
       Swal.fire("Succès", `Charges directes ${formData.id ? 'modifiées' : 'enregistrées'} avec succès.`, "success");
@@ -150,13 +165,13 @@ const ChargeDirecteList = () => {
 
   const chunks = [];
   const itemsPerSlide = 4;
-  const catWithTout = [{ id: 'tout', categorie: 'Tout' }, ...categories.filter(c => c.idCatMer === null)];
+  const catWithTout = [{ id: 'tout', categorie: 'Tout' }, ...(categories || []).filter(c => c && c.idCatMer === null)];
   for (let i = 0; i < catWithTout.length; i += itemsPerSlide) {
     chunks.push(catWithTout.slice(i, i + itemsPerSlide));
   }
 
-  const selectedCatData = categories.find(c => c.id === parseInt(selectedCategory));
-  const sousCategories = selectedCatData ? categories.filter(c => c.idCatMer === selectedCatData.id) : [];
+  const selectedCatData = (categories || []).find(c => c && c.id === parseInt(selectedCategory));
+  const sousCategories = selectedCatData ? (categories || []).filter(c => c && c.idCatMer === selectedCatData.id) : [];
   const chunksSucat = [];
   const suCatWithTout = [{ id: 'tout', sous_categorie: 'Tout' }, ...sousCategories];
   for (let i = 0; i < suCatWithTout.length; i += itemsPerSlide) {
@@ -181,7 +196,20 @@ const ChargeDirecteList = () => {
           handleSousCategoryFilterChange={handleSousCategoryFilterChange}
         />
 
-        <div style={{ position: 'relative', marginTop: '20px' }}>
+        <div
+          className="container-d-flex justify-content-start"
+          style={{ marginTop: "20px", position: "relative" }}
+        >
+          <ChargeDirecteForm
+            show={formContainerStyle.right === "0"}
+            formData={formData}
+            handleChange={handleChange}
+            handleSubmit={handleSubmit}
+            errors={errors}
+            closeForm={closeForm}
+            formContainerStyle={formContainerStyle}
+          />
+
           <TableMui
             columns={[
                 {
@@ -262,7 +290,7 @@ const ChargeDirecteList = () => {
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
             produitsFiltres={filteredProduits}
             addButtonText="Ajouter"
-            tableContainerStyle={{ width: '100%' }}
+            tableContainerStyle={{ ...tableContainerStyle, width: '100%' }}
             selectedItems={selectedItems}
             handleDeleteSelected={noop}
             AddButton={AddButton}
@@ -270,15 +298,6 @@ const ChargeDirecteList = () => {
             showFilters={showFilters}
             toggleFilters={() => setShowFilters(!showFilters)}
             handleShowFormButtonClick={handleShowFormButtonClick}
-          />
-
-          <ChargeDirecteForm
-            show={showModal}
-            formData={formData}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-            errors={errors}
-            closeForm={closeForm}
           />
         </div>
       </Box>

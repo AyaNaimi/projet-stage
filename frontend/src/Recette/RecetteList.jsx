@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import Box from "@mui/material/Box";
 import TableMui from "../components/TableMui";
 import { useOpen } from "../Acceuil/OpenProvider";
@@ -44,13 +45,15 @@ const RecetteList = () => {
     try {
       const baseUrl = `http://${import.meta.env.VITE_API_URL}`;
       const [prodRes, catRes, matRes] = await Promise.all([
-        axios.get(`${baseUrl}/api/produits`).catch(() => ({ data: {} })),
-        axios.get(`${baseUrl}/api/categories`).catch(() => ({ data: [] })),
-        axios.get(`${baseUrl}/api/matiere-premieres`).catch(() => ({ data: [] }))
+        axiosInstance.get('/api/produits').catch(() => ({ data: {} })),
+        axiosInstance.get('/api/categories').catch(() => ({ data: [] })),
+        axiosInstance.get('/api/matiere-premieres').catch(() => ({ data: [] }))
       ]);
-      setProduits(prodRes.data?.produit || prodRes.data || []);
+      const prodData = prodRes.data?.produit || prodRes.data;
+      setProduits(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catRes.data) ? catRes.data : []);
-      setMatierePremieres(matRes.data?.data || Array.isArray(matRes.data) ? matRes.data : []);
+      const matData = matRes.data?.data || matRes.data;
+      setMatierePremieres(Array.isArray(matData) ? matData : []);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -61,9 +64,10 @@ const RecetteList = () => {
   }, []);
 
   useEffect(() => {
+    const safeSearchQuery = (searchQuery || '').toLowerCase();
     let filtered = produits.filter((p) =>
-      p.designation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.Code_produit?.toLowerCase().includes(searchQuery.toLowerCase())
+      p.designation?.toLowerCase().includes(safeSearchQuery) ||
+      p.Code_produit?.toLowerCase().includes(safeSearchQuery)
     );
 
     if (selectedCategory && selectedCategory !== 'tout') {
@@ -144,7 +148,7 @@ const RecetteList = () => {
         ...formData,
         lines: formData.recette
       };
-      await axios[method](url, payload);
+      await axiosInstance[method](url, payload);
       fetchData();
       closeForm();
       Swal.fire("Succès", `Fiche technique ${formData.id ? 'modifiée' : 'ajoutée'} avec succès.`, "success");
@@ -162,15 +166,29 @@ const RecetteList = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const formContainerStyle = {
+    position: 'absolute',
+    top: '30px', 
+    left: showModal ? '20px' : '-100%',
+    width: '97%',
+    height: '100%',
+    transition: 'left 0.5s ease',
+    zIndex: 10,
+    backgroundColor: '#fff',
+    border: '1px solid #ccc',
+    padding: '20px',
+    boxShadow: '0px 0px 10px rgba(0,0,0,0.1)',
+  };
+
   const chunks = [];
   const itemsPerSlide = 4;
-  const catWithTout = [{ id: 'tout', categorie: 'Tout' }, ...categories.filter(c => c.idCatMer === null)];
+  const catWithTout = [{ id: 'tout', categorie: 'Tout' }, ...(categories || []).filter(c => c && c.idCatMer === null)];
   for (let i = 0; i < catWithTout.length; i += itemsPerSlide) {
     chunks.push(catWithTout.slice(i, i + itemsPerSlide));
   }
 
-  const selectedCatData = categories.find(c => c.id === parseInt(selectedCategory));
-  const sousCategories = selectedCatData ? categories.filter(c => c.idCatMer === selectedCatData.id) : [];
+  const selectedCatData = (categories || []).find(c => c && c.id === parseInt(selectedCategory));
+  const sousCategories = selectedCatData ? (categories || []).filter(c => c && c.idCatMer === selectedCatData.id) : [];
   const chunksSucat = [];
   const suCatWithTout = [{ id: 'tout', sous_categorie: 'Tout' }, ...sousCategories];
   for (let i = 0; i < suCatWithTout.length; i += itemsPerSlide) {
@@ -291,6 +309,7 @@ const RecetteList = () => {
             errors={errors}
             matierePremieres={matierePremieres}
             closeForm={closeForm}
+            formContainerStyle={formContainerStyle}
           />
         </div>
       </Box>

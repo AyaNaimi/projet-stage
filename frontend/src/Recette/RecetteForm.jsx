@@ -11,7 +11,8 @@ const RecetteForm = ({
   handleSubmit,
   errors,
   matierePremieres,
-  closeForm
+  closeForm,
+  formContainerStyle
 }) => {
   const inputStyle = {
     borderRadius: '0.5rem',
@@ -31,16 +32,13 @@ const RecetteForm = ({
   };
 
   return (
-    <Modal 
-      show={show} 
-      onHide={closeForm} 
-      size="xl" 
-      centered
-      backdrop="static"
-      className="custom-recette-modal"
+    <div
+      id="formContainerunique"
+      className=""
+      style={{ ...formContainerStyle, marginTop: '-0px', height: `calc(99.6vh - 300px)`, overflow: 'auto' }}
     >
-      <Modal.Header closeButton style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-        <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
             background: '#00afaa',
             width: '40px',
@@ -61,10 +59,11 @@ const RecetteForm = ({
               {formData.designation || 'Sélectionner un produit'}
             </div>
           </div>
-        </Modal.Title>
-      </Modal.Header>
+        </div>
+        <Button variant="link" onClick={closeForm} style={{ color: '#64748b', textDecoration: 'none', fontSize: '1.5rem', lineHeight: 1 }}>&times;</Button>
+      </div>
 
-      <Modal.Body style={{ background: '#f1f5f9', padding: '24px' }}>
+      <div style={{ background: '#f1f5f9', padding: '24px', overflowY: 'auto', height: 'calc(100% - 140px)' }}>
         <Form onSubmit={handleSubmit} id="recetteForm">
           <div style={sectionStyle}>
             <div style={{ display: 'flex', gap: '20px' }}>
@@ -132,7 +131,7 @@ const RecetteForm = ({
                   type: 'select',
                   options: [
                     { value: '', label: 'Sélectionner une matière' },
-                    ...(Array.isArray(matierePremieres) ? matierePremieres.map(m => ({ value: m.id, label: m.designation })) : [])
+                    ...(Array.isArray(matierePremieres) ? matierePremieres.filter(m => m != null).map(m => ({ value: m.id, label: m.designation || 'Sans désignation' })) : [])
                   ]
                 },
                 { key: 'quantite', label: 'Quantité', width: '20%', type: 'number' },
@@ -149,9 +148,9 @@ const RecetteForm = ({
             />
           </div>
         </Form>
-      </Modal.Body>
+      </div>
 
-      <Modal.Footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '16px 24px' }}>
+      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px', position: 'absolute', bottom: 0, width: '100%', left: 0 }}>
         <Button
           variant="light"
           onClick={closeForm}
@@ -174,13 +173,14 @@ const RecetteForm = ({
             padding: '8px 32px',
             borderRadius: '8px',
             fontWeight: 700,
+            color: '#fff',
             boxShadow: '0 4px 12px rgba(0, 175, 170, 0.2)'
           }}
         >
           {formData.id ? 'Sauvegarder les modifications' : 'Enregistrer la fiche'}
         </Button>
-      </Modal.Footer>
-    </Modal>
+      </div>
+    </div>
   );
 };
 

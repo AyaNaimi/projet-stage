@@ -8,7 +8,8 @@ const ChargeDirecteForm = ({
   handleChange,
   handleSubmit,
   errors,
-  closeForm
+  closeForm,
+  formContainerStyle
 }) => {
   const inputStyle = {
     borderRadius: '0.6rem',
@@ -38,15 +39,13 @@ const ChargeDirecteForm = ({
   };
 
   return (
-    <Modal 
-      show={show} 
-      onHide={closeForm} 
-      size="lg" 
-      centered
-      backdrop="static"
+    <div
+      id="formContainerunique"
+      className=""
+      style={{ ...formContainerStyle, marginTop: '-0px', height: `calc(99.6vh - 300px)`, overflow: 'auto' }}
     >
-      <Modal.Header closeButton style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-        <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+      <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <div style={{
             background: 'linear-gradient(135deg, #00afaa 0%, #008f8a 100%)',
             width: '44px',
@@ -67,10 +66,11 @@ const ChargeDirecteForm = ({
               Paramétrage du coût de main d'œuvre
             </div>
           </div>
-        </Modal.Title>
-      </Modal.Header>
+        </div>
+        <Button variant="link" onClick={closeForm} style={{ color: '#64748b', textDecoration: 'none', fontSize: '1.5rem', lineHeight: 1 }}>&times;</Button>
+      </div>
 
-      <Modal.Body style={{ background: '#f1f5f9', padding: '30px' }}>
+      <div style={{ background: '#f1f5f9', padding: '30px', overflowY: 'auto', height: 'calc(100% - 140px)' }}>
         <Form onSubmit={handleSubmit} id="chargeDirecteForm">
           <div style={sectionStyle}>
             <Row>
@@ -152,10 +152,10 @@ const ChargeDirecteForm = ({
             </div>
           </div>
         </Form>
-      </Modal.Body>
+      </div>
 
-      <Modal.Footer style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-        <Button variant="light" onClick={closeForm} style={{ padding: '10px 25px', borderRadius: '10px', fontWeight: 600 }}>
+      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px', position: 'absolute', bottom: 0, width: '100%', left: 0 }}>
+        <Button variant="light" onClick={closeForm} style={{ padding: '10px 25px', borderRadius: '10px', fontWeight: 600, border: '1px solid #e2e8f0' }}>
           Annuler
         </Button>
         <Button 
@@ -166,13 +166,14 @@ const ChargeDirecteForm = ({
             border: 'none', 
             padding: '10px 35px', 
             borderRadius: '10px', 
-            fontWeight: 700 
+            fontWeight: 700,
+            color: '#fff'
           }}
         >
           {formData.id ? 'Mettre à jour' : 'Valider'}
         </Button>
-      </Modal.Footer>
-    </Modal>
+      </div>
+    </div>
   );
 };
 

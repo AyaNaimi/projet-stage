@@ -410,6 +410,8 @@
 use App\Http\Controllers\MatierePremiereController;
 use App\Http\Controllers\RecetteController;
 use App\Http\Controllers\ChargeIndirecteController;
+use App\Http\Controllers\FamilleMatiereController;
+use App\Http\Controllers\TypeMatiereController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutorisationController;
 use App\Http\Controllers\BonLivraisonController;
@@ -566,10 +568,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BienEtreIdeeController;
 use App\Http\Controllers\DemandeAttestationController;
 use App\Http\Controllers\EvenementController;
-use App\Http\Controllers\FamilleMatiereController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ReclamationSalaireController;
-use App\Http\Controllers\TypeMatiereController;
 
 Route::get('/demandes-attestation', [DemandeAttestationController::class, 'index']);
 Route::post('/demandes-attestation', [DemandeAttestationController::class, 'store']);
@@ -677,14 +677,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-{/*-------------------------------- Gestion Actifs -------------------------------------- */}
+    /*-------------------------------- Gestion Actifs -------------------------------------- */
 
     // Gestion des actifs
 
 
 
 
-{/*-------------------------------- MEnu Réclamations & RH -------------------------------------- */}
+    /*-------------------------------- MEnu Réclamations & RH -------------------------------------- */
 
 
 
