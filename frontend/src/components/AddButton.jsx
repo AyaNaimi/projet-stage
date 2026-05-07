@@ -24,18 +24,18 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
           onClick={hasPermission ? onClick : null} // Désactive l'action si pas de permission
           disabled={!hasPermission} // Désactive le bouton visuellement
           style={{
-            backgroundColor: hasPermission ? "#00796b" : "#b0bec5", // Gris si désactivé
+            backgroundColor: hasPermission ? "#00afaa" : "#b0bec5", // Brand color
             color: "white",
             border: "none",
-            borderRadius: "4px",
-            padding: "8px 12px",
+            borderRadius: "999px", // Pill shape
+            padding: "10px 24px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
             gap: "8px",
-            cursor: hasPermission ? "pointer" : "not-allowed", // Change le curseur si désactivé
-            width: "350px",
-            margin: "5px",
+            fontWeight: "700",
+            cursor: hasPermission ? "pointer" : "not-allowed",
+            transition: "all 0.3s ease",
+            boxShadow: hasPermission ? "0 4px 12px rgba(0, 175, 170, 0.2)" : "none",
           }}
           className="AjouteBotton"
         >

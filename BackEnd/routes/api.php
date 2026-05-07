@@ -408,6 +408,8 @@
 
 
 use App\Http\Controllers\MatierePremiereController;
+use App\Http\Controllers\RecetteController;
+use App\Http\Controllers\ChargeIndirecteController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutorisationController;
 use App\Http\Controllers\BonLivraisonController;
@@ -1249,8 +1251,9 @@ Route::apiResource('heures-travail', HeureTravailController::class);
 
 Route::apiResource('horaire-exceptionnel', HoraireExceptionnelController::class);
 
-
+// Cost Calculation Module Routes
+Route::get('recettes/produit/{produitId}', [RecetteController::class, 'index']);
+Route::post('recettes/sync/{produitId}', [RecetteController::class, 'sync']);
+Route::apiResource('recettes', RecetteController::class)->except(['index']);
+Route::apiResource('charges-indirectes', ChargeIndirecteController::class);
 });
-
-
-  

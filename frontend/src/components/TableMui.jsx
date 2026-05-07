@@ -131,14 +131,14 @@ export default function TableMui({
 // console.log('TableMui rendered with rows:', openDetails, rows);
   return (
         <div 
-            style={{...tableContainerStyle,
-              marginTop:'-45px',
-               maxWidth: width?width:'100%',
-
-              padding:'0',
-              backgroundColor: "#ffff", // Set background color
-              border: "1px solid #e0e0e0", // Add border to the table
-              borderCollapse: "collapse", // Collapse borders
+            style={{
+              marginTop: '-45px',
+              ...tableContainerStyle,
+              maxWidth: width ? width : '100%',
+              padding: '0',
+              backgroundColor: "#ffff", 
+              border: "1px solid #e0e0e0", 
+              borderCollapse: "collapse", 
               borderRadius: 10,
               boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
             }}>
@@ -185,7 +185,7 @@ hasChart={hasChart}
                       align={column.align || (column.numeric ? 'right' : 'left')}
                       style={{ minWidth: column.minWidth }}
                     >
-                      {column.label}
+                      {column.renderHeader ? column.renderHeader() : column.label}
                     </TableCell>
                   ) : null
                 )}

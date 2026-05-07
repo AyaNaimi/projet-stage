@@ -27,7 +27,8 @@ class ProduitController extends Controller
                 'Embalge',
                 'etiquette',
                 'EmbalgeS',
-                'stockProduit'
+                'stockProduit',
+                'recettes.matierePremiere'
             )->orderBy('id', 'desc')->get();
 
             return response()->json([
@@ -113,6 +114,23 @@ class ProduitController extends Controller
             }
 
             $produit->save();
+
+            // Sync Recipes (Nomenclature)
+            if ($request->has('lines')) {
+                $lines = is_string($request->input('lines')) 
+                    ? json_decode($request->input('lines'), true) 
+                    : $request->input('lines');
+                
+                foreach ($lines as $line) {
+                    if (!empty($line['matiere_premiere_id'])) {
+                        $produit->recettes()->create([
+                            'matiere_premiere_id' => $line['matiere_premiere_id'],
+                            'quantite' => $line['quantite'] ?? 0,
+                            'perte' => $line['perte'] ?? 0,
+                        ]);
+                    }
+                }
+            }
 
             $prixProduits = $request->input('prixProduits');
             if (is_array($prixProduits)) {
@@ -223,6 +241,24 @@ class ProduitController extends Controller
             $produit = Produit::findOrFail($id);
             $data = $request->except('prixProduits');
             $produit->update($data);
+
+            // Sync Recipes (Nomenclature)
+            if ($request->has('lines')) {
+                $produit->recettes()->delete(); // Clear old recipes
+                $lines = is_string($request->input('lines')) 
+                    ? json_decode($request->input('lines'), true) 
+                    : $request->input('lines');
+                
+                foreach ($lines as $line) {
+                    if (!empty($line['matiere_premiere_id'])) {
+                        $produit->recettes()->create([
+                            'matiere_premiere_id' => $line['matiere_premiere_id'],
+                            'quantite' => $line['quantite'] ?? 0,
+                            'perte' => $line['perte'] ?? 0,
+                        ]);
+                    }
+                }
+            }
 
             if ($request->has('prixProduits')) {
                 foreach ($request->input('prixProduits') as $prix) {

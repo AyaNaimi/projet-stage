@@ -81,6 +81,39 @@ public function stockProduit()
     return $this->hasMany(StockProduit::class, 'produit_id');
 }
 
+    public function recettes()
+    {
+        return $this->hasMany(Recette::class);
+    }
+
+    public function getUnitCostAttribute()
+    {
+        // 1. Matières Premières
+        $matiereCost = 0;
+        foreach ($this->recettes as $recette) {
+            if ($recette->matierePremiere) {
+                // Coût = Quantité * Prix / (1 - Perte)
+                $lossFactor = 1 - ($recette->perte / 100);
+                if ($lossFactor > 0) {
+                    $matiereCost += ($recette->quantite * $recette->matierePremiere->prix_achat) / $lossFactor;
+                }
+            }
+        }
+
+        // 2. MOD
+        $modCost = $this->temps_production * $this->cout_horaire_mod;
+
+        // 3. Packaging
+        $packagingCost = 0;
+        if ($this->etiquette) $packagingCost += $this->etiquette->unit_cost ?? 0;
+        if ($this->Embalge) $packagingCost += $this->Embalge->unit_cost ?? 0;
+        if ($this->EmbalgeS) $packagingCost += $this->EmbalgeS->unit_cost ?? 0;
+
+        return round($matiereCost + $modCost + $packagingCost, 4);
+    }
+
+    protected $appends = ['unit_cost'];
+
 public function stock()
 {
     return $this->hasMany(StockProduit::class, 'produit_id');

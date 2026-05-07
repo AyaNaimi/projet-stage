@@ -162,7 +162,7 @@ const FamilleTypeCarousels = ({
                             boxSizing: 'border-box'
                           }}>
                             <img
-                              src={'../../public/images/bayd.jpg'}
+                              src={'/images/bayd.jpg'}
                               alt={'tout'}
                               style={{
                                 width: '100%',
@@ -215,7 +215,7 @@ const FamilleTypeCarousels = ({
                               <img
                                 src={category.logoP && category.logoP !== '' && category.logoP !== null && category.logoP !== undefined
                                   ? category.logoP
-                                  : '../../public/images/logo-ovotec-blanc-05 (1).png'}
+                                  : '/images/bayd.jpg'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',
@@ -343,7 +343,7 @@ const FamilleTypeCarousels = ({
                             boxSizing: 'border-box'
                           }}>
                             <img
-                              src={'../../public/images/bayd.jpg'}
+                              src={'/images/bayd.jpg'}
                               alt={'tout'}
                               style={{
                                 width: '100%',
@@ -394,7 +394,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP}
+                                src={category.logoP && category.logoP !== '' ? category.logoP : '/images/bayd.jpg'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',

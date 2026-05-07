@@ -38,4 +38,9 @@ class MatierePremiere extends Model
     {
         return $this->hasMany(MatierePremiereHistorique::class);
     }
+
+    public function recettes()
+    {
+        return $this->hasMany(Recette::class);
+    }
 }

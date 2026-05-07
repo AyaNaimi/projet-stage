@@ -11,7 +11,10 @@ import Login from "./Login/Login.jsx";
 import EmpHistorique from "./Zakaria/EmpHistorique.jsx";
 import DepartementManager from "./Zakaria/Employe/DepartementManager";
 import ProduitList from "./Produit/ProduitList.jsx";
+import RecetteList from "./Recette/RecetteList.jsx";
+import ChargeDirecteList from "./ChargesDirectes/ChargeDirecteList.jsx";
 import MatierePremiereList from "./MatierePremiere/MatierePremiereList.jsx";
+import ChargeIndirecteList from "./ChargesIndirectes/ChargeIndirecteList.jsx";
 
 const App = () => {
   const location = useLocation();
@@ -27,7 +30,10 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/employes" element={<DepartementManager />} />
             <Route path="/produits" element={<ProduitList />} />
+            <Route path="/recettes" element={<RecetteList />} />
+            <Route path="/charges-directes" element={<ChargeDirecteList />} />
             <Route path="/matieres-premieres" element={<MatierePremiereList />} />
+            <Route path="/charges-indirectes" element={<ChargeIndirecteList />} />
             <Route path="/emphistorique" element={<EmpHistorique />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             
