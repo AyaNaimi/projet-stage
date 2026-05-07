@@ -11,17 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('logoP')->nullable();
-            $table->string('categorie');
-            
-            // Colonne pour définir la Famille (Parent) et le Type (Enfant)
-            // Si NULL, c'est une Famille (Parent). Si rempli, c'est un Type (Enfant) lié à un parent.
-            $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('set null');
-            
-            $table->timestamps();
-        });
+Schema::create('categories', function (Blueprint $table) {
+    $table->id();
+    $table->string('logoP');
+    $table->string('categorie');
+    $table->unsignedBigInteger('idCatMer')->nullable(); // Allowing null values
+    $table->foreign('idCatMer')
+        ->references('id')
+        ->on('categories')
+        ->onDelete('cascade'); // Optional: cascade delete if the parent category is deleted
+    $table->timestamps();
+});
+
     }
 
     /**

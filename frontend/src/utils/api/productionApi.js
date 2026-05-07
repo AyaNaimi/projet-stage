@@ -1,30 +1,22 @@
-import axios from 'axios';
-
-const API_BASE = `${import.meta.env.VITE_API_URL}/api`;
-
-const token = localStorage.getItem('API_TOKEN');
-if (token) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+import axiosInstance from '../axiosInstance';
 
 export const getStockProduction = async () => {
-  const response = await axios.get(`${API_BASE}/stock_production`);
+  const response = await axiosInstance.get('/stock_production');
   return response.data;
 };
 
 export const getProduits = async () => {
-  const response = await axios.get(`${API_BASE}/produits`);
-  // API may return { produit: [...] } or direct array — normalize
+  const response = await axiosInstance.get('/api/produits');
   return response.data?.produit || response.data;
 };
 
 export const getProductions = async () => {
-  const response = await axios.get(`${API_BASE}/productions`);
+  const response = await axiosInstance.get('/api/productions');
   return response.data;
 };
 
 export const deleteLignePoidsCongeles = async (id) => {
-  const response = await axios.delete(`${API_BASE}/ligne-poids-congeles/${id}`);
+  const response = await axiosInstance.delete(`/api/ligne-poids-congeles/${id}`);
   return response.data;
 };
 

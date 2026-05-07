@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ville;
 use Illuminate\Http\Request;
 
 class VilleController extends Controller
@@ -11,7 +12,8 @@ class VilleController extends Controller
      */
     public function index()
     {
-        //
+        $villes = Ville::with('region')->orderBy('id', 'desc')->get();
+        return response()->json($villes);
     }
 
     /**
@@ -27,21 +29,30 @@ class VilleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validate the request
+        $request->validate([
+            'ville' => 'required|string|max:255',
+            'region_id' => 'nullable|exists:regions,id',  // Check if region_id exists in the regions table
+        ]);
+
+        // Create a new Ville
+        $ville = Ville::create($request->all());
+
+        return response()->json($ville, 201); // Return the newly created Ville
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Ville $ville)
     {
-        //
+        return response()->json($ville);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Ville $ville)
     {
         //
     }
@@ -49,16 +60,26 @@ class VilleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Ville $ville)
     {
-        //
+        // Validate the request
+        $request->validate([
+            'ville' => 'required|string|max:255',
+        ]);
+
+        // Update the Ville
+        $ville->update($request->all());
+
+        return response()->json($ville);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Ville $ville)
     {
-        //
+        $ville->delete();
+
+        return response()->json(null, 204);  // Return 204 No Content
     }
 }

@@ -1,12 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axiosInstance from '../axiosInstance';
 
 export const fetchFactures = createAsyncThunk(
   'factures/fetchFactures',
   async (_, { rejectWithValue }) => {
     try {
-      const resp = await axios.get(`${import.meta.env.VITE_API_URL}/api/indexPourPrix`);
-      // Expecting resp.data to be the array of factures
+      const resp = await axiosInstance.get('/indexPourPrix');
       return resp.data;
     } catch (err) { 
       return rejectWithValue(err.response?.data || err.message);

@@ -2,63 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Récupérer tous les services
     public function index()
     {
-        //
+        $services = Service::orderBy('id', 'desc')->get();
+        return response()->json($services);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Ajouter un nouveau service
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'service' => 'required|string|max:255'
+        ]);
+
+        $service = Service::create([
+            'service' => $request->service
+        ]);
+
+        return response()->json($service, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    // Récupérer un service spécifique
+    public function show($id)
     {
-        //
+        $service = Service::find($id);
+        if (!$service) {
+            return response()->json(['message' => 'Service non trouvé'], 404);
+        }
+        return response()->json($service);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    // Mettre à jour un service
+    public function update(Request $request, $id)
     {
-        //
+        $service = Service::find($id);
+        if (!$service) {
+            return response()->json(['message' => 'Service non trouvé'], 404);
+        }
+
+        $request->validate([
+            'service' => 'required|string|max:255'
+        ]);
+
+        $service->update([
+            'service' => $request->service
+        ]);
+
+        return response()->json($service);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    // Supprimer un service
+    public function destroy($id)
     {
-        //
-    }
+        $service = Service::find($id);
+        if (!$service) {
+            return response()->json(['message' => 'Service non trouvé'], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $service->delete();
+        return response()->json(['message' => 'Service supprimé avec succès']);
     }
 }

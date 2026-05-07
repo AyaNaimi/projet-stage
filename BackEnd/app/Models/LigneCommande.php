@@ -18,4 +18,13 @@ class ligneCommande extends Model
     {
         return $this->belongsTo(Produit::class);
     }
+    public function stockligne()
+    {
+        return $this->belongsTo(StockLinge::class, 'id_stockligne', 'id');
+    }
+
+    public function ligneChargements()
+    {
+        return $this->hasMany(LigneChargement::class, 'id_ligneCommande');
+    }
 }

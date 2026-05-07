@@ -21,10 +21,16 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call(DepartementSeeder::class);
-        // $this->call([FullDataSeeder::class, ]);
+
         $this->call([
             RolesAndPermissionsSeeder::class,
-            CrudTestDataSeeder::class,
+            // CrudTestDataSeeder::class, // Disabled: requires equipements table (missing migration)
+            ProduitSeeder::class,
+            // LivreurSeeder::class, // Disabled: duplicate CIN on re-run
+            // VehiculeSeeder::class,
+            // VehiculeLivreurSeeder::class,
+            // ClientSeeder::class, // Disabled: requires ZoneFactory (missing factory)
+            MatierePremiereCategoriesSeeder::class,
         ]);
 
        

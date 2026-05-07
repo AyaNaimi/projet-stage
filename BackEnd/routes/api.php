@@ -566,8 +566,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BienEtreIdeeController;
 use App\Http\Controllers\DemandeAttestationController;
 use App\Http\Controllers\EvenementController;
+use App\Http\Controllers\FamilleMatiereController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ReclamationSalaireController;
+use App\Http\Controllers\TypeMatiereController;
 
 Route::get('/demandes-attestation', [DemandeAttestationController::class, 'index']);
 Route::post('/demandes-attestation', [DemandeAttestationController::class, 'store']);
