@@ -39,7 +39,8 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Autocomplete, Fab, TextField, Toolbar } from "@mui/material";
 import { BsShop } from "react-icons/bs";
-import { useOpen } from "../Acceuil/OpenProvider"; // Importer le hook personnalisÃ©
+import { useOpen } from "../Acceuil/OpenProvider"; // Importer le hook personnalisé
+import { useHeader } from "../Acceuil/HeaderContext";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import {
   deleteDataFromIndexedDB,
@@ -85,6 +86,7 @@ const ProduitList = () => {
 
   const { open } = useOpen();
   const { dynamicStyles } = useOpen();
+  const { setTitle } = useHeader();
   const tableHeaderStyle = {
     background: "#007bff",
     padding: "10px",
@@ -195,7 +197,9 @@ const ProduitList = () => {
     }
   };
 
-  console.log("categories2Produit", categories2);
+  useEffect(() => {
+    setTitle("Gestion produits");
+  }, [setTitle]);
 
   console.log("cattest");
   useEffect(() => {
@@ -1825,4 +1829,5 @@ const tableCellStyle = {
 };
 
 export default ProduitList;
+
 
