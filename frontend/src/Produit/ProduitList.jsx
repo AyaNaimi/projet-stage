@@ -11,6 +11,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Carousel } from "react-bootstrap";
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const toFullUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const clean = path.startsWith("/") ? path.slice(1) : path;
+  return `${API_BASE}/${clean}`;
+};
+
 import {
   faTrash,
   faFilePdf,
@@ -156,9 +165,12 @@ const ProduitList = () => {
   const fetchProduits = async () => {
     try {
       const response = await axiosInstance.get("/api/produits");
-      setProduits(response.data.produit);
-      // Store produits in IndexedDB
-      await storeDataInIndexedDB(response.data.produit, "produits");
+      const produits = response.data.produit.map(p => ({
+        ...p,
+        logoP: toFullUrl(p.logoP),
+      }));
+      setProduits(produits);
+      await storeDataInIndexedDB(produits, "produits");
       console.log("produit", response.data.produit);
 
       const usersResponse = await axiosInstance.get("/api/user");
@@ -194,7 +206,13 @@ const ProduitList = () => {
         const storedCategories = await getDataFromIndexedDB("famille");
 
         // Set the state if the data exists in IndexedDB
-        if (storedProduits) setProduits(storedProduits);
+        if (storedProduits) {
+          const normalized = storedProduits.map(p => ({
+            ...p,
+            logoP: toFullUrl(p.logoP),
+          }));
+          setProduits(normalized);
+        }
         if (storedCategories) setCategories(storedCategories);
 
         // If the data doesn't exist in IndexedDB, fetch it from the API
@@ -670,9 +688,19 @@ const ProduitList = () => {
         etat_produit: formData.etat_produit,
         marque: formData.marque,
         prix_vente: formData.prix_vente,
-        genre: formData.genre,
-        type: formData.type_produit,
-        Dvie: formData.Dvie,
+        // Avoid persisting literal "undefined" strings in DB
+        genre:
+          formData.genre === undefined || formData.genre === "undefined"
+            ? null
+            : formData.genre,
+        type:
+          formData.type_produit === undefined || formData.type_produit === "undefined"
+            ? null
+            : formData.type_produit,
+        Dvie:
+          formData.Dvie === undefined || formData.Dvie === "undefined"
+            ? null
+            : formData.Dvie,
         reference: formData.reference,
 
         produit_Embalg_id: formData.produit_Embalg_id,
@@ -704,8 +732,9 @@ const ProduitList = () => {
         })),
       };
       console.log("requestData", requestData);
-      if (formData.logoP) {
-        setMessage("Please select a file before submitting.");
+      // Only upload when a NEW file was selected (existing logo is often a URL string)
+      if (formData.logoP instanceof File) {
+        setMessage("");
         const formData2 = new FormData();
         formData2.append("logoP", formData.logoP);
 
@@ -713,12 +742,16 @@ const ProduitList = () => {
           const token =
             localStorage.getItem("token") || localStorage.getItem("API_TOKEN");
           const response = await axiosInstance.post(
-            `/produit/${editingProduit.id}/update-logo`,
+            `/api/produit/${editingProduit.id}/update-logo`,
             formData2,
             {
-              headers: { "Content-Type": "multipart/form-data" },
+              // Let Axios set the proper multipart boundary automatically
             },
           );
+          // Refresh logo immediately in UI if needed
+          if (response?.data?.logoP) {
+            setFormData((prev) => ({ ...prev, logoP: response.data.logoP }));
+          }
         } catch (error) {
           setMessage("Error uploading the logo.");
           console.error(error);
@@ -1013,22 +1046,22 @@ const ProduitList = () => {
     imageFile: null,
   });
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
     try {
       const formData = new FormData();
       formData.append("categorie", newCategory.categorie);
-      formData.append("logoP", newCategory.imageFile);
+      if (newCategory.imageFile instanceof File) {
+        formData.append("logoP", newCategory.imageFile);
+      }
 
-      const response = await axiosInstance.post("/api/categories", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosInstance.post("/api/categories", formData);
 
       console.log(response.data);
       await fetchCategories(); // Refresh categories after adding
       await storeDataInIndexedDB(categories, "famille");
       setShowAddCategory(false);
+      setNewCategory({ categorie: "", sous_categorie: "", imageFile: null });
       Swal.fire({
         icon: "success",
         title: "Succès!",
@@ -1038,26 +1071,28 @@ const ProduitList = () => {
       console.error("Error adding category:", error);
     }
   };
-  const handleAddSousCategory = async () => {
+  const handleAddSousCategory = async (e) => {
+    if (e?.preventDefault) e.preventDefault(); // prevent native GET form submit
     try {
       console.log("idSucategorie", idSucategorie);
 
       const formData = new FormData();
-      formData.append("categorie", newCategory.categorie);
+      // Modal input stores the subcategory name in `newCategory.sous_categorie`
+      formData.append("categorie", newCategory.sous_categorie || "");
       formData.append("idCatMer", idSucategorie);
 
-      formData.append("logoP", newCategory.imageFile);
+      // Optional image for subcategory (only if user selected a real file)
+      if (newCategory.imageFile instanceof File) {
+        formData.append("logoP", newCategory.imageFile);
+      }
 
-      const response = await axiosInstance.post("/api/categories", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosInstance.post("/api/categories", formData);
 
       console.log(response.data);
       await fetchCategories(); // Refresh categories after adding
       await storeDataInIndexedDB(categories, "famille");
-      setShowAddCategory(false);
+      setShowSuModal(false);
+      setNewCategory({ categorie: "", sous_categorie: "", imageFile: null });
       Swal.fire({
         icon: "success",
         title: "Succès!",

@@ -34,7 +34,8 @@ class CategorieController extends Controller
                     'categorie' => 'required',
                     'idCatMer' => 'nullable',
 
-                    'logoP' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Category logo validation
+                    // Logo is optional (especially for sous-catégorie); validate only if provided
+                    'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
                 ]);
     
                 // If validation fails, return error response
@@ -52,6 +53,9 @@ class CategorieController extends Controller
                 if ($request->hasFile('logoP')) {
                     $logoPath = $request->file('logoP')->store('public/logoP'); // Store logo in public/logoc directory
                     $category->logoP = Storage::url($logoPath); // Save the public path to the logo
+                } else {
+                    // `categories.logoP` is non-nullable in DB; keep it as empty string when no logo is provided.
+                    $category->logoP = '';
                 }
     
                 // Save the category to the database
@@ -77,7 +81,7 @@ class CategorieController extends Controller
             $validator = Validator::make($request->all(), [
                 'categorie' => 'required|string', // Ensure category name is required
                 'idCatMer' => 'nullable',
-                'logoP' => 'nullable|image', // Make the logo optional, but validate if provided
+                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             ]);
     
             // If validation fails, return error response

@@ -22,7 +22,7 @@ class ProduitController extends Controller
                 $produits = Produit::with('categorie', 'calibre', 'user','souscategorie','prixProduits','prixProduitsLast','Embalge','etiquette','EmbalgeS','stockProduit')->orderBy('id', 'desc')->get()
                     ->map(function ($produit) {
                         $data = $produit->toArray();
-                        $data['logoP'] = $produit->logo_url;
+                        $data['logoP'] = $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null;
                         return $data;
                     });
                 $count = Produit::count();
@@ -59,7 +59,8 @@ class ProduitController extends Controller
                     'stock_initial' => 'nullable',
                     'etat_produit' => 'nullable',
                     'marque' => 'nullable',
-                    'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                    // Accept common image formats (incl. webp) for product logos
+                    'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
                     'categorie_id' => 'required',
                     'suCat_id' => 'nullable',
                     'genre' => 'nullable',
@@ -115,8 +116,8 @@ class ProduitController extends Controller
                 $produit->user_id = Auth::id(); 
 
                 if ($request->hasFile('logoP')) {
-                    $photoPath = $request->file('logoP')->store('public/logop');
-                    $produit->logoP = Storage::url($photoPath);
+                    $photoPath = $request->file('logoP')->store('logop', 'public');
+                    $produit->logoP = 'storage/' . $photoPath;
                 }
 
                 \Log::info('DB utilisée par Laravel : ' . \DB::connection()->getDatabaseName());
@@ -137,7 +138,7 @@ class ProduitController extends Controller
                 }
                 }
                
-                return response()->json(['message' => 'Produit ajouté avec succès', 'produit' => array_merge($produit->toArray(), ['logoP' => $produit->logo_url])], 200);
+                return response()->json(['message' => 'Produit ajouté avec succès', 'produit' => array_merge($produit->toArray(), ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null])], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }
@@ -151,7 +152,7 @@ class ProduitController extends Controller
         try {
             // Validate the request
             $request->validate([
-                'logoP' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'logoP' => 'required|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             ]);
     
             // Find the product by ID
@@ -161,15 +162,15 @@ class ProduitController extends Controller
             if ($request->hasFile('logoP')) {
                 // Delete the old logo if it exists
                 if ($produit->logoP) {
-                    $oldFilePath = str_replace('/storage', 'public', $produit->logoP);
+                    $oldFilePath = str_replace('storage/', '', $produit->logoP);
                     if (Storage::exists($oldFilePath)) {
                         Storage::delete($oldFilePath);
                     }
                 }
     
                 // Store the new logo
-                $photoPath = $request->file('logoP')->store('public/logop');
-                $produit->logoP = Storage::url($photoPath); // Save the URL of the new file
+                $photoPath = $request->file('logoP')->store('logop', 'public');
+                $produit->logoP = 'storage/' . $photoPath;
             }
     
             // Save the updated product
@@ -178,7 +179,7 @@ class ProduitController extends Controller
             // Return success response
             return response()->json([
                 'message' => 'Logo updated successfully!',
-                'logoP' => $produit->logoP,
+                'logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null,
             ], 200);
             
         } catch (\Exception $e) {
@@ -200,7 +201,7 @@ class ProduitController extends Controller
         try {
             $produit = Produit::with('calibre', 'categorie')->findOrFail($id);
             $data = $produit->toArray();
-            $data['logoP'] = $produit->logo_url;
+            $data['logoP'] = $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null;
 
             return response()->json(['produit' => $data]);
         } catch (\Exception $e) {
@@ -274,7 +275,7 @@ class ProduitController extends Controller
                         }
                     }
                 }
-                return response()->json(['message' => 'Produit modifié avec succès', 'produit' => array_merge($produit->toArray(), ['logoP' => $produit->logo_url])], 200);
+                return response()->json(['message' => 'Produit modifié avec succès', 'produit' => array_merge($produit->toArray(), ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null])], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }

@@ -2,6 +2,15 @@ import React from 'react';
 import { Carousel } from 'react-bootstrap';
 import { FaArrowRight, FaArrowLeft, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const toFullUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const clean = path.startsWith("/") ? path.slice(1) : path;
+  return `${API_BASE}/${clean}`;
+};
+
 const FamilleTypeCarousels = ({
   activeIndex,
   handleSelect,
@@ -162,7 +171,7 @@ const FamilleTypeCarousels = ({
                             boxSizing: 'border-box'
                           }}>
                             <img
-                              src={'../../public/images/bayd.jpg'}
+                              src={'/images/bayd.jpg'}
                               alt={'tout'}
                               style={{
                                 width: '100%',
@@ -213,9 +222,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP && category.logoP !== '' && category.logoP !== null && category.logoP !== undefined
-                                  ? category.logoP
-                                  : '../../public/images/logo-ovotec-blanc-05 (1).png'}
+                                src={category.logoP ? toFullUrl(category.logoP) : '/images/logo-ovotec-blanc-05 (1).png'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',
@@ -343,7 +350,7 @@ const FamilleTypeCarousels = ({
                             boxSizing: 'border-box'
                           }}>
                             <img
-                              src={'../../public/images/bayd.jpg'}
+                              src={'/images/bayd.jpg'}
                               alt={'tout'}
                               style={{
                                 width: '100%',
@@ -394,7 +401,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP}
+                                src={category.logoP ? toFullUrl(category.logoP) : '/images/logo-ovotec-blanc-05 (1).png'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',

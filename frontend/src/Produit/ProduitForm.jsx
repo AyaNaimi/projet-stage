@@ -3,15 +3,46 @@ import { Form, Modal, Button, Row, Col, Tab, Tabs } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
-  Plus, Barcode, Tag, Box, Package, Boxes, Ruler, DollarSign, Layers,
-  List, Weight, Factory, Image, Scale, AlertTriangle, LineChart, Calendar,
-  Type, Box as Cube, Grid, Info
-} from 'lucide-react';
+  faTimes,
+  faCalendarAlt,
+  faCheck,
+  faImage,
+  faEye,
+  faBarcode,
+} from '@fortawesome/free-solid-svg-icons';
 import Fab from '@mui/material/Fab';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { useState } from 'react';
 import TableForms from '../etat/TableForms';
+import {
+  Image,
+  Tag,
+  Weight,
+  Plus,
+  Layers,
+  List,
+  Text,
+  Type,
+  Calendar,
+  LineChart,
+  Scale,
+  Factory,
+  AlertTriangle,
+  Box,
+  Info,
+  DollarSign,
+  Package,
+} from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const toFullUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const clean = path.startsWith("/") ? path.slice(1) : path;
+  return `${API_BASE}/${clean}`;
+};
 
 // Extracted outside to avoid remounting on every render (which was causing input focus to be lost)
 const StyledFormGroup = React.memo(({ icon, label, htmlFor, children }) => (
@@ -72,14 +103,21 @@ const ProduitForm = ({
   formContainerStyle
 }) => {
   const [tabKey, setTabKey] = React.useState('infoProduit');
-  const [logoPreview, setLogoPreview] = useState(formData.logoP ? (typeof formData.logoP === 'string' ? formData.logoP : URL.createObjectURL(formData.logoP)) : null);
+  const [logoPreview, setLogoPreview] = useState(
+    formData.logoP
+      ? formData.logoP instanceof File
+        ? URL.createObjectURL(formData.logoP)
+        : toFullUrl(formData.logoP)
+      : null
+  );
 
   // Update preview on file change
   const handleLogoChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setLogoPreview(URL.createObjectURL(e.target.files[0]));
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      setLogoPreview(URL.createObjectURL(file));
+      setFormData(prev => ({ ...prev, logoP: file }));
     }
-    handleChange(e);
   };
 
   // Common input style with consistent placeholder styling
@@ -198,7 +236,7 @@ const ProduitForm = ({
           {/* Inputs grid */}
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto', gap: '0.7rem', marginTop: '5px', marginLeft: '25px' }}>
             {/* Row 1: Code Produit & Désignation */}
-            <StyledFormGroup icon={<Barcode size={18} />} label="Code Produit" htmlFor="code_produit">
+            <StyledFormGroup icon={<FontAwesomeIcon icon={faBarcode} />} label="Code Produit" htmlFor="code_produit">
               <input
                 id="code_produit"
                 className={`form-control styled-input ${errors.Code_produit ? 'is-invalid' : ''}`}
@@ -379,7 +417,7 @@ const ProduitForm = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   {/* référence */}
-                  <StyledFormGroup icon={<Type size={18} />} label="référence" htmlFor="reference">
+                  <StyledFormGroup icon={<Text size={18} />} label="référence" htmlFor="reference">
                     <input
                       id="reference"
                       name="reference"
@@ -490,7 +528,7 @@ const ProduitForm = ({
               <div style={{ display: 'flex', gap: '1.5rem', width: '100%' }}>
                 <div style={{ flex: 1 }}>
                   {/* Unité */}
-                  <StyledFormGroup icon={<Cube size={18} />} label="Unité" htmlFor="unite">
+                  <StyledFormGroup icon={<Package size={18} />} label="Unité" htmlFor="unite">
                     <input
                       id="unite"
                       name="unite"
@@ -661,7 +699,7 @@ const ProduitForm = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   {/* Unité Emballage Primaire */}
-                  <StyledFormGroup icon={<Cube size={18} />} label="Unité Emballage Primaire" htmlFor="unite_embalage_primaire">
+                  <StyledFormGroup icon={<Package size={18} />} label="Unité Emballage Primaire" htmlFor="unite_embalage_primaire">
                     <input
                       id="unite_embalage_primaire"
                       name="unite_embalage_primaire"
@@ -679,7 +717,7 @@ const ProduitForm = ({
               <div style={{ display: 'flex', gap: '1.5rem', width: '100%' }}>
                 <div style={{ flex: 1 }}>
                   {/* Emballage Secondaire */}
-                  <StyledFormGroup icon={<Boxes size={18} />} label="Embalage Secondaire" htmlFor="produit_Embalg_S_id">
+                  <StyledFormGroup icon={<Layers size={18} />} label="Embalage Secondaire" htmlFor="produit_Embalg_S_id">
                     <Autocomplete
                       options={produits}
                       getOptionLabel={(option) => option.designation}
@@ -725,7 +763,7 @@ const ProduitForm = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   {/* Unité Emballage Secondaire */}
-                  <StyledFormGroup icon={<Cube size={18} />} label="Unité Emballage Secondaire" htmlFor="unite_embalage_secondaire">
+                  <StyledFormGroup icon={<Package size={18} />} label="Unité Emballage Secondaire" htmlFor="unite_embalage_secondaire">
                     <input
                       id="unite_embalage_secondaire"
                       name="unite_embalage_secondaire"
@@ -789,7 +827,7 @@ const ProduitForm = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   {/* Unité Etiquette */}
-                  <StyledFormGroup icon={<Cube size={18} />} label="Unité Etiquette" htmlFor="unite_etiquette">
+                  <StyledFormGroup icon={<Package size={18} />} label="Unité Etiquette" htmlFor="unite_etiquette">
                     <input
                       id="unite_etiquette"
                       name="unite_etiquette"
