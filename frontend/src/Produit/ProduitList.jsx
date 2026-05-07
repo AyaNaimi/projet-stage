@@ -39,7 +39,7 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Autocomplete, Fab, TextField, Toolbar } from "@mui/material";
 import { BsShop } from "react-icons/bs";
-import { useOpen } from "../Acceuil/OpenProvider"; // Importer le hook personnalis�
+import { useOpen } from "../Acceuil/OpenProvider"; // Importer le hook personnalis�
 import { useHeader } from "../Acceuil/HeaderContext";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import {
@@ -167,7 +167,7 @@ const ProduitList = () => {
   const fetchProduits = async () => {
     try {
       const response = await axiosInstance.get("/api/produits");
-      const produits = response.data.produit.map(p => ({
+      const produits = response.data.produit.map((p) => ({
         ...p,
         logoP: toFullUrl(p.logoP),
       }));
@@ -211,7 +211,7 @@ const ProduitList = () => {
 
         // Set the state if the data exists in IndexedDB
         if (storedProduits) {
-          const normalized = storedProduits.map(p => ({
+          const normalized = storedProduits.map((p) => ({
             ...p,
             logoP: toFullUrl(p.logoP),
           }));
@@ -312,7 +312,9 @@ const ProduitList = () => {
             const filteredSuCat = filteredProduits.filter(
               (produit) => produit.suCat_id === parseInt(sousCatFiltre),
             );
-            setFilteredProduitsByCategory(filteredSuCat.length === 0 ? [] : filteredSuCat);
+            setFilteredProduitsByCategory(
+              filteredSuCat.length === 0 ? [] : filteredSuCat,
+            );
             setPage(1);
             return;
           }
@@ -520,19 +522,46 @@ const ProduitList = () => {
     setTableContainerStyle({ marginRight: "0" });
     setShowForm(false);
     setFormData({
-      Code_produit: "", designation: "", type_quantite: "", unite: "",
-      seuil_alerte: "", stock_initial: "", etat_produit: "", calibre_id: "",
-      user_id: "", categorie_id: "", prix_vente: "", marque: "Ovotec",
-      logoP: "", suCat_id: "", reference: "", produit_Embalg_S_id: "",
-      unite_etiquette: "", unite_embalage_primaire: "", unite_embalage_secondaire: "",
-      type_produit: "", produit_Etiq_id: "", produit_Embalg_id: "",
-      genre: "", Dvie: "", tva: "",
+      Code_produit: "",
+      designation: "",
+      type_quantite: "",
+      unite: "",
+      seuil_alerte: "",
+      stock_initial: "",
+      etat_produit: "",
+      calibre_id: "",
+      user_id: "",
+      categorie_id: "",
+      prix_vente: "",
+      marque: "Ovotec",
+      logoP: "",
+      suCat_id: "",
+      reference: "",
+      produit_Embalg_S_id: "",
+      unite_etiquette: "",
+      unite_embalage_primaire: "",
+      unite_embalage_secondaire: "",
+      type_produit: "",
+      produit_Etiq_id: "",
+      produit_Embalg_id: "",
+      genre: "",
+      Dvie: "",
+      tva: "",
     });
     setErrors({
-      Code_produit: "", designation: "", type_quantite: "", unite: "",
-      seuil_alerte: "", stock_initial: "", etat_produit: "", calibre_id: "",
-      user_id: "", categorie_id: "", unite_etiquette: "",
-      unite_embalage_primaire: "", unite_embalage_secondaire: "",
+      Code_produit: "",
+      designation: "",
+      type_quantite: "",
+      unite: "",
+      seuil_alerte: "",
+      stock_initial: "",
+      etat_produit: "",
+      calibre_id: "",
+      user_id: "",
+      categorie_id: "",
+      unite_etiquette: "",
+      unite_embalage_primaire: "",
+      unite_embalage_secondaire: "",
     });
     setSelectedProductsDataRep([]);
     setEditingProduit(null);
@@ -673,7 +702,8 @@ const ProduitList = () => {
             ? null
             : formData.genre,
         type:
-          formData.type_produit === undefined || formData.type_produit === "undefined"
+          formData.type_produit === undefined ||
+          formData.type_produit === "undefined"
             ? null
             : formData.type_produit,
         Dvie:
@@ -752,34 +782,73 @@ const ProduitList = () => {
       formDatad.append("prix_vente", formData.prix_vente || "");
       formDatad.append("categorie_id", formData.categorie_id || "");
       formDatad.append("suCat_id", formData.suCat_id || "");
-      formDatad.append("genre", (formData.genre === undefined || formData.genre === "undefined") ? "" : formData.genre);
-      formDatad.append("type", (formData.type_produit === undefined || formData.type_produit === "undefined") ? "" : formData.type_produit);
-      formDatad.append("Dvie", (formData.Dvie === undefined || formData.Dvie === "undefined") ? "" : formData.Dvie);
+      formDatad.append(
+        "genre",
+        formData.genre === undefined || formData.genre === "undefined"
+          ? ""
+          : formData.genre,
+      );
+      formDatad.append(
+        "type",
+        formData.type_produit === undefined ||
+          formData.type_produit === "undefined"
+          ? ""
+          : formData.type_produit,
+      );
+      formDatad.append(
+        "Dvie",
+        formData.Dvie === undefined || formData.Dvie === "undefined"
+          ? ""
+          : formData.Dvie,
+      );
       formDatad.append("reference", formData.reference || "");
       formDatad.append("tva", formData.tva || "");
 
       formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || "");
       formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || "");
-      formDatad.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || "");
+      formDatad.append(
+        "produit_Embalg_S_id",
+        formData.produit_Embalg_S_id || "",
+      );
 
       // Ajout des nouveaux champs
       formDatad.append("unite_etiquette", formData.unite_etiquette || "");
-      formDatad.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
-      formDatad.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
+      formDatad.append(
+        "unite_embalage_primaire",
+        formData.unite_embalage_primaire || "",
+      );
+      formDatad.append(
+        "unite_embalage_secondaire",
+        formData.unite_embalage_secondaire || "",
+      );
 
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);
       }
-      
+
       if (selectedProductsDataRep && Array.isArray(selectedProductsDataRep)) {
         selectedProductsDataRep.forEach((prix, index) => {
-          formDatad.append(`prixProduits[${index}][dateDebut]`, prix.date_debut || "");
-          formDatad.append(`prixProduits[${index}][dateFin]`, prix.date_fin || "");
-          formDatad.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit || "");
-          formDatad.append(`prixProduits[${index}][typeQte]`, 
-            formData.type_quantite === "kg" ? "K" : 
-            formData.type_quantite === "litre" ? "L" : 
-            formData.type_quantite === "unite" ? "U" : (prix.type || "")
+          formDatad.append(
+            `prixProduits[${index}][dateDebut]`,
+            prix.date_debut || "",
+          );
+          formDatad.append(
+            `prixProduits[${index}][dateFin]`,
+            prix.date_fin || "",
+          );
+          formDatad.append(
+            `prixProduits[${index}][prixProduit]`,
+            prix.prixProduit || "",
+          );
+          formDatad.append(
+            `prixProduits[${index}][typeQte]`,
+            formData.type_quantite === "kg"
+              ? "K"
+              : formData.type_quantite === "litre"
+                ? "L"
+                : formData.type_quantite === "unite"
+                  ? "U"
+                  : prix.type || "",
           );
           formDatad.append(`prixProduits[${index}][Unite]`, prix.unite || "");
         });
@@ -854,39 +923,57 @@ const ProduitList = () => {
       if (error.response) {
         const serverErrors = error.response.data.error;
         console.log("Erreur serveur:", serverErrors);
-        
-        if (typeof serverErrors === 'object' && serverErrors !== null) {
+
+        if (typeof serverErrors === "object" && serverErrors !== null) {
           setErrors({
             logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
-            Code_produit: serverErrors.Code_produit ? serverErrors.Code_produit[0] : "",
-            designation: serverErrors.designation ? serverErrors.designation[0] : "",
-            calibre_id: serverErrors.calibre_id ? serverErrors.calibre_id[0] : "",
-            type_quantite: serverErrors.type_quantite ? serverErrors.type_quantite[0] : "",
+            Code_produit: serverErrors.Code_produit
+              ? serverErrors.Code_produit[0]
+              : "",
+            designation: serverErrors.designation
+              ? serverErrors.designation[0]
+              : "",
+            calibre_id: serverErrors.calibre_id
+              ? serverErrors.calibre_id[0]
+              : "",
+            type_quantite: serverErrors.type_quantite
+              ? serverErrors.type_quantite[0]
+              : "",
             unite: serverErrors.unite ? serverErrors.unite[0] : "",
-            seuil_alerte: serverErrors.seuil_alerte ? serverErrors.seuil_alerte[0] : "",
-            stock_initial: serverErrors.stock_initial ? serverErrors.stock_initial[0] : "",
-            etat_produit: serverErrors.etat_produit ? serverErrors.etat_produit[0] : "",
+            seuil_alerte: serverErrors.seuil_alerte
+              ? serverErrors.seuil_alerte[0]
+              : "",
+            stock_initial: serverErrors.stock_initial
+              ? serverErrors.stock_initial[0]
+              : "",
+            etat_produit: serverErrors.etat_produit
+              ? serverErrors.etat_produit[0]
+              : "",
             marque: serverErrors.marque ? serverErrors.marque[0] : "",
-            categorie_id: serverErrors.categorie_id ? serverErrors.categorie_id[0] : "",
+            categorie_id: serverErrors.categorie_id
+              ? serverErrors.categorie_id[0]
+              : "",
           });
           Swal.fire({
-            icon: 'error',
-            title: 'Erreur de validation',
-            text: 'Veuillez vérifier les champs du formulaire.',
+            icon: "error",
+            title: "Erreur de validation",
+            text: "Veuillez vérifier les champs du formulaire.",
           });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: serverErrors || "Une erreur est survenue lors de l'enregistrement.",
+            icon: "error",
+            title: "Erreur",
+            text:
+              serverErrors ||
+              "Une erreur est survenue lors de l'enregistrement.",
           });
         }
       } else {
         console.error(error);
         Swal.fire({
-          icon: 'error',
-          title: 'Erreur Réseau',
-          text: 'Impossible de contacter le serveur.',
+          icon: "error",
+          title: "Erreur Réseau",
+          text: "Impossible de contacter le serveur.",
         });
       }
     }
@@ -920,10 +1007,11 @@ const ProduitList = () => {
         title: "Succès!",
         text: " supprimée avec succès.",
       });
-      await fetchCategories(); // Refresh categories after adding
-      await storeDataInIndexedDB(categories, "famille");
-
-      // Récupérer les nouvelles catégories après suppression
+      // Récupérer les nouvelles catégories après suppression et stocker
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
+      setCategories(latestCategories);
+      await storeDataInIndexedDB(latestCategories, "famille");
     } catch (error) {
       console.error("Error deleting categorie:", error);
       Swal.fire({
@@ -992,11 +1080,12 @@ const ProduitList = () => {
 
       await axiosInstance.post(
         `/api/categories/${selectedCategoryId.id}`,
-        formData
+        formData,
       );
-      
+
       await fetchCategories();
-      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
       await storeDataInIndexedDB(latestCategories, "famille");
 
       setShowEditModal(false);
@@ -1011,9 +1100,9 @@ const ProduitList = () => {
     } catch (error) {
       console.error("Erreur lors de la modification de la catégorie :", error);
       let errorMsg = "Échec de la modification de la catégorie.";
-      
+
       if (error.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
+        if (typeof error.response.data.error === "object") {
           errorMsg = Object.values(error.response.data.error).flat().join(", ");
         } else {
           errorMsg = error.response.data.error;
@@ -1057,14 +1146,22 @@ const ProduitList = () => {
 
   const handleAddCategory = async (e) => {
     if (e?.preventDefault) e.preventDefault();
-    
+
     // Validate before sending
     if (!newCategory.categorie || !newCategory.categorie.trim()) {
-      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez saisir un nom de famille." });
+      Swal.fire({
+        icon: "warning",
+        title: "Attention!",
+        text: "Veuillez saisir un nom de famille.",
+      });
       return;
     }
     if (!newCategory.imageFile) {
-      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez sélectionner une image." });
+      Swal.fire({
+        icon: "warning",
+        title: "Attention!",
+        text: "Veuillez sélectionner une image.",
+      });
       return;
     }
 
@@ -1072,15 +1169,26 @@ const ProduitList = () => {
       title: "Traitement en cours...",
       text: "Veuillez patienter...",
       allowOutsideClick: false,
-      didOpen: () => { Swal.showLoading(); },
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
 
     try {
       console.log("Adding Category:", newCategory);
       const formData = new FormData();
       formData.append("categorie", newCategory.categorie.trim());
-      console.log("Appending imageFile:", newCategory.imageFile.name, newCategory.imageFile.type, newCategory.imageFile.size);
-      formData.append("logoP", newCategory.imageFile, newCategory.imageFile.name);
+      console.log(
+        "Appending imageFile:",
+        newCategory.imageFile.name,
+        newCategory.imageFile.type,
+        newCategory.imageFile.size,
+      );
+      formData.append(
+        "logoP",
+        newCategory.imageFile,
+        newCategory.imageFile.name,
+      );
 
       const response = await axiosInstance.post("/api/categories", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -1088,20 +1196,26 @@ const ProduitList = () => {
 
       console.log(response.data);
       await fetchCategories();
-      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
       await storeDataInIndexedDB(latestCategories, "famille");
 
       setShowAddCategory(false);
       setNewCategory({ categorie: "", imageFile: null });
 
-      Swal.fire({ icon: "success", title: "Succès!", text: "Famille ajoutée avec succès." });
+      Swal.fire({
+        icon: "success",
+        title: "Succès!",
+        text: "Famille ajoutée avec succès.",
+      });
     } catch (error) {
       console.error("Error adding category:", error);
       let errorMsg = "Échec de l'ajout de la famille.";
       if (error.response?.data?.error) {
-        errorMsg = typeof error.response.data.error === 'object'
-          ? Object.values(error.response.data.error).flat().join(", ")
-          : error.response.data.error;
+        errorMsg =
+          typeof error.response.data.error === "object"
+            ? Object.values(error.response.data.error).flat().join(", ")
+            : error.response.data.error;
       } else if (error.message) {
         errorMsg = error.message;
       }
@@ -1137,9 +1251,10 @@ const ProduitList = () => {
 
       console.log(response.data);
       await fetchCategories(); // Refresh categories after adding
-      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
       await storeDataInIndexedDB(latestCategories, "famille");
-      
+
       setShowSuModal(false);
       setNewCategory({ categorie: "", sous_categorie: "", imageFile: null }); // Reset form
       Swal.fire({
@@ -1149,10 +1264,11 @@ const ProduitList = () => {
       });
     } catch (error) {
       console.error("Error adding sub-category:", error);
-      let errorMsg = "Échec de l'ajout de la sous-catégorie. Vérifiez que vous avez bien sélectionné une image.";
-      
+      let errorMsg =
+        "Échec de l'ajout de la sous-catégorie. Vérifiez que vous avez bien sélectionné une image.";
+
       if (error.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
+        if (typeof error.response.data.error === "object") {
           errorMsg = Object.values(error.response.data.error).flat().join(", ");
         } else {
           errorMsg = error.response.data.error;
@@ -1228,12 +1344,14 @@ const ProduitList = () => {
     categories.filter((cat) => cat.idCatMer === null),
     chunkSize,
   );
-const chunksSucat = chunkArray(
-  selectedCategory === 'tout' 
-    ? categories.filter(cat => cat.idCatMer !== null)
-    : categories.filter(cat => cat.idCatMer !== null && cat.idCatMer === selectedCategory),
-  chunkSize
-);
+  const chunksSucat = chunkArray(
+    selectedCategory === "tout"
+      ? categories.filter((cat) => cat.idCatMer !== null)
+      : categories.filter(
+          (cat) => cat.idCatMer !== null && cat.idCatMer === selectedCategory,
+        ),
+    chunkSize,
+  );
 
   console.log("categori1", categories);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -1907,5 +2025,3 @@ const tableCellStyle = {
 };
 
 export default ProduitList;
-
-
