@@ -6,6 +6,7 @@ use App\Models\MatierePremiere;
 use App\Models\MatierePremiereHistorique;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class MatierePremiereController extends Controller
 {
@@ -35,7 +36,7 @@ class MatierePremiereController extends Controller
                 'nom' => 'required|string|max:255',
                 'prix_achat' => 'required|numeric|min:0',
                 'unite' => 'required|string',
-                'fournisseur_id' => 'required|exists:fournisseurs,id',
+                'fournisseur_id' => 'nullable|exists:fournisseurs,id',
                 'famille_id' => 'nullable|exists:famille_matieres,id',
                 'type_id' => 'nullable|exists:type_matieres,id',
                 'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -48,7 +49,7 @@ class MatierePremiereController extends Controller
             $data = $request->all();
             if ($request->hasFile('logoP')) {
                 $path = $request->file('logoP')->store('public/matiere_premieres');
-                $data['photo_url'] = \Storage::url($path);
+                $data['photo_url'] = Storage::url($path);
             }
 
             $matiere = MatierePremiere::create($data);
@@ -87,7 +88,7 @@ class MatierePremiereController extends Controller
                 'nom' => 'required|string|max:255',
                 'prix_achat' => 'required|numeric|min:0',
                 'unite' => 'required|string',
-                'fournisseur_id' => 'required|exists:fournisseurs,id',
+                'fournisseur_id' => 'nullable|exists:fournisseurs,id',
                 'famille_id' => 'nullable|exists:famille_matieres,id',
                 'type_id' => 'nullable|exists:type_matieres,id',
                 'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -101,10 +102,10 @@ class MatierePremiereController extends Controller
             if ($request->hasFile('logoP')) {
                 if ($matiere->photo_url) {
                     $oldPath = str_replace('/storage', 'public', $matiere->photo_url);
-                    \Storage::delete($oldPath);
+                    Storage::delete($oldPath);
                 }
                 $path = $request->file('logoP')->store('public/matiere_premieres');
-                $data['photo_url'] = \Storage::url($path);
+                $data['photo_url'] = Storage::url($path);
             }
 
             $matiere->update($data);

@@ -34,7 +34,6 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
             justifyContent: "center",
             gap: "8px",
             cursor: hasPermission ? "pointer" : "not-allowed", // Change le curseur si désactivé
-            width: "350px",
             margin: "5px",
           }}
           className="AjouteBotton"

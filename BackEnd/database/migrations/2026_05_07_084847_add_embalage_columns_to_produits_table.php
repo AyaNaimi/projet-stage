@@ -12,10 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('produits', function (Blueprint $table) {
-            $table->unsignedBigInteger('produit_Embalg_S_id')->nullable();
-            $table->string('unite_etiquette')->nullable();
-            $table->string('unite_embalage_primaire')->nullable();
-            $table->string('unite_embalage_secondaire')->nullable();
+            if (!Schema::hasColumn('produits', 'produit_Embalg_S_id')) {
+                $table->unsignedBigInteger('produit_Embalg_S_id')->nullable();
+            }
+            if (!Schema::hasColumn('produits', 'unite_etiquette')) {
+                $table->string('unite_etiquette')->nullable();
+            }
+            if (!Schema::hasColumn('produits', 'unite_embalage_primaire')) {
+                $table->string('unite_embalage_primaire')->nullable();
+            }
+            if (!Schema::hasColumn('produits', 'unite_embalage_secondaire')) {
+                $table->string('unite_embalage_secondaire')->nullable();
+            }
         });
     }
 

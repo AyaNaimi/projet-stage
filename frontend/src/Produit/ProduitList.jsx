@@ -740,70 +740,51 @@ const ProduitList = () => {
       // Create a FormData object and append the file
     } else {
       const formDatad = new FormData();
-      formDatad.append("Code_produit", formData.Code_produit);
-      formDatad.append("designation", formData.designation);
-      formDatad.append("calibre_id", formData.calibre_id);
-      formDatad.append("type_quantite", formData.type_quantite);
-      formDatad.append("unite", formData.unite);
-      formDatad.append("seuil_alerte", formData.seuil_alerte);
-      formDatad.append("stock_initial", formData.stock_initial);
-      formDatad.append("etat_produit", formData.etat_produit);
-      formDatad.append("marque", formData.marque);
-      formDatad.append("prix_vente", formData.prix_vente);
-      formDatad.append("categorie_id", formData.categorie_id);
-      formDatad.append("suCat_id", formData.suCat_id);
-      formDatad.append("genre", formData.genre);
-      formDatad.append("type", formData.type_produit);
-      formDatad.append("Dvie", formData.Dvie);
-      formDatad.append("reference", formData.reference);
+      formDatad.append("Code_produit", formData.Code_produit || "");
+      formDatad.append("designation", formData.designation || "");
+      formDatad.append("calibre_id", formData.calibre_id || "");
+      formDatad.append("type_quantite", formData.type_quantite || "");
+      formDatad.append("unite", formData.unite || "");
+      formDatad.append("seuil_alerte", formData.seuil_alerte || "");
+      formDatad.append("stock_initial", formData.stock_initial || "");
+      formDatad.append("etat_produit", formData.etat_produit || "");
+      formDatad.append("marque", formData.marque || "");
+      formDatad.append("prix_vente", formData.prix_vente || "");
+      formDatad.append("categorie_id", formData.categorie_id || "");
+      formDatad.append("suCat_id", formData.suCat_id || "");
+      formDatad.append("genre", (formData.genre === undefined || formData.genre === "undefined") ? "" : formData.genre);
+      formDatad.append("type", (formData.type_produit === undefined || formData.type_produit === "undefined") ? "" : formData.type_produit);
+      formDatad.append("Dvie", (formData.Dvie === undefined || formData.Dvie === "undefined") ? "" : formData.Dvie);
+      formDatad.append("reference", formData.reference || "");
+      formDatad.append("tva", formData.tva || "");
 
-      formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || '');
-      formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || '');
-      formDatad.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || '');
+      formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || "");
+      formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || "");
+      formDatad.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || "");
 
       // Ajout des nouveaux champs
-      formDatad.append("unite_etiquette", formData.unite_etiquette);
-      formDatad.append(
-        "unite_embalage_primaire",
-        formData.unite_embalage_primaire,
-      );
-      formDatad.append(
-        "unite_embalage_secondaire",
-        formData.unite_embalage_secondaire,
-      );
+      formDatad.append("unite_etiquette", formData.unite_etiquette || "");
+      formDatad.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
+      formDatad.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
 
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);
       }
+      
       if (selectedProductsDataRep && Array.isArray(selectedProductsDataRep)) {
         selectedProductsDataRep.forEach((prix, index) => {
-          formDatad.append(
-            `prixProduits[${index}][dateDebut]`,
-            prix.date_debut || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][dateFin]`,
-            prix.date_fin || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][prixProduit]`,
-            prix.prixProduit || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][typeQte]`,
-            formData.type_quantite === "kg"
-              ? "K"
-              : formData.type_quantite === "litre"
-                ? "L"
-                : formData.type_quantite === "unite"
-                  ? "U"
-                  : prix.type,
+          formDatad.append(`prixProduits[${index}][dateDebut]`, prix.date_debut || "");
+          formDatad.append(`prixProduits[${index}][dateFin]`, prix.date_fin || "");
+          formDatad.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit || "");
+          formDatad.append(`prixProduits[${index}][typeQte]`, 
+            formData.type_quantite === "kg" ? "K" : 
+            formData.type_quantite === "litre" ? "L" : 
+            formData.type_quantite === "unite" ? "U" : (prix.type || "")
           );
           formDatad.append(`prixProduits[${index}][Unite]`, prix.unite || "");
         });
       }
       requestData = formDatad;
-      console.log(requestData);
     }
 
     try {
@@ -872,33 +853,40 @@ const ProduitList = () => {
 
       if (error.response) {
         const serverErrors = error.response.data.error;
-        console.log(error);
-        setErrors({
-          logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
-          Code_produit: serverErrors.Code_produit
-            ? serverErrors.Code_produit[0]
-            : "",
-          designation: serverErrors.designation
-            ? serverErrors.designation[0]
-            : "",
-          calibre_id: serverErrors.calibre_id ? serverErrors.calibre_id[0] : "",
-          type_quantite: serverErrors.type_quantite
-            ? serverErrors.type_quantite[0]
-            : "",
-          unite: serverErrors.unite ? serverErrors.unite[0] : "",
-          seuil_alerte: serverErrors.seuil_alerte
-            ? serverErrors.seuil_alerte[0]
-            : "",
-          stock_initial: serverErrors.stock_initial
-            ? serverErrors.stock_initial[0]
-            : "",
-          etat_produit: serverErrors.etat_produit
-            ? serverErrors.etat_produit[0]
-            : "",
-          marque: serverErrors.marque ? serverErrors.marque[0] : "",
-          categorie_id: serverErrors.categorie_id
-            ? serverErrors.categorie_id[0]
-            : "",
+        console.log("Erreur serveur:", serverErrors);
+        
+        if (typeof serverErrors === 'object' && serverErrors !== null) {
+          setErrors({
+            logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
+            Code_produit: serverErrors.Code_produit ? serverErrors.Code_produit[0] : "",
+            designation: serverErrors.designation ? serverErrors.designation[0] : "",
+            calibre_id: serverErrors.calibre_id ? serverErrors.calibre_id[0] : "",
+            type_quantite: serverErrors.type_quantite ? serverErrors.type_quantite[0] : "",
+            unite: serverErrors.unite ? serverErrors.unite[0] : "",
+            seuil_alerte: serverErrors.seuil_alerte ? serverErrors.seuil_alerte[0] : "",
+            stock_initial: serverErrors.stock_initial ? serverErrors.stock_initial[0] : "",
+            etat_produit: serverErrors.etat_produit ? serverErrors.etat_produit[0] : "",
+            marque: serverErrors.marque ? serverErrors.marque[0] : "",
+            categorie_id: serverErrors.categorie_id ? serverErrors.categorie_id[0] : "",
+          });
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur de validation',
+            text: 'Veuillez vérifier les champs du formulaire.',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: serverErrors || "Une erreur est survenue lors de l'enregistrement.",
+          });
+        }
+      } else {
+        console.error(error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur Réseau',
+          text: 'Impossible de contacter le serveur.',
         });
       }
     }
@@ -985,27 +973,60 @@ const ProduitList = () => {
   };
 
   const handleSave = async () => {
-    console.log("image", selectedCategoryId.categorie, image);
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       const formData = new FormData();
-      formData.append("_method", "put"); // Note : Vous n'avez peut-être pas besoin de cette ligne si vous utilisez une méthode PUT directement
+      formData.append("_method", "put");
       formData.append("categorie", selectedCategoryId.categorie);
-      formData.append("logoP", newCategory.imageFile);
+      if (newCategory.imageFile) {
+        formData.append("logoP", newCategory.imageFile);
+      }
+
       await axiosInstance.post(
         `/api/categories/${selectedCategoryId.id}`,
-        formData,
+        formData
       );
-      fetchCategories(); // Refresh the categories list
-      await storeDataInIndexedDB(categories, "famille");
+      
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+
       setShowEditModal(false);
       setShowEditSousModal(false);
+      setNewCategory({ categorie: "", imageFile: null }); // Reset form
+
       Swal.fire({
         icon: "success",
         title: "Succès!",
-        text: " modifiée avec succès.",
+        text: "Catégorie modifiée avec succès.",
       });
     } catch (error) {
       console.error("Erreur lors de la modification de la catégorie :", error);
+      let errorMsg = "Échec de la modification de la catégorie.";
+      
+      if (error.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMsg = Object.values(error.response.data.error).flat().join(", ");
+        } else {
+          errorMsg = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: errorMsg,
+      });
     }
   };
   const handleSaveClibre = async () => {
@@ -1036,31 +1057,69 @@ const ProduitList = () => {
 
   const handleAddCategory = async (e) => {
     if (e?.preventDefault) e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("categorie", newCategory.categorie);
-      if (newCategory.imageFile instanceof File) {
-        formData.append("logoP", newCategory.imageFile);
-      }
+    
+    // Validate before sending
+    if (!newCategory.categorie || !newCategory.categorie.trim()) {
+      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez saisir un nom de famille." });
+      return;
+    }
+    if (!newCategory.imageFile) {
+      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez sélectionner une image." });
+      return;
+    }
 
-      const response = await axiosInstance.post("/api/categories", formData);
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); },
+    });
+
+    try {
+      console.log("Adding Category:", newCategory);
+      const formData = new FormData();
+      formData.append("categorie", newCategory.categorie.trim());
+      console.log("Appending imageFile:", newCategory.imageFile.name, newCategory.imageFile.type, newCategory.imageFile.size);
+      formData.append("logoP", newCategory.imageFile, newCategory.imageFile.name);
+
+      const response = await axiosInstance.post("/api/categories", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       console.log(response.data);
-      await fetchCategories(); // Refresh categories after adding
-      await storeDataInIndexedDB(categories, "famille");
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+
       setShowAddCategory(false);
-      setNewCategory({ categorie: "", sous_categorie: "", imageFile: null });
-      Swal.fire({
-        icon: "success",
-        title: "Succès!",
-        text: " ajoutée avec succès.",
-      }); // Hide the modal after success
+      setNewCategory({ categorie: "", imageFile: null });
+
+      Swal.fire({ icon: "success", title: "Succès!", text: "Famille ajoutée avec succès." });
     } catch (error) {
       console.error("Error adding category:", error);
+      let errorMsg = "Échec de l'ajout de la famille.";
+      if (error.response?.data?.error) {
+        errorMsg = typeof error.response.data.error === 'object'
+          ? Object.values(error.response.data.error).flat().join(", ")
+          : error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      Swal.fire({ icon: "error", title: "Erreur!", text: errorMsg });
     }
   };
   const handleAddSousCategory = async (e) => {
     if (e?.preventDefault) e.preventDefault(); // prevent native GET form submit
+
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       console.log("idSucategorie", idSucategorie);
 
@@ -1078,16 +1137,35 @@ const ProduitList = () => {
 
       console.log(response.data);
       await fetchCategories(); // Refresh categories after adding
-      await storeDataInIndexedDB(categories, "famille");
+      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+      
       setShowSuModal(false);
-      setNewCategory({ categorie: "", sous_categorie: "", imageFile: null });
+      setNewCategory({ categorie: "", sous_categorie: "", imageFile: null }); // Reset form
       Swal.fire({
         icon: "success",
         title: "Succès!",
-        text: "ajoutée avec succès.",
-      }); // Hide the modal after success
+        text: "Sous-catégorie ajoutée avec succès.",
+      });
     } catch (error) {
-      console.error("Error adding category:", error);
+      console.error("Error adding sub-category:", error);
+      let errorMsg = "Échec de l'ajout de la sous-catégorie. Vérifiez que vous avez bien sélectionné une image.";
+      
+      if (error.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMsg = Object.values(error.response.data.error).flat().join(", ");
+        } else {
+          errorMsg = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: errorMsg,
+      });
     }
   };
 

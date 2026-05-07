@@ -30,6 +30,8 @@ import PrintIcon from "@mui/icons-material/Print";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import TableViewIcon from "@mui/icons-material/TableView";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
 import { useOpen } from "./OpenProvider";
 import { useHeader } from "./HeaderContext";
 
@@ -119,10 +121,28 @@ const navItems = [
     match: (pathname) => pathname === "/produits",
   },
   {
+    to: "/recettes",
+    label: "Recettes / Nomenclature",
+    icon: <AssignmentIcon />,
+    match: (pathname) => pathname === "/recettes",
+  },
+  {
+    to: "/charges-directes",
+    label: "Charges Directes",
+    icon: <FlashOnIcon />,
+    match: (pathname) => pathname === "/charges-directes",
+  },
+  {
     to: "/matieres-premieres",
     label: "Matières Premières",
     icon: <ShoppingBagIcon />, // Using same icon for now
     match: (pathname) => pathname === "/matieres-premieres",
+  },
+  {
+    to: "/charges-indirectes",
+    label: "Charges Indirectes",
+    icon: <TableViewIcon />,
+    match: (pathname) => pathname === "/charges-indirectes",
   },
   {
     to: "/emphistorique",

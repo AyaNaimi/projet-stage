@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('prix_produits', function (Blueprint $table) {
-            $table->id(); // ID auto-incrémenté pour la table
-            $table->unsignedBigInteger('produit_id')->nullable(); // Référence au produit
-            $table->date('dateDebut')->nullable(); // Date de début
-            $table->date('dateFin')->nullable(); // Date de fin
-            $table->decimal('prixProduit', 10, 2)->nullable(); // Prix du produit avec deux décimales
-            $table->timestamps(); // Colonnes created_at et updated_at
-
-            // Clé étrangère vers la table des produits (si elle existe)
-            $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('prix_produits')) {
+            Schema::create('prix_produits', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('produit_id')->nullable();
+                $table->date('dateDebut')->nullable();
+                $table->date('dateFin')->nullable();
+                $table->decimal('prixProduit', 10, 2)->nullable();
+                $table->timestamps();
+                $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
+            });
+        }
     }
 
     /**

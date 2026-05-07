@@ -136,8 +136,7 @@ const FamilleTypeCarousels = ({
               >
                 {chunks.map((chunk, chunkIndex) => (
                   <Carousel.Item key={chunkIndex}>
-                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{ 
-                      gap: itemGap,
+                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{                      gap: itemGap,
                       padding: '10px 0',
                       marginLeft: '9%'
                     }}>
@@ -222,7 +221,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP ? toFullUrl(category.logoP) : '/images/logo-ovotec-blanc-05 (1).png'}
+                                src={category.logoP ? toFullUrl(category.logoP) : '/images/bayd.jpg'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',
@@ -315,8 +314,7 @@ const FamilleTypeCarousels = ({
               >
                 {chunksSucat.map((chunk, chunkIndex) => (
                   <Carousel.Item key={chunkIndex}>
-                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{ 
-                      gap: itemGap,
+                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{                      gap: itemGap,
                       padding: '10px 0',
                       marginLeft: '9%'
                     }}>
@@ -401,7 +399,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP ? toFullUrl(category.logoP) : '/images/logo-ovotec-blanc-05 (1).png'}
+                                src={category.logoP ? toFullUrl(category.logoP) : '/images/bayd.jpg'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',
