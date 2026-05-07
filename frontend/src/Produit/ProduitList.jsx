@@ -286,8 +286,17 @@ const ProduitList = () => {
 
         // Handle the case where 'categoryId' is 'tout'
         if (categoryId === "tout") {
-          setFilteredProduitsByCategory(filteredProduits); // Show all products
-          return; // Exit the function early
+          if (sousCatFiltre && sousCatFiltre !== "tout") {
+            const filteredSuCat = filteredProduits.filter(
+              (produit) => produit.suCat_id === parseInt(sousCatFiltre),
+            );
+            setFilteredProduitsByCategory(filteredSuCat.length === 0 ? [] : filteredSuCat);
+            setPage(1);
+            return;
+          }
+          setFilteredProduitsByCategory(filteredProduits);
+          setPage(1);
+          return;
         }
 
         let filtered = filteredProduits.filter(
