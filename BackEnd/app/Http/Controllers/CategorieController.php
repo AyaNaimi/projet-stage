@@ -34,7 +34,7 @@ class CategorieController extends Controller
                     'categorie' => 'required',
                     'idCatMer' => 'nullable',
 
-                    // Logo is optional (especially for sous-catégorie); validate only if provided
+                    // Logo is optional (especially for sous-catÃ©gorie); validate only if provided
                     'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
                 ]);
     
@@ -62,7 +62,7 @@ class CategorieController extends Controller
                 $category->save();
     
                 // Return success response
-                return response()->json(['message' => 'Catégorie ajoutée avec succès', 'category' => $category], 200);
+                return response()->json(['message' => 'CatÃ©gorie ajoutÃ©e avec succÃ¨s', 'category' => $category], 200);
     
             } catch (\Exception $e) {
                 // Handle any errors and return a JSON response
@@ -109,7 +109,7 @@ class CategorieController extends Controller
             $categorie->save();
     
             // Return success response
-            return response()->json(['message' => 'Catégorie modifiée avec succès', 'category' => $categorie], 200);
+            return response()->json(['message' => 'CatÃ©gorie modifiÃ©e avec succÃ¨s', 'category' => $categorie], 200);
     
         } catch (\Exception $e) {
             // Handle any errors and return a JSON response
@@ -121,7 +121,14 @@ class CategorieController extends Controller
 
     public function destroy($id)
     {
-        Categorie::findOrFail($id)->delete();
+        $categorie = Categorie::find($id);
+
+        if (!$categorie) {
+            return response()->json(null, 204);
+        }
+
+        $categorie->delete();
         return response()->json(null, 204);
     }
 }
+
