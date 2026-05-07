@@ -1,9 +1,21 @@
 import React from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import { Layers, Tag, DollarSign, RefreshCw } from 'lucide-react';
+import { Form, Button, Tab, Tabs } from 'react-bootstrap';
+import { Layers, Tag, DollarSign, RefreshCw, Info, Package } from 'lucide-react';
+
+// Extracted outside to avoid remounting
+const StyledFormGroup = React.memo(({ icon, label, htmlFor, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
+    <label htmlFor={htmlFor} style={{ fontWeight: 500, color: '#4b5563', fontSize: '0.875rem ', marginBottom: 2, display: 'flex', alignItems: 'center' }}>
+      <span style={{ marginRight: 6, color: '#4b5563', fontSize: 16 }}>
+        {icon}
+      </span>
+      {label}
+    </label>
+    {children}
+  </div>
+));
 
 const ChargeIndirecteForm = ({
-  show,
   formData,
   handleChange,
   handleSubmit,
@@ -11,176 +23,185 @@ const ChargeIndirecteForm = ({
   closeForm,
   formContainerStyle
 }) => {
+  const [tabKey, setTabKey] = React.useState('configuration');
+
   const inputStyle = {
     borderRadius: '0.5rem',
     border: '1px solid #d1d5db',
     padding: '0.6rem 1rem',
     fontSize: 15,
-    background: '#f9fafb',
+    background: '#fff',
     color: '#000',
   };
 
-  const sectionStyle = {
-    background: '#fff',
-    borderRadius: '1rem',
-    padding: '1.5rem',
-    marginBottom: '1rem',
-    border: '1px solid #e5e7eb',
-  };
-
-  const labelStyle = {
-    fontWeight: 600,
-    fontSize: '0.85rem',
-    color: '#475569',
-    marginBottom: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  };
-
   return (
-    <div
-      id="formContainerunique"
-      className=""
-      style={{ 
-        ...formContainerStyle, 
-        marginTop: '-0px', 
-        height: `calc(100vh - 280px)`, 
-        top: '280px',
-        overflow: 'auto',
-        zIndex: 1050
-      }}
-    >
-      <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            background: '#00afaa',
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff'
-          }}>
-            <Layers size={22} />
-          </div>
-          <div>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>
-              {formData.id ? 'Modifier Charge Indirecte' : 'Nouvelle Charge Indirecte'}
-            </span>
-            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 400 }}>
-              Paramétrage des frais fixes et variables
-            </div>
+    <div style={{ marginTop: "45px" }}>
+      <style>
+        {`
+          .styled-input::placeholder {
+            color: #9ca3af !important;
+            opacity: 1 !important;
+            font-size: 15px !important;
+          }
+          
+          .styled-select {
+            color: #000 !important;
+          }
+          
+          .btn-primary-custom {
+            background-color: #00afaa !important;
+            color: #fff !important;
+            border-radius: 0.375rem !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 3rem !important;
+            border: none !important;
+            transition: background-color 0.15s;
+          }
+          .btn-primary-custom:hover:not(:disabled) {
+            background-color: #009691 !important;
+          }
+          .btn-secondary-custom {
+            background-color: gray !important;
+            color: #fff !important;
+            border-radius: 0.375rem !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 3rem !important;
+            border: none !important;
+            transition: background-color 0.15s;
+          }
+
+          .is-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.1);
+          }
+        `}
+      </style>
+
+      <div
+        id="formContainerunique"
+        style={{ 
+          ...formContainerStyle, 
+          marginTop: '-0px', 
+          height: `calc(99.6vh - 300px)`, 
+          overflow: 'auto',
+          zIndex: 1050 
+        }}
+      >
+        {/* Top Section */}
+        <div style={{
+          background: '#fff',
+          borderRadius: '1rem',
+          padding: '0.7rem 2rem',
+          marginBottom: '0.7rem',
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '1.5rem',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          minHeight: 0
+        }}>
+          <div style={{ flex: 1 }}>
+            <StyledFormGroup icon={<Tag size={18} />} label="Nom de la Charge" htmlFor="nom">
+              <input
+                id="nom"
+                name="nom"
+                value={formData.nom || ''}
+                onChange={handleChange}
+                style={inputStyle}
+                placeholder="Ex: Électricité, Loyer..."
+                className={`form-control styled-input ${errors.nom ? 'is-invalid' : ''}`}
+              />
+            </StyledFormGroup>
           </div>
         </div>
-        <Button variant="link" onClick={closeForm} style={{ color: '#64748b', textDecoration: 'none', fontSize: '1.5rem', lineHeight: 1 }}>&times;</Button>
-      </div>
 
-      <div style={{ background: '#f1f5f9', padding: '24px', overflowY: 'auto', height: 'calc(100% - 140px)' }}>
-        <Form onSubmit={handleSubmit} id="chargeIndirecteForm">
-          <div style={sectionStyle}>
-            <Row>
-              <Col md={12} className="mb-3">
-                <Form.Group>
-                  <Form.Label style={labelStyle}><Tag size={14} /> Nom de la Charge</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="nom"
-                    value={formData.nom || ''}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    placeholder="Ex: Électricité, Loyer..."
-                    isInvalid={!!errors.nom}
-                  />
-                  {errors.nom && <Form.Control.Feedback type="invalid">{errors.nom[0]}</Form.Control.Feedback>}
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label style={labelStyle}><DollarSign size={14} /> Montant (DH)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    name="montant"
-                    value={formData.montant || ''}
-                    onChange={handleChange}
-                    style={inputStyle}
-                    placeholder="0.00"
-                    isInvalid={!!errors.montant}
-                  />
-                  {errors.montant && <Form.Control.Feedback type="invalid">{errors.montant[0]}</Form.Control.Feedback>}
-                </Form.Group>
-              </Col>
-            </Row>
-          </div>
+        {/* Tabs Section */}
+        <Tabs
+          id="charge-indirecte-tabs"
+          activeKey={tabKey}
+          onSelect={(k) => setTabKey(k)}
+          className="mb-4 nav-tabs"
+          style={{ 
+            justifyContent: 'center', 
+            position: 'sticky', 
+            top: '-1%', 
+            backgroundColor: '#fff', 
+            zIndex: 100, 
+            marginLeft: '-0.5%', 
+            marginRight: '-0.7%' 
+          }}
+        >
+          <Tab eventKey="configuration" title={<span><DollarSign className="me-2" size={16} />Montant & Fréquence</span>}>
+            <Form onSubmit={handleSubmit} style={{ padding: '0 1rem' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ flex: 1 }}>
+                  <StyledFormGroup icon={<DollarSign size={18} />} label="Montant (DH)" htmlFor="montant">
+                    <input
+                      id="montant"
+                      type="number"
+                      step="0.01"
+                      name="montant"
+                      value={formData.montant || ''}
+                      onChange={handleChange}
+                      style={inputStyle}
+                      placeholder="0.00"
+                      className={`form-control styled-input ${errors.montant ? 'is-invalid' : ''}`}
+                    />
+                  </StyledFormGroup>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <StyledFormGroup icon={<RefreshCw size={18} />} label="Fréquence" htmlFor="frequence">
+                    <select
+                      id="frequence"
+                      name="frequence"
+                      value={formData.frequence || 'mensuel'}
+                      onChange={handleChange}
+                      style={inputStyle}
+                      className="form-select styled-select"
+                    >
+                      <option value="mensuel">Mensuel</option>
+                      <option value="trimestriel">Trimestriel</option>
+                      <option value="annuel">Annuel</option>
+                    </select>
+                  </StyledFormGroup>
+                </div>
+              </div>
 
-          <div style={sectionStyle}>
-            <Row>
-              <Col md={12} className="mb-3">
-                <Form.Group>
-                  <Form.Label style={labelStyle}><RefreshCw size={14} /> Fréquence</Form.Label>
-                  <Form.Select
-                    name="frequence"
-                    value={formData.frequence || 'mensuel'}
-                    onChange={handleChange}
-                    style={inputStyle}
-                  >
-                    <option value="mensuel">Mensuel</option>
-                    <option value="trimestriel">Trimestriel</option>
-                    <option value="annuel">Annuel</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label style={labelStyle}><Layers size={14} /> Méthode de Répartition</Form.Label>
-                  <Form.Select
+              <div style={{ marginBottom: '2rem' }}>
+                <StyledFormGroup icon={<Layers size={18} />} label="Méthode de Répartition" htmlFor="methode_repartition">
+                  <select
+                    id="methode_repartition"
                     name="methode_repartition"
                     value={formData.methode_repartition || 'volume'}
                     onChange={handleChange}
                     style={inputStyle}
+                    className="form-select styled-select"
                   >
                     <option value="volume">Volume de production</option>
                     <option value="quantite">Quantité produite</option>
                     <option value="temps_machine">Temps machine / MOD</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-          </div>
-        </Form>
-      </div>
+                  </select>
+                </StyledFormGroup>
+              </div>
 
-      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px', position: 'absolute', bottom: 0, width: '100%', left: 0 }}>
-        <Button
-          variant="light"
-          onClick={closeForm}
-          style={{
-            padding: '8px 24px',
-            borderRadius: '8px',
-            fontWeight: 600,
-            border: '1px solid #e2e8f0',
-            color: '#475569'
-          }}
-        >
-          Annuler
-        </Button>
-        <Button 
-          form="chargeIndirecteForm"
-          type="submit" 
-          style={{ 
-            background: '#00afaa', 
-            border: 'none', 
-            padding: '8px 32px', 
-            borderRadius: '8px', 
-            fontWeight: 700,
-            color: '#fff',
-            boxShadow: '0 4px 12px rgba(0, 175, 170, 0.2)'
-          }}
-        >
-          {formData.id ? 'Sauvegarder les modifications' : 'Enregistrer la charge'}
-        </Button>
+              <div className="d-flex justify-content-center mt-5 mb-5">
+                <Button type="submit" className="btn-primary-custom mx-2">
+                  {formData.id ? 'Modifier' : 'Enregistrer'}
+                </Button>
+                <Button type="button" className="btn-secondary-custom mx-2" onClick={closeForm}>
+                  Annuler
+                </Button>
+              </div>
+            </Form>
+          </Tab>
+
+          <Tab eventKey="info" title={<span><Info className="me-2" size={16} />Informations</span>}>
+            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+              <Package size={48} style={{ marginBottom: '1rem', opacity: 0.3 }} />
+              <p>Configuration des charges indirectes et de leur clé de répartition.</p>
+            </div>
+          </Tab>
+        </Tabs>
       </div>
     </div>
   );
