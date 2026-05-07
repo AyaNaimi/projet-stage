@@ -1741,6 +1741,7 @@ const ProduitList = () => {
               showEditSousModal={showEditSousModal}
               setShowEditSousModal={setShowEditSousModal}
               handleSuCategorie={handleSuCategorie}
+              idSucategorie={idSucategorie}
               handleAddEmptyRowRep={handleAddEmptyRowRep}
               selectedProductsDataRep={selectedProductsDataRep}
               handleInputChangeRep={handleInputChangeRep}

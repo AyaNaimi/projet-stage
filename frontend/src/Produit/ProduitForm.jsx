@@ -95,6 +95,7 @@ const ProduitForm = ({
   showEditSousModal,
   setShowEditSousModal,
   handleSuCategorie,
+  idSucategorie,
   handleAddEmptyRowRep,
   selectedProductsDataRep,
   handleInputChangeRep,
@@ -1148,6 +1149,17 @@ const ProduitForm = ({
                 </Form.Text>
               </Form.Group>
               <Form.Group className="mb-3">
+                <Form.Label>Logo de la Sous-Catégorie</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setNewCategory(prev => ({ ...prev, imageFile: file }));
+                  }}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>
                 <Form.Control
                   type="text"
@@ -1169,6 +1181,40 @@ const ProduitForm = ({
                 <Fab variant="extended" className="btn-sm FabAnnule mb-2 mx-2" onClick={() => setShowSuModal(false)}>
                   Annuler
                 </Fab>
+              </Form.Group>
+              <Form.Group className="mt-3">
+                <div className="form-group mt-3" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Id</th>
+                        <th>Sous-Catégorie</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.filter((cat) => cat.idCatMer !== null && cat.idCatMer === Number(idSucategorie)).map(categ => (
+                        <tr key={categ.id}>
+                          <td>{categ.id}</td>
+                          <td>{categ.categorie}</td>
+                          <td>
+                            <FontAwesomeIcon
+                              onClick={() => handleEditSousCategorie(categ)}
+                              icon={faEdit}
+                              style={{ color: "#007bff", cursor: "pointer" }}
+                            />
+                            <span style={{ margin: "0 8px" }}></span>
+                            <FontAwesomeIcon
+                              onClick={() => handleDeletecatgeorieSousCat(categ.id)}
+                              icon={faTrash}
+                              style={{ color: "#ff0000", cursor: "pointer" }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Form.Group>
             </Form>
           </Modal.Body>
