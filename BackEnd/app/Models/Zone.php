@@ -18,4 +18,15 @@ class Zone extends Model
     public function siteclients() {
         return $this->hasMany(SiteClient::class);
     }
+    public function equipements()
+    {
+        return $this->hasMany(Equipement::class); 
+    }
+
+    public function maintenancePreventive()
+    {
+        return $this->hasMany(MaintenancePreventive::class);
+    }
+
+
 }

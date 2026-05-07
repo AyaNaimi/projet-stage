@@ -24,6 +24,7 @@ const FiltersComponent = ({
           <div className="date-filter-container" style={styles.filterContainer}>
             <Form.Select
               aria-label="Sélecteur de genre"
+              desibled={true}
               value={genreFiltre}
               onChange={(e) => setGenreFiltre(e.target.value)}
               style={styles.select}

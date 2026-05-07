@@ -16,13 +16,14 @@ return new class extends Migration
             $table->string('Code_produit')->unique();
             $table->string('designation');
             $table->string('type_quantite');
-            $table->string('unite');
-            $table->string('seuil_alerte');
-            $table->string('stock_initial');
-            $table->string('etat_produit');
-            $table->string('marque');
-            $table->string('logoP');
-            $table->decimal('prix_vente')->nullable();
+            $table->string('unite')->nullable();
+            $table->string('seuil_alerte')->nullable();
+            $table->string('stock_initial')->nullable();
+            $table->string('etat_produit')->nullable();
+            $table->string('marque')->nullable();
+            $table->string('logoP')->nullable();
+            $table->decimal('prix_vente')->nullable()->nullable();
+
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('restrict');
             $table->unsignedBigInteger('categorie_id');
@@ -30,7 +31,12 @@ return new class extends Migration
                 ->references('id')
                 ->on('categories')
                 ->onDelete('cascade');
-                $table->unsignedBigInteger('calibre_id');
+                $table->unsignedBigInteger('suCat_id')->nullable();
+                $table->foreign('suCat_id')
+                    ->references('id')
+                    ->on('categories')
+                    ->onDelete('cascade');
+                $table->unsignedBigInteger('calibre_id')->nullable();
                 $table->foreign('calibre_id')->references('id')->on('calibre')->onDelete('cascade');
             $table->timestamps();
         });

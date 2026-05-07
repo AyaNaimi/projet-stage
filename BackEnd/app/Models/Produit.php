@@ -9,7 +9,34 @@ use Illuminate\Database\Eloquent\Model;
 class Produit extends Model
 {
     use HasFactory;
-    protected $guarded=[]; 
+
+    protected $fillable = [
+        'Code_produit',
+        'designation',
+        'type_quantite',
+        'unite',
+        'seuil_alerte',
+        'stock_initial',
+        'etat_produit',
+        'marque',
+        'logoP',
+        'prix_vente',
+        'user_id',
+        'categorie_id',
+        'suCat_id',
+        'calibre_id',
+        'type',
+        'genre',
+        'tva',
+        'Dvie',
+        'reference',
+        'produit_Etiq_id',
+        'produit_Embalg_id',
+        'produit_Embalg_S_id',
+        'unite_etiquette',
+        'unite_embalage_primaire',
+        'unite_embalage_secondaire',
+    ];
 
     public function categorie()
     {

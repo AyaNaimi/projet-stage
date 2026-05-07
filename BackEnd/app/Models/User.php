@@ -56,6 +56,12 @@ class User extends Authenticatable
         $this->roles()->sync([$role->id]);
 
     }
+// // Dans le modèle User (app/Models/User.php)
+// public function hasPermission($permission)
+// {
+//     // Vérifier si l'utilisateur a la permission (cela peut être une relation ou une simple vérification de tableau)
+//     return in_array($permission, $this->permissions);
+// }
 
     public function hasPermission($permission)
     {

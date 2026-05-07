@@ -5,7 +5,7 @@ export const fetchStockProduction = createAsyncThunk(
   "production/fetchStockProduction",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/api/stock_production`);
+      const response = await axiosInstance.get(`/stock_production`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -29,7 +29,7 @@ export const fetchProductions = createAsyncThunk(
   "production/fetchProductions",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/api/productions`);
+      const response = await axiosInstance.get(`/productions`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);

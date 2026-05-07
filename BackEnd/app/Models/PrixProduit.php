@@ -9,18 +9,33 @@ class PrixProduit extends Model
 {
     use HasFactory;
 
+    /**
+     * Le nom de la table associée au modèle.
+     *
+     * @var string
+     */
     protected $table = 'prix_produits';
 
-    protected $guarded = [];
-
-    protected $casts = [
-        'dateDebut' => 'datetime:Y-m-d',
-        'dateFin' => 'datetime:Y-m-d',
-        'prixProduit' => 'decimal:2',
+    /**
+     * Les attributs pouvant être assignés en masse.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'id_produit',
+        'dateDebut',
+        'dateFin',
+        'prixProduit',
+        'Unite',
+        'typeQte'
     ];
 
+    /**
+     * Définir la relation avec le modèle Produit.
+     * (Supposons qu'il existe un modèle Produit).
+     */
     public function produit()
     {
-        return $this->belongsTo(Produit::class, 'produit_id');
+        return $this->belongsTo(Produit::class, 'produit_id'); // Précisez 'id_produit' comme clé étrangère
     }
 }

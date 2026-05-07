@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
-import axios from "axios";
+import axiosInstance from "../../axiosInstance";
 
 const CategoryProductChart = () => {
   const [chartData, setChartData] = useState(null);
@@ -10,8 +10,8 @@ const CategoryProductChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/statistique-chartProduitData"
+        const response = await axiosInstance.get(
+          "statistique-chartProduitData"
         );
         setChartData(response.data);
         setLoading(false);

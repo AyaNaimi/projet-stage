@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import API_BASE_URL, { getApiRequestConfig } from '../utils/api/baseUrl';
+import axiosInstance from '../axiosInstance';
 
 const normalizeCalibres = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -13,7 +12,7 @@ export const fetchCalibres = createAsyncThunk(
   'calibres/fetchCalibres',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/calibres`, getApiRequestConfig());
+      const response = await axiosInstance.get('/api/calibres');
       const calibres = normalizeCalibres(response.data);
       localStorage.setItem('calibres', JSON.stringify(calibres));
       return calibres;
