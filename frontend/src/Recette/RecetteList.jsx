@@ -11,6 +11,7 @@ import AddButton from "../components/AddButton";
 import FilterToggleButton from "../components/FilterToggleButton";
 import RecetteForm from "./RecetteForm";
 import Swal from "sweetalert2";
+import "../Produit/All.css";
 
 const RecetteList = () => {
   const [produits, setProduits] = useState([]);
@@ -23,7 +24,13 @@ const RecetteList = () => {
   const [sousCatFiltre, setSousCatFiltre] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [formContainerStyle, setFormContainerStyle] = useState({
+    right: "-100%",
+  });
+  const [tableContainerStyle, setTableContainerStyle] = useState({
+    marginRight: "0%",
+    width: "100%"
+  });
 
   const [formData, setFormData] = useState({
     id: null,
@@ -111,11 +118,17 @@ const RecetteList = () => {
       recette: []
     });
     setErrors({});
-    setShowModal(true);
+    if (formContainerStyle.right === "-100%") {
+      setFormContainerStyle({ right: "0", width: "50%" });
+      setTableContainerStyle({ marginRight: "48%", width: "52%" });
+    } else {
+      closeForm();
+    }
   };
 
   const closeForm = () => {
-    setShowModal(false);
+    setFormContainerStyle({ right: "-100%" });
+    setTableContainerStyle({ marginRight: "0", width: "100%" });
     setErrors({});
   };
 
@@ -133,7 +146,10 @@ const RecetteList = () => {
           unite: r.matiere_premiere?.unite || 'K'
         })) || []
      });
-     setShowModal(true);
+     if (formContainerStyle.right === "-100%") {
+      setFormContainerStyle({ right: "0", width: "50%" });
+      setTableContainerStyle({ marginRight: "48%", width: "52%" });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -164,20 +180,6 @@ const RecetteList = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const formContainerStyle = {
-    position: 'absolute',
-    top: '30px', 
-    left: showModal ? '20px' : '-100%',
-    width: '97%',
-    height: '100%',
-    transition: 'left 0.5s ease',
-    zIndex: 10,
-    backgroundColor: '#fff',
-    border: '1px solid #ccc',
-    padding: '20px',
-    boxShadow: '0px 0px 10px rgba(0,0,0,0.1)',
   };
 
   const chunks = [];
@@ -213,7 +215,21 @@ const RecetteList = () => {
           handleSousCategoryFilterChange={handleSousCategoryFilterChange}
         />
 
-        <div style={{ position: 'relative', marginTop: '20px' }}>
+        <div
+          className="container-d-flex justify-content-start"
+          style={{ marginTop: "55px" }}
+        >
+          <RecetteForm
+            show={formContainerStyle.right === "0"}
+            formData={formData}
+            setFormData={setFormData}
+            handleChange={handleChange}
+            handleSubmit={handleSubmit}
+            errors={errors}
+            matierePremieres={matierePremieres}
+            closeForm={closeForm}
+            formContainerStyle={formContainerStyle}
+          />
           <TableMui
             columns={[
               {
@@ -278,7 +294,7 @@ const RecetteList = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    <Edit3 size={16} /> Gérer Fiche
+                    <Edit3 size={16} /> Configurer
                   </button>
                 )
               }
@@ -290,7 +306,10 @@ const RecetteList = () => {
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
             produitsFiltres={filteredProduits}
             addButtonText="Ajouter"
-            tableContainerStyle={{ width: '100%' }}
+            tableContainerStyle={{ 
+              ...tableContainerStyle, 
+              transition: 'all 0.3s ease' 
+            }}
             selectedItems={selectedItems}
             handleDeleteSelected={noop}
             AddButton={AddButton}
@@ -298,18 +317,6 @@ const RecetteList = () => {
             showFilters={showFilters}
             toggleFilters={() => setShowFilters(!showFilters)}
             handleShowFormButtonClick={handleShowFormButtonClick}
-          />
-
-          <RecetteForm
-            show={showModal}
-            formData={formData}
-            setFormData={setFormData}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-            errors={errors}
-            matierePremieres={matierePremieres}
-            closeForm={closeForm}
-            formContainerStyle={formContainerStyle}
           />
         </div>
       </Box>

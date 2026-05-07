@@ -691,7 +691,8 @@ useEffect(() => {
     formData2.append('logoP', formData.logoP);
 
     try {
-        const response = await fetch(`produit/${editingProduit.id}/update-logo`, {
+        const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const response = await fetch(`${API_BASE}/api/produit/${editingProduit.id}/update-logo`, {
             method: 'POST',
             body: formData2, // Corrected to send formData2
         });

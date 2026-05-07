@@ -11,6 +11,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Carousel } from "react-bootstrap";
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const toFullUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const clean = path.startsWith("/") ? path.slice(1) : path;
+  return `${API_BASE}/${clean}`;
+};
+
 import {
   faTrash,
   faFilePdf,
@@ -156,9 +165,12 @@ const ProduitList = () => {
   const fetchProduits = async () => {
     try {
       const response = await axiosInstance.get("/api/produits");
-      setProduits(response.data.produit);
-      // Store produits in IndexedDB
-      await storeDataInIndexedDB(response.data.produit, "produits");
+      const produits = response.data.produit.map(p => ({
+        ...p,
+        logoP: toFullUrl(p.logoP),
+      }));
+      setProduits(produits);
+      await storeDataInIndexedDB(produits, "produits");
       console.log("produit", response.data.produit);
 
       const usersResponse = await axiosInstance.get("/api/user");
@@ -194,7 +206,13 @@ const ProduitList = () => {
         const storedCategories = await getDataFromIndexedDB("famille");
 
         // Set the state if the data exists in IndexedDB
-        if (storedProduits) setProduits(storedProduits);
+        if (storedProduits) {
+          const normalized = storedProduits.map(p => ({
+            ...p,
+            logoP: toFullUrl(p.logoP),
+          }));
+          setProduits(normalized);
+        }
         if (storedCategories) setCategories(storedCategories);
 
         // If the data doesn't exist in IndexedDB, fetch it from the API
@@ -286,8 +304,17 @@ const ProduitList = () => {
 
         // Handle the case where 'categoryId' is 'tout'
         if (categoryId === "tout") {
-          setFilteredProduitsByCategory(filteredProduits); // Show all products
-          return; // Exit the function early
+          if (sousCatFiltre && sousCatFiltre !== "tout") {
+            const filteredSuCat = filteredProduits.filter(
+              (produit) => produit.suCat_id === parseInt(sousCatFiltre),
+            );
+            setFilteredProduitsByCategory(filteredSuCat.length === 0 ? [] : filteredSuCat);
+            setPage(1);
+            return;
+          }
+          setFilteredProduitsByCategory(filteredProduits);
+          setPage(1);
+          return;
         }
 
         let filtered = filteredProduits.filter(
@@ -661,9 +688,19 @@ const ProduitList = () => {
         etat_produit: formData.etat_produit,
         marque: formData.marque,
         prix_vente: formData.prix_vente,
-        genre: formData.genre,
-        type: formData.type_produit,
-        Dvie: formData.Dvie,
+        // Avoid persisting literal "undefined" strings in DB
+        genre:
+          formData.genre === undefined || formData.genre === "undefined"
+            ? null
+            : formData.genre,
+        type:
+          formData.type_produit === undefined || formData.type_produit === "undefined"
+            ? null
+            : formData.type_produit,
+        Dvie:
+          formData.Dvie === undefined || formData.Dvie === "undefined"
+            ? null
+            : formData.Dvie,
         reference: formData.reference,
 
         produit_Embalg_id: formData.produit_Embalg_id,
@@ -695,8 +732,9 @@ const ProduitList = () => {
         })),
       };
       console.log("requestData", requestData);
-      if (formData.logoP) {
-        setMessage("Please select a file before submitting.");
+      // Only upload when a NEW file was selected (existing logo is often a URL string)
+      if (formData.logoP instanceof File) {
+        setMessage("");
         const formData2 = new FormData();
         formData2.append("logoP", formData.logoP);
 
@@ -704,12 +742,16 @@ const ProduitList = () => {
           const token =
             localStorage.getItem("token") || localStorage.getItem("API_TOKEN");
           const response = await axiosInstance.post(
-            `/produit/${editingProduit.id}/update-logo`,
+            `/api/produit/${editingProduit.id}/update-logo`,
             formData2,
             {
-              headers: { "Content-Type": "multipart/form-data" },
+              // Let Axios set the proper multipart boundary automatically
             },
           );
+          // Refresh logo immediately in UI if needed
+          if (response?.data?.logoP) {
+            setFormData((prev) => ({ ...prev, logoP: response.data.logoP }));
+          }
         } catch (error) {
           setMessage("Error uploading the logo.");
           console.error(error);
@@ -719,70 +761,51 @@ const ProduitList = () => {
       // Create a FormData object and append the file
     } else {
       const formDatad = new FormData();
-      formDatad.append("Code_produit", formData.Code_produit);
-      formDatad.append("designation", formData.designation);
-      formDatad.append("calibre_id", formData.calibre_id);
-      formDatad.append("type_quantite", formData.type_quantite);
-      formDatad.append("unite", formData.unite);
-      formDatad.append("seuil_alerte", formData.seuil_alerte);
-      formDatad.append("stock_initial", formData.stock_initial);
-      formDatad.append("etat_produit", formData.etat_produit);
-      formDatad.append("marque", formData.marque);
-      formDatad.append("prix_vente", formData.prix_vente);
-      formDatad.append("categorie_id", formData.categorie_id);
-      formDatad.append("suCat_id", formData.suCat_id);
-      formDatad.append("genre", formData.genre);
-      formDatad.append("type", formData.type_produit);
-      formDatad.append("Dvie", formData.Dvie);
-      formDatad.append("reference", formData.reference);
+      formDatad.append("Code_produit", formData.Code_produit || "");
+      formDatad.append("designation", formData.designation || "");
+      formDatad.append("calibre_id", formData.calibre_id || "");
+      formDatad.append("type_quantite", formData.type_quantite || "");
+      formDatad.append("unite", formData.unite || "");
+      formDatad.append("seuil_alerte", formData.seuil_alerte || "");
+      formDatad.append("stock_initial", formData.stock_initial || "");
+      formDatad.append("etat_produit", formData.etat_produit || "");
+      formDatad.append("marque", formData.marque || "");
+      formDatad.append("prix_vente", formData.prix_vente || "");
+      formDatad.append("categorie_id", formData.categorie_id || "");
+      formDatad.append("suCat_id", formData.suCat_id || "");
+      formDatad.append("genre", (formData.genre === undefined || formData.genre === "undefined") ? "" : formData.genre);
+      formDatad.append("type", (formData.type_produit === undefined || formData.type_produit === "undefined") ? "" : formData.type_produit);
+      formDatad.append("Dvie", (formData.Dvie === undefined || formData.Dvie === "undefined") ? "" : formData.Dvie);
+      formDatad.append("reference", formData.reference || "");
+      formDatad.append("tva", formData.tva || "");
 
-      formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || '');
-      formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || '');
-      formDatad.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || '');
+      formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || "");
+      formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || "");
+      formDatad.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || "");
 
       // Ajout des nouveaux champs
-      formDatad.append("unite_etiquette", formData.unite_etiquette);
-      formDatad.append(
-        "unite_embalage_primaire",
-        formData.unite_embalage_primaire,
-      );
-      formDatad.append(
-        "unite_embalage_secondaire",
-        formData.unite_embalage_secondaire,
-      );
+      formDatad.append("unite_etiquette", formData.unite_etiquette || "");
+      formDatad.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
+      formDatad.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
 
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);
       }
+      
       if (selectedProductsDataRep && Array.isArray(selectedProductsDataRep)) {
         selectedProductsDataRep.forEach((prix, index) => {
-          formDatad.append(
-            `prixProduits[${index}][dateDebut]`,
-            prix.date_debut || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][dateFin]`,
-            prix.date_fin || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][prixProduit]`,
-            prix.prixProduit || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][typeQte]`,
-            formData.type_quantite === "kg"
-              ? "K"
-              : formData.type_quantite === "litre"
-                ? "L"
-                : formData.type_quantite === "unite"
-                  ? "U"
-                  : prix.type,
+          formDatad.append(`prixProduits[${index}][dateDebut]`, prix.date_debut || "");
+          formDatad.append(`prixProduits[${index}][dateFin]`, prix.date_fin || "");
+          formDatad.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit || "");
+          formDatad.append(`prixProduits[${index}][typeQte]`, 
+            formData.type_quantite === "kg" ? "K" : 
+            formData.type_quantite === "litre" ? "L" : 
+            formData.type_quantite === "unite" ? "U" : (prix.type || "")
           );
           formDatad.append(`prixProduits[${index}][Unite]`, prix.unite || "");
         });
       }
       requestData = formDatad;
-      console.log(requestData);
     }
 
     try {
@@ -842,33 +865,40 @@ const ProduitList = () => {
 
       if (error.response) {
         const serverErrors = error.response.data.error;
-        console.log(error);
-        setErrors({
-          logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
-          Code_produit: serverErrors.Code_produit
-            ? serverErrors.Code_produit[0]
-            : "",
-          designation: serverErrors.designation
-            ? serverErrors.designation[0]
-            : "",
-          calibre_id: serverErrors.calibre_id ? serverErrors.calibre_id[0] : "",
-          type_quantite: serverErrors.type_quantite
-            ? serverErrors.type_quantite[0]
-            : "",
-          unite: serverErrors.unite ? serverErrors.unite[0] : "",
-          seuil_alerte: serverErrors.seuil_alerte
-            ? serverErrors.seuil_alerte[0]
-            : "",
-          stock_initial: serverErrors.stock_initial
-            ? serverErrors.stock_initial[0]
-            : "",
-          etat_produit: serverErrors.etat_produit
-            ? serverErrors.etat_produit[0]
-            : "",
-          marque: serverErrors.marque ? serverErrors.marque[0] : "",
-          categorie_id: serverErrors.categorie_id
-            ? serverErrors.categorie_id[0]
-            : "",
+        console.log("Erreur serveur:", serverErrors);
+        
+        if (typeof serverErrors === 'object' && serverErrors !== null) {
+          setErrors({
+            logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
+            Code_produit: serverErrors.Code_produit ? serverErrors.Code_produit[0] : "",
+            designation: serverErrors.designation ? serverErrors.designation[0] : "",
+            calibre_id: serverErrors.calibre_id ? serverErrors.calibre_id[0] : "",
+            type_quantite: serverErrors.type_quantite ? serverErrors.type_quantite[0] : "",
+            unite: serverErrors.unite ? serverErrors.unite[0] : "",
+            seuil_alerte: serverErrors.seuil_alerte ? serverErrors.seuil_alerte[0] : "",
+            stock_initial: serverErrors.stock_initial ? serverErrors.stock_initial[0] : "",
+            etat_produit: serverErrors.etat_produit ? serverErrors.etat_produit[0] : "",
+            marque: serverErrors.marque ? serverErrors.marque[0] : "",
+            categorie_id: serverErrors.categorie_id ? serverErrors.categorie_id[0] : "",
+          });
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur de validation',
+            text: 'Veuillez vérifier les champs du formulaire.',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: serverErrors || "Une erreur est survenue lors de l'enregistrement.",
+          });
+        }
+      } else {
+        console.error(error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur Réseau',
+          text: 'Impossible de contacter le serveur.',
         });
       }
     }
@@ -1037,7 +1067,9 @@ const ProduitList = () => {
     imageFile: null,
   });
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    
     // Validate before sending
     if (!newCategory.categorie || !newCategory.categorie.trim()) {
       Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez saisir un nom de famille." });
@@ -1088,7 +1120,9 @@ const ProduitList = () => {
       Swal.fire({ icon: "error", title: "Erreur!", text: errorMsg });
     }
   };
-  const handleAddSousCategory = async () => {
+  const handleAddSousCategory = async (e) => {
+    if (e?.preventDefault) e.preventDefault(); // prevent native GET form submit
+
     Swal.fire({
       title: "Traitement en cours...",
       text: "Veuillez patienter...",
@@ -1102,20 +1136,24 @@ const ProduitList = () => {
       console.log("idSucategorie", idSucategorie);
 
       const formData = new FormData();
-      formData.append("categorie", newCategory.sous_categorie);
+      // Modal input stores the subcategory name in `newCategory.sous_categorie`
+      formData.append("categorie", newCategory.sous_categorie || "");
       formData.append("idCatMer", idSucategorie);
-      formData.append("logoP", newCategory.imageFile);
+
+      // Optional image for subcategory (only if user selected a real file)
+      if (newCategory.imageFile instanceof File) {
+        formData.append("logoP", newCategory.imageFile);
+      }
 
       const response = await axiosInstance.post("/api/categories", formData);
 
       console.log(response.data);
-      await fetchCategories();
+      await fetchCategories(); // Refresh categories after adding
       const latestCategories = (await axiosInstance.get("/api/categories")).data;
       await storeDataInIndexedDB(latestCategories, "famille");
       
       setShowSuModal(false);
-      setNewCategory({ categorie: "", imageFile: null }); // Reset form
-
+      setNewCategory({ categorie: "", sous_categorie: "", imageFile: null }); // Reset form
       Swal.fire({
         icon: "success",
         title: "Succès!",

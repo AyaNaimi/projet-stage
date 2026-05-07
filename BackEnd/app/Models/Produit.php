@@ -38,6 +38,21 @@ class Produit extends Model
         'unite_embalage_secondaire',
     ];
 
+
+    public function getLogoUrlAttribute()
+    {
+        if (!$this->logoP) {
+            return null;
+        }
+        if (str_starts_with($this->logoP, 'http')) {
+            return $this->logoP;
+        }
+        if (str_starts_with($this->logoP, '/storage/')) {
+            return asset($this->logoP);
+        }
+        return asset('storage/' . $this->logoP);
+    }
+
     public function categorie()
     {
         return $this->belongsTo(categorie::class, 'categorie_id');
@@ -139,7 +154,7 @@ public function stockProduit()
         return round($matiereCost + $modCost + $packagingCost, 4);
     }
 
-    protected $appends = ['unit_cost'];
+    protected $appends = ['logo_url', 'unit_cost'];
 
 public function stock()
 {

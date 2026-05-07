@@ -35,7 +35,14 @@ const RecetteForm = ({
     <div
       id="formContainerunique"
       className=""
-      style={{ ...formContainerStyle, marginTop: '-0px', height: `calc(99.6vh - 300px)`, overflow: 'auto' }}
+      style={{ 
+        ...formContainerStyle, 
+        marginTop: '-0px', 
+        height: `calc(100vh - 280px)`, 
+        top: '280px',
+        overflow: 'auto',
+        zIndex: 1050
+      }}
     >
       <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

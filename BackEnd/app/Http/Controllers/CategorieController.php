@@ -31,7 +31,7 @@ class CategorieController extends Controller
             $validator = Validator::make($request->all(), [
                 'categorie' => 'required',
                 'idCatMer' => 'nullable',
-                'logoP' => 'nullable', 
+                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             ]);
 
             // If validation fails, return error response
@@ -46,10 +46,11 @@ class CategorieController extends Controller
 
             // Handle logo image upload
             if ($request->hasFile('logoP')) {
-                $logoPath = $request->file('logoP')->store('public/logoP');
-                $category->logoP = Storage::url($logoPath);
+                $logoPath = $request->file('logoP')->store('public/logoP'); 
+                $category->logoP = Storage::url($logoPath); 
             } else {
-                $category->logoP = ''; // Default empty if no image provided
+                // categories.logoP is non-nullable in DB; keep it as empty string when no logo is provided.
+                $category->logoP = '';
             }
 
             // Save the category to the database
@@ -74,7 +75,7 @@ class CategorieController extends Controller
             $validator = Validator::make($request->all(), [
                 'categorie' => 'required|string',
                 'idCatMer' => 'nullable',
-                'logoP' => 'nullable',
+                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
             ]);
     
             // If validation fails, return error response
@@ -110,8 +111,6 @@ class CategorieController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    
-    
 
     public function destroy($id)
     {

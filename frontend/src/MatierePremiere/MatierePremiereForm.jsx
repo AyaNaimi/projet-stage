@@ -1,27 +1,10 @@
 import React, { useState } from 'react';
-import { Form, Button, Modal } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Tag, DollarSign, Package, Truck, History, Scale } from 'lucide-react';
+import { Form, Button, Modal, Row, Col } from 'react-bootstrap';
+import { Tag, DollarSign, Scale, Truck, History, Plus, Edit3, Trash2 } from 'lucide-react';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import axios from '../axiosInstance';
+import axiosInstance from '../axiosInstance';
 import Swal from 'sweetalert2';
-
-const StyledFormGroup = React.memo(({ icon, label, htmlFor, children, extra }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <label htmlFor={htmlFor} style={{ fontWeight: 500, color: '#4b5563', fontSize: '0.875rem ', marginBottom: 2, display: 'flex', alignItems: 'center' }}>
-        <span style={{ marginRight: 6, color: '#4b5563', fontSize: 16 }}>
-          {icon}
-        </span>
-        {label}
-      </label>
-      {extra}
-    </div>
-    {children}
-  </div>
-));
 
 const MatierePremiereForm = ({
   formData,
@@ -30,8 +13,6 @@ const MatierePremiereForm = ({
   handleSubmit,
   errors,
   fournisseurs,
-  familles = [],
-  types = [],
   closeForm,
   formContainerStyle,
   fetchFournisseurs
@@ -49,54 +30,35 @@ const MatierePremiereForm = ({
   const handleAddFournisseur = async () => {
     try {
       if (!newFournisseur.nom || !newFournisseur.CodeFournisseur) {
-        Swal.fire("Erreur", "Veuillez remplir les champs obligatoires (Nom et Code)", "error");
+        Swal.fire("Erreur", "Veuillez remplir les champs obligatoires", "error");
         return;
       }
-
       if (editingFournisseur) {
-        await axios.put(`/api/fournisseurs/${editingFournisseur.id}`, newFournisseur);
-        Swal.fire("Succès", "Fournisseur modifié", "success");
+        await axiosInstance.put(`/api/fournisseurs/${editingFournisseur.id}`, newFournisseur);
       } else {
-        await axios.post(`/api/fournisseurs`, newFournisseur);
-        Swal.fire("Succès", "Fournisseur ajouté", "success");
+        await axiosInstance.post(`/api/fournisseurs`, newFournisseur);
       }
-
       setNewFournisseur({ nom: '', raison_sociale: '', CodeFournisseur: '', tele: '', email: '' });
       setEditingFournisseur(null);
       if (fetchFournisseurs) fetchFournisseurs();
+      Swal.fire("Succès", "Opération réussie", "success");
     } catch (error) {
-      console.error("Error saving fournisseur:", error);
-      const message = error.response?.data?.message || error.response?.data?.error || "Une erreur est survenue";
-      Swal.fire("Erreur", message, "error");
+      Swal.fire("Erreur", "Une erreur est survenue", "error");
     }
-  };
-
-  const handleEditFournisseur = (f) => {
-    setEditingFournisseur(f);
-    setNewFournisseur({
-      nom: f.nom || '',
-      CodeFournisseur: f.CodeFournisseur,
-      tele: f.tele || '',
-      email: f.email || ''
-    });
   };
 
   const handleDeleteFournisseur = async (id) => {
     const result = await Swal.fire({
       title: 'Supprimer ?',
-      text: "Action irréversible !",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
       confirmButtonText: 'Oui'
     });
-
     if (result.isConfirmed) {
       try {
-        await axios.delete(`/api/fournisseurs/${id}`);
-        Swal.fire('Supprimé !', '', 'success');
+        await axiosInstance.delete(`/api/fournisseurs/${id}`);
         if (fetchFournisseurs) fetchFournisseurs();
+        Swal.fire('Supprimé !', '', 'success');
       } catch (error) {
         Swal.fire("Erreur", "Échec suppression", "error");
       }
@@ -108,117 +70,145 @@ const MatierePremiereForm = ({
     border: '1px solid #d1d5db',
     padding: '0.6rem 1rem',
     fontSize: 15,
-    background: '#fff',
+    background: '#f9fafb',
     color: '#000',
   };
 
+  const sectionStyle = {
+    background: '#fff',
+    borderRadius: '1rem',
+    padding: '1.5rem',
+    marginBottom: '1rem',
+    border: '1px solid #e5e7eb',
+  };
+
+  const labelStyle = {
+    fontWeight: 600,
+    fontSize: '0.85rem',
+    color: '#475569',
+    marginBottom: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  };
+
   return (
-    <div style={{ marginTop: "45px" }}>
-      <style>
-        {`
-          .styled-input::placeholder { color: #9ca3af !important; opacity: 1 !important; font-size: 15px !important; }
-          .is-invalid { border-color: #dc3545 !important; box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.1); }
-          .cursor-pointer { cursor: pointer; }
-        `}
-      </style>
+    <div
+      id="formContainerunique"
+      className=""
+      style={{ 
+        ...formContainerStyle, 
+        marginTop: '-0px', 
+        height: `calc(100vh - 115px)`, 
+        top: '115px',
+        overflow: 'auto',
+        zIndex: 1050
+      }}
+    >
+      <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            background: '#00afaa',
+            width: '40px',
+            height: '40px',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff'
+          }}>
+            <Tag size={22} />
+          </div>
+          <div>
+            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>
+              {formData.id ? 'Modifier Matière Première' : 'Nouvelle Matière Première'}
+            </span>
+            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 400 }}>
+              Gestion des stocks et des prix d'achat
+            </div>
+          </div>
+        </div>
+        <Button variant="link" onClick={closeForm} style={{ color: '#64748b', textDecoration: 'none', fontSize: '1.5rem', lineHeight: 1 }}>&times;</Button>
+      </div>
 
-      <div
-        id="formContainerMatiere"
-        style={{
-          ...formContainerStyle,
-          marginTop: '0px',
-          height: `calc(100vh - 70px)`,
-          overflow: 'auto',
-          background: '#f9fafb',
-          padding: '20px',
-          borderLeft: '1px solid #e5e7eb',
-          borderRadius: '1rem',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}
-      >
-        <div style={{
-          background: '#fff',
-          borderRadius: '1rem',
-          padding: '2rem',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          marginBottom: '1rem'
-        }}>
-          <h4 style={{ marginBottom: '1.5rem', fontWeight: 600, color: '#111827', borderBottom: '2px solid #00afaa', paddingBottom: '10px' }}>
-            {formData.id ? 'Modifier' : 'Ajouter'} une Matière Première
-          </h4>
+      <div style={{ background: '#f1f5f9', padding: '24px', overflowY: 'auto', height: 'calc(100% - 140px)' }}>
+        <Form onSubmit={handleSubmit} id="matiereForm">
+          <div style={sectionStyle}>
+            <Row>
+              <Col md={12} className="mb-3">
+                <Form.Group>
+                  <Form.Label style={labelStyle}><Tag size={14} /> Nom de la Matière</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="nom"
+                    value={formData.nom || ''}
+                    onChange={handleChange}
+                    style={inputStyle}
+                    placeholder="Ex: Farine, Sucre..."
+                    isInvalid={!!errors.nom}
+                  />
+                  {errors.nom && <Form.Control.Feedback type="invalid">{errors.nom}</Form.Control.Feedback>}
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label style={labelStyle}><DollarSign size={14} /> Prix d'achat (DH)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    name="prix_achat"
+                    value={formData.prix_achat || ''}
+                    onChange={handleChange}
+                    style={inputStyle}
+                    placeholder="0.00"
+                    isInvalid={!!errors.prix_achat}
+                  />
+                  {errors.prix_achat && <Form.Control.Feedback type="invalid">{errors.prix_achat}</Form.Control.Feedback>}
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label style={labelStyle}><Scale size={14} /> Unité</Form.Label>
+                  <Form.Select
+                    name="unite"
+                    value={formData.unite || ''}
+                    onChange={handleChange}
+                    style={inputStyle}
+                    isInvalid={!!errors.unite}
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="kg">Kilogramme (kg)</option>
+                    <option value="L">Litre (L)</option>
+                    <option value="unite">Unité</option>
+                  </Form.Select>
+                  {errors.unite && <Form.Control.Feedback type="invalid">{errors.unite}</Form.Control.Feedback>}
+                </Form.Group>
+              </Col>
+            </Row>
+          </div>
 
-
-
-          <Form onSubmit={handleSubmit}>
-
-
-            <StyledFormGroup icon={<Tag size={18} />} label="Nom de la matière *" htmlFor="nom">
-              <input
-                id="nom"
-                className={`form-control styled-input ${errors.nom ? 'is-invalid' : ''}`}
-                style={inputStyle}
-                type="text"
-                name="nom"
-                value={formData.nom}
-                onChange={handleChange}
-                placeholder="Ex: Farine, Sucre..."
-              />
-              {errors.nom && <div className="text-danger" style={{ fontSize: 13 }}>{errors.nom}</div>}
-            </StyledFormGroup>
-
-            <StyledFormGroup icon={<DollarSign size={18} />} label="Prix d'achat *" htmlFor="prix_achat">
-              <input
-                id="prix_achat"
-                className={`form-control styled-input ${errors.prix_achat ? 'is-invalid' : ''}`}
-                style={inputStyle}
-                type="number"
-                step="0.01"
-                name="prix_achat"
-                value={formData.prix_achat}
-                onChange={handleChange}
-                placeholder="0.00"
-              />
-              {errors.prix_achat && <div className="text-danger" style={{ fontSize: 13 }}>{errors.prix_achat}</div>}
-            </StyledFormGroup>
-
-            <StyledFormGroup icon={<Scale size={18} />} label="Unité *" htmlFor="unite">
-              <select
-                id="unite"
-                name="unite"
-                value={formData.unite}
-                onChange={handleChange}
-                style={inputStyle}
-                className={`form-select ${errors.unite ? 'is-invalid' : ''}`}
-              >
-                <option value="">Sélectionner une unité</option>
-                <option value="kg">Kilogramme (kg)</option>
-                <option value="L">Litre (L)</option>
-                <option value="unite">Unité</option>
-              </select>
-              {errors.unite && <div className="text-danger" style={{ fontSize: 13 }}>{errors.unite}</div>}
-            </StyledFormGroup>
-
-            <StyledFormGroup
-              icon={<Truck size={18} />}
-              label="Fournisseur *"
-              htmlFor="fournisseur_id"
-              extra={
-                <div
-                  className="cursor-pointer"
+          <div style={sectionStyle}>
+            <Form.Group>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <Form.Label style={{ ...labelStyle, marginBottom: 0 }}><Truck size={14} /> Fournisseur</Form.Label>
+                <button
+                  type="button"
                   onClick={() => setShowFournisseurModal(true)}
                   style={{
-                    color: '#00afaa',
+                    background: 'none',
                     border: '1px solid #00afaa',
-                    borderRadius: '50%',
-                    width: 24, height: 24,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    color: '#00afaa',
+                    borderRadius: '4px',
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}
                 >
-                  <FontAwesomeIcon icon={faPlus} size="xs" />
-                </div>
-              }
-            >
+                  <Plus size={12} /> Nouveau
+                </button>
+              </div>
               <Autocomplete
                 options={fournisseurs}
                 getOptionLabel={(option) => option.nom || option.raison_sociale || ''}
@@ -230,107 +220,134 @@ const MatierePremiereForm = ({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder="Sélectionner un fournisseur"
+                    placeholder="Rechercher un fournisseur"
                     variant="outlined"
                     sx={{
-                      '& .MuiInputBase-root': {
+                      '& .MuiOutlinedInput-root': {
                         borderRadius: '0.5rem',
-                        height: '45px',
-                        backgroundColor: '#fff',
+                        backgroundColor: '#f9fafb',
                       }
                     }}
                   />
                 )}
               />
-              {errors.fournisseur_id && <div className="text-danger" style={{ fontSize: 13 }}>{errors.fournisseur_id}</div>}
-            </StyledFormGroup>
-
-            <div className="d-flex justify-content-center gap-3 mt-4">
-              <Button
-                type="submit"
-                style={{ backgroundColor: '#00afaa', border: 'none', padding: '0.6rem 2.5rem', borderRadius: '0.5rem', fontWeight: 600 }}
-              >
-                Valider
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={closeForm}
-                style={{ padding: '0.6rem 2.5rem', borderRadius: '0.5rem', fontWeight: 600 }}
-              >
-                Annuler
-              </Button>
-            </div>
-          </Form>
-        </div>
-
-        {formData.historiques && formData.historiques.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: '1rem', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-            <h5 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem', color: '#374151' }}>
-              <History size={20} /> Historique des prix
-            </h5>
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead><tr><th>Date</th><th>Prix</th></tr></thead>
-                <tbody>
-                  {formData.historiques.map((hist, idx) => (
-                    <tr key={idx}>
-                      <td>{new Date(hist.created_at).toLocaleDateString()}</td>
-                      <td>{hist.prix} DH</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              {errors.fournisseur_id && <div className="text-danger mt-1" style={{ fontSize: '0.75rem' }}>{errors.fournisseur_id}</div>}
+            </Form.Group>
           </div>
-        )}
-      </div>
 
-      <Modal show={showFournisseurModal} onHide={() => setShowFournisseurModal(false)} size="lg">
-        <Modal.Header closeButton><Modal.Title>Gestion Fournisseurs</Modal.Title></Modal.Header>
-        <Modal.Body>
-          <div className="row mb-4">
-            <div className="col-md-6 mb-2">
-              <label className="form-label small fw-bold">Code</label>
-              <input type="text" className="form-control" value={newFournisseur.CodeFournisseur} onChange={e => setNewFournisseur({ ...newFournisseur, CodeFournisseur: e.target.value })} />
-            </div>
-            <div className="col-md-6">
-              <div className="row g-3">
-                <div className="col-md-12">
-                  <Form.Group className="mb-2">
-                    <Form.Label>Nom *</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={newFournisseur.nom}
-                      onChange={(e) => setNewFournisseur({ ...newFournisseur, nom: e.target.value })}
-                    />
-                  </Form.Group>
-                </div>
+          {formData.historiques && formData.historiques.length > 0 && (
+            <div style={sectionStyle}>
+              <h6 style={{ ...labelStyle, borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '12px' }}>
+                <History size={14} /> Historique des Prix
+              </h6>
+              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                <table className="table table-sm mb-0" style={{ fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ color: '#64748b', fontWeight: 500 }}>Date</th>
+                      <th style={{ color: '#64748b', fontWeight: 500 }}>Prix</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.historiques.map((h, i) => (
+                      <tr key={i}>
+                        <td style={{ color: '#334155' }}>{new Date(h.created_at).toLocaleDateString()}</td>
+                        <td style={{ color: '#0f766e', fontWeight: 600 }}>{h.prix} DH</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div className="col-md-12 text-center mt-3">
-              <Button variant="primary" size="sm" onClick={handleAddFournisseur}>{editingFournisseur ? 'Modifier' : 'Ajouter'}</Button>
-              {editingFournisseur && <Button variant="link" size="sm" onClick={() => { setEditingFournisseur(null); setNewFournisseur({ nom: '', raison_sociale: '', CodeFournisseur: '', tele: '', email: '' }) }}>Annuler</Button>}
-            </div>
-          </div>
-          <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-            <table className="table table-sm border">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Nom</th>
+          )}
+        </Form>
+      </div>
 
-                  <th>Actions</th>
+      <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px', position: 'absolute', bottom: 0, width: '100%', left: 0 }}>
+        <Button
+          variant="light"
+          onClick={closeForm}
+          style={{
+            padding: '8px 24px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            border: '1px solid #e2e8f0',
+            color: '#475569'
+          }}
+        >
+          Annuler
+        </Button>
+        <Button 
+          form="matiereForm"
+          type="submit" 
+          style={{ 
+            background: '#00afaa', 
+            border: 'none', 
+            padding: '8px 32px', 
+            borderRadius: '8px', 
+            fontWeight: 700,
+            color: '#fff',
+            boxShadow: '0 4px 12px rgba(0, 175, 170, 0.2)'
+          }}
+        >
+          {formData.id ? 'Enregistrer les modifications' : 'Ajouter au stock'}
+        </Button>
+      </div>
+
+      <Modal show={showFournisseurModal} onHide={() => setShowFournisseurModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontSize: '1.1rem', fontWeight: 700 }}>Gestion des Fournisseurs</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ background: '#f8fafc', padding: '24px' }}>
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+            <Row className="g-3">
+              <Col md={6}>
+                <Form.Label style={labelStyle}>Code Fournisseur</Form.Label>
+                <Form.Control 
+                  style={inputStyle}
+                  value={newFournisseur.CodeFournisseur} 
+                  onChange={e => setNewFournisseur({ ...newFournisseur, CodeFournisseur: e.target.value })} 
+                />
+              </Col>
+              <Col md={6}>
+                <Form.Label style={labelStyle}>Nom / Raison Sociale</Form.Label>
+                <Form.Control 
+                  style={inputStyle}
+                  value={newFournisseur.nom} 
+                  onChange={e => setNewFournisseur({ ...newFournisseur, nom: e.target.value })} 
+                />
+              </Col>
+              <Col md={12} className="text-end">
+                <Button variant="primary" style={{ background: '#00afaa', border: 'none', borderRadius: '8px', padding: '6px 20px' }} onClick={handleAddFournisseur}>
+                  {editingFournisseur ? 'Mettre à jour' : 'Ajouter le fournisseur'}
+                </Button>
+              </Col>
+            </Row>
+          </div>
+          
+          <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <table className="table table-hover mb-0">
+              <thead style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
+                <tr>
+                  <th style={{ padding: '12px' }}>Code</th>
+                  <th style={{ padding: '12px' }}>Nom</th>
+                  <th style={{ padding: '12px', textAlign: 'center' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {fournisseurs.map(f => (
                   <tr key={f.id}>
-                    <td>{f.CodeFournisseur}</td>
-                    <td>{f.nom}</td>
-
-                    <td>
-                      <FontAwesomeIcon icon={faEdit} className="text-primary me-2 cursor-pointer" onClick={() => handleEditFournisseur(f)} />
-                      <FontAwesomeIcon icon={faTrash} className="text-danger cursor-pointer" onClick={() => handleDeleteFournisseur(f.id)} />
+                    <td style={{ padding: '12px' }}>{f.CodeFournisseur}</td>
+                    <td style={{ padding: '12px' }}>{f.nom || f.raison_sociale}</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <button onClick={() => { setEditingFournisseur(f); setNewFournisseur(f); }} style={{ border: 'none', background: '#f1f5f9', padding: '6px', borderRadius: '6px', color: '#007bff' }}>
+                          <Edit3 size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteFournisseur(f.id)} style={{ border: 'none', background: '#fef2f2', padding: '6px', borderRadius: '6px', color: '#ef4444' }}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

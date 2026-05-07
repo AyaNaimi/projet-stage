@@ -11,6 +11,7 @@ import AddButton from "../components/AddButton";
 import FilterToggleButton from "../components/FilterToggleButton";
 import ChargeDirecteForm from "./ChargeDirecteForm";
 import Swal from "sweetalert2";
+import "../Produit/All.css";
 
 const ChargeDirecteList = () => {
   const [produits, setProduits] = useState([]);
@@ -27,6 +28,7 @@ const ChargeDirecteList = () => {
   });
   const [tableContainerStyle, setTableContainerStyle] = useState({
     marginRight: "0%",
+    width: "100%"
   });
 
   const [formData, setFormData] = useState({
@@ -112,8 +114,8 @@ const ChargeDirecteList = () => {
     });
     setErrors({});
     if (formContainerStyle.right === "-100%") {
-      setFormContainerStyle({ right: "0" });
-      setTableContainerStyle({ marginRight: "48%" });
+      setFormContainerStyle({ right: "0", width: "50%" });
+      setTableContainerStyle({ marginRight: "48%", width: "52%" });
     } else {
       closeForm();
     }
@@ -121,7 +123,7 @@ const ChargeDirecteList = () => {
 
   const closeForm = () => {
     setFormContainerStyle({ right: "-100%" });
-    setTableContainerStyle({ marginRight: "0" });
+    setTableContainerStyle({ marginRight: "0", width: "100%" });
     setErrors({});
   };
 
@@ -134,8 +136,8 @@ const ChargeDirecteList = () => {
        temps_production: row.temps_production || 0
     });
     if (formContainerStyle.right === "-100%") {
-      setFormContainerStyle({ right: "0" });
-      setTableContainerStyle({ marginRight: "48%" });
+      setFormContainerStyle({ right: "0", width: "50%" });
+      setTableContainerStyle({ marginRight: "48%", width: "52%" });
     }
   };
 
@@ -198,7 +200,7 @@ const ChargeDirecteList = () => {
 
         <div
           className="container-d-flex justify-content-start"
-          style={{ marginTop: "20px", position: "relative" }}
+          style={{ marginTop: "55px" }}
         >
           <ChargeDirecteForm
             show={formContainerStyle.right === "0"}
@@ -290,7 +292,10 @@ const ChargeDirecteList = () => {
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
             produitsFiltres={filteredProduits}
             addButtonText="Ajouter"
-            tableContainerStyle={{ ...tableContainerStyle, width: '100%' }}
+            tableContainerStyle={{ 
+              ...tableContainerStyle, 
+              transition: 'all 0.3s ease' 
+            }}
             selectedItems={selectedItems}
             handleDeleteSelected={noop}
             AddButton={AddButton}

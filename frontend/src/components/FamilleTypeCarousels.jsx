@@ -2,6 +2,15 @@ import React from 'react';
 import { Carousel } from 'react-bootstrap';
 import { FaArrowRight, FaArrowLeft, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const toFullUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const clean = path.startsWith("/") ? path.slice(1) : path;
+  return `${API_BASE}/${clean}`;
+};
+
 const FamilleTypeCarousels = ({
   activeIndex,
   handleSelect,
@@ -127,8 +136,7 @@ const FamilleTypeCarousels = ({
               >
                 {chunks.map((chunk, chunkIndex) => (
                   <Carousel.Item key={chunkIndex}>
-                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{ 
-                      gap: itemGap,
+                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{                      gap: itemGap,
                       padding: '10px 0',
                       marginLeft: '9%'
                     }}>
@@ -213,9 +221,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP && category.logoP !== '' && category.logoP !== null && category.logoP !== undefined
-                                  ? category.logoP
-                                  : '/images/bayd.jpg'}
+                                src={category.logoP ? toFullUrl(category.logoP) : '/images/bayd.jpg'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',
@@ -308,8 +314,7 @@ const FamilleTypeCarousels = ({
               >
                 {chunksSucat.map((chunk, chunkIndex) => (
                   <Carousel.Item key={chunkIndex}>
-                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{ 
-                      gap: itemGap,
+                    <div className="d-flex justify-content-start align-items-center flex-wrap" style={{                      gap: itemGap,
                       padding: '10px 0',
                       marginLeft: '9%'
                     }}>
@@ -394,7 +399,7 @@ const FamilleTypeCarousels = ({
                               boxSizing: 'border-box'
                             }}>
                               <img
-                                src={category.logoP && category.logoP !== '' ? category.logoP : '/images/bayd.jpg'}
+                                src={category.logoP ? toFullUrl(category.logoP) : '/images/bayd.jpg'}
                                 alt={category.categorie}
                                 style={{
                                   width: '100%',
