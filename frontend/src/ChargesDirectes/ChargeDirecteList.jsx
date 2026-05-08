@@ -86,7 +86,7 @@ const ChargeDirecteList = () => {
   }, [produits, searchQuery, selectedCategory, sousCatFiltre]);
 
   const selectedProduct = (produits || []).find(p => p.id === parseInt(carouselSelectedProductId));
-  const currentProductData = selectedProduct ? [selectedProduct] : [];
+  const currentProductData = selectedProduct ? [selectedProduct] : filteredProduits;
 
   const handleCategoryFilterChange = (catId) => {
     setSelectedCategory(catId);
@@ -215,7 +215,36 @@ const ChargeDirecteList = () => {
     chunksSucat.push(suCatWithTout.slice(i, i + itemsPerSlide));
   }
 
-  const noop = () => {};
+  const handleDeleteSelected = () => {
+    if (selectedItems.length === 0) return;
+    
+    Swal.fire({
+      title: "Réinitialiser la sélection ?",
+      text: `Voulez-vous réinitialiser les charges directes pour les ${selectedItems.length} produits sélectionnés ?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, réinitialiser",
+      cancelButtonText: "Annuler"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // On fait un appel groupé ou plusieurs appels. Pour rester simple, on peut faire un endpoint bulk update si besoin, 
+          // mais ici on va utiliser une boucle ou un endpoint existant s'il existe.
+          // Le ProduitController a une méthode update.
+          await Promise.all(selectedItems.map(id => 
+            axiosInstance.put(`/api/produits/${id}`, { cout_horaire_mod: 0, temps_production: 0 })
+          ));
+          fetchData();
+          setSelectedItems([]);
+          Swal.fire("Réinitialisé !", "Les charges ont été remises à zéro.", "success");
+        } catch (error) {
+          Swal.fire("Erreur", "Une erreur est survenue.", "error");
+        }
+      }
+    });
+  };
 
   return (
     <Box sx={{ ...dynamicStyles }}>
@@ -306,7 +335,7 @@ const ChargeDirecteList = () => {
               transition: 'all 0.3s ease' 
             }}
             selectedItems={selectedItems}
-            handleDeleteSelected={noop}
+            handleDeleteSelected={handleDeleteSelected}
             AddButton={AddButton}
             FilterToggleButton={FilterToggleButton}
             showFilters={showFilters}

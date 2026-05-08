@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             // CrudTestDataSeeder::class, // Disabled: requires equipements table (missing migration)
-            ProduitSeeder::class,
+            // ProduitSeeder::class,
             // LivreurSeeder::class, // Disabled: duplicate CIN on re-run
             // VehiculeSeeder::class,
             // VehiculeLivreurSeeder::class,

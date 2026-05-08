@@ -9,6 +9,8 @@ import MatierePremiereForm from "./MatierePremiereForm";
 import { Edit3, Trash2, History } from "lucide-react";
 import AddButton from "../components/AddButton";
 import FilterToggleButton from "../components/FilterToggleButton";
+import { Form } from "react-bootstrap";
+import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import "../Produit/All.css";
@@ -191,7 +193,33 @@ const MatierePremiereList = () => {
         setSelectedItems(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
     };
 
-    const noop = () => {};
+    const handleDeleteSelected = () => {
+        if (selectedItems.length === 0) return;
+
+        Swal.fire({
+            title: "Supprimer la sélection ?",
+            text: `Voulez-vous supprimer les ${selectedItems.length} matières premières sélectionnées ?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Oui, supprimer",
+            cancelButtonText: "Annuler"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await Promise.all(selectedItems.map(id => 
+                        axiosInstance.delete(`/api/matiere-premieres/${id}`)
+                    ));
+                    fetchMatieres();
+                    setSelectedItems([]);
+                    Swal.fire("Supprimé !", "La sélection a été supprimée.", "success");
+                } catch (error) {
+                    Swal.fire("Erreur", "Une erreur est survenue.", "error");
+                }
+            }
+        });
+    };
 
     return (
         <Box sx={{ ...dynamicStyles }}>
@@ -259,12 +287,93 @@ const MatierePremiereList = () => {
                             transition: 'all 0.3s ease' 
                         }}
                         selectedItems={selectedItems}
-                        handleDeleteSelected={noop}
+                        handleDeleteSelected={handleDeleteSelected}
                         AddButton={AddButton}
                         FilterToggleButton={FilterToggleButton}
                         showFilters={showFilters}
                         toggleFilters={() => setShowFilters(!showFilters)}
                         handleShowFormButtonClick={handleShowFormButtonClick}
+                        heightOffset={{ trueOffset: 388, falseOffset: 338 }}
+                        FiltreInput={
+                            <AnimatePresence>
+                                {showFilters && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
+                                        transition={{ duration: 0.5 }}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "flex-end",
+                                            marginTop: "0px",
+                                            maxWidth: "100%",
+                                            padding: "0 20px",
+                                        }}
+                                    >
+                                        {/* Fournisseur Filter */}
+                                        <div
+                                            className="date-filter-container"
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                marginTop: "20px",
+                                                marginRight: "20px",
+                                                marginBottom: "10px",
+                                            }}
+                                        >
+                                            <Form.Select
+                                                aria-label="Select fournisseur"
+                                                value={fournisseurFilter}
+                                                onChange={(e) => setFournisseurFilter(e.target.value)}
+                                                style={{
+                                                    padding: "8px",
+                                                    fontSize: "12px",
+                                                    width: "200px",
+                                                    marginTop: "-17px",
+                                                }}
+                                            >
+                                                <option value="">Tous les fournisseurs</option>
+                                                {fournisseurs.map((f) => (
+                                                    <option key={f.id} value={f.id}>
+                                                        {f.nom || f.raison_sociale}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </div>
+
+                                        {/* Unite Filter */}
+                                        <div
+                                            className="date-filter-container"
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                marginTop: "20px",
+                                                marginRight: "20px",
+                                                marginBottom: "10px",
+                                            }}
+                                        >
+                                            <Form.Select
+                                                aria-label="Select unite"
+                                                value={uniteFilter}
+                                                onChange={(e) => setUniteFilter(e.target.value)}
+                                                style={{
+                                                    padding: "8px",
+                                                    fontSize: "12px",
+                                                    width: "150px",
+                                                    marginTop: "-17px",
+                                                }}
+                                            >
+                                                <option value="">Toutes les unités</option>
+                                                {[...new Set(matieres.map(m => m.unite))].filter(Boolean).map(u => (
+                                                    <option key={u} value={u}>{u}</option>
+                                                ))}
+                                            </Form.Select>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        }
                     />
                 </div>
             </Box>

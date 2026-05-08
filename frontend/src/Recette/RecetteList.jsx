@@ -276,7 +276,33 @@ const RecetteList = () => {
     chunksSucat.push(suCatWithTout.slice(i, i + itemsPerSlide));
   }
 
-  const noop = () => {};
+  const handleDeleteSelected = () => {
+    if (selectedItems.length === 0) return;
+    
+    Swal.fire({
+      title: "Supprimer la sélection ?",
+      text: `Voulez-vous supprimer les ${selectedItems.length} ingrédients sélectionnés ?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await Promise.all(selectedItems.map(id => 
+            axiosInstance.delete(`/api/recettes/${id}`)
+          ));
+          fetchData();
+          setSelectedItems([]);
+          Swal.fire("Supprimé !", "La sélection a été supprimée.", "success");
+        } catch (error) {
+          Swal.fire("Erreur", "Une erreur est survenue.", "error");
+        }
+      }
+    });
+  };
 
   return (
     <Box sx={{ ...dynamicStyles }}>
@@ -366,7 +392,7 @@ const RecetteList = () => {
               transition: 'all 0.3s ease' 
             }}
             selectedItems={selectedItems}
-            handleDeleteSelected={noop}
+            handleDeleteSelected={handleDeleteSelected}
             AddButton={AddButton}
             FilterToggleButton={FilterToggleButton}
             showFilters={showFilters}
