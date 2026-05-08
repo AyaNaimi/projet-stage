@@ -21,8 +21,8 @@ export default function TableToolbar({
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px 0 0' }}>
-      { hasChart&& handleShowFormButtonClick && (
-           <ChartActionButton onClick={() => handleShowFormButtonClickChart(true)} />
+      {hasChart && handleShowFormButtonClick && (
+        <ChartActionButton onClick={() => handleShowFormButtonClickChart(true)} />
 
       )}
       {FilterToggleButton && showFilters !== undefined && toggleFilters && (
@@ -40,7 +40,7 @@ export default function TableToolbar({
         onToggleMenu={handleToggleColumnMenu}
         menuRef={columnMenuRef}
       />
-       {AddButton && handleShowFormButtonClick && (
+      {AddButton && handleShowFormButtonClick && (
         <AddButton
           onClick={() => handleShowFormButtonClick(false)}
           text={addButtonText || "Ajouter"}
