@@ -202,6 +202,25 @@ const ChargeIndirecteList = () => {
 
           <TableMui
             columns={[
+              {
+                id: 'select',
+                label: 'SÉLECTION',
+                renderHeader: () => (
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.length === filteredCharges.length && filteredCharges.length > 0}
+                    onChange={handleSelectAllChange}
+                  />
+                ),
+                minWidth: 40,
+                render: (row) => (
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(row.id)}
+                    onChange={() => handleCheckboxChange(row.id)}
+                  />
+                )
+              },
               { id: 'nom', label: 'TYPE', minWidth: 200 },
               { id: 'montant', label: 'MONTANT', minWidth: 120, render: (row) => `${row.montant} DH` },
               { id: 'frequence', label: 'PÉRIODE', minWidth: 120, render: (row) => `${row.frequence} mois` },
@@ -228,7 +247,7 @@ const ChargeIndirecteList = () => {
             hasActions={true}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
-            addButtonText="Ajouter Charge"
+            addButtonText="Ajouter"
             tableContainerStyle={{ 
               ...tableContainerStyle, 
               transition: 'all 0.3s ease' 

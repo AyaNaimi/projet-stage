@@ -297,8 +297,10 @@ const ChargeDirecteList = () => {
             handleChangePage={(e, newPage) => setPage(newPage)}
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
             produitsFiltres={currentProductData}
-            hasActions={false}
-            addButtonText="Modifier Charges"
+            hasActions={true}
+            handleEdit={handleEdit}
+            handleDelete={(row) => handleDelete(row.id)}
+            addButtonText="Ajouter"
             tableContainerStyle={{ 
               ...tableContainerStyle, 
               transition: 'all 0.3s ease' 

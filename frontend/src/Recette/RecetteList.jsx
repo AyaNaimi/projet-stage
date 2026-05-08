@@ -112,7 +112,7 @@ const RecetteList = () => {
 
   const handleSelectAllChange = (e) => {
     if (e.target.checked) {
-      setSelectedItems(filteredProduits.map(p => p.id));
+      setSelectedItems(currentRecipeLines.map(p => p.id));
     } else {
       setSelectedItems([]);
     }
@@ -151,7 +151,9 @@ const RecetteList = () => {
   };
 
   const handleEdit = (row) => {
-     setFormData({
+    // If 'row' is a product (has recipes)
+    if (row.recettes || row.id) {
+      setFormData({
         ...row,
         recette: (row.recettes || []).map(r => ({
           id: r.id,
@@ -161,11 +163,36 @@ const RecetteList = () => {
           unite: r.unite || r.matiere_premiere?.unite || 'K',
           quantite_reelle: r.quantite_reelle || (parseFloat(r.quantite || 0) * (1 + parseFloat(r.perte || 0) / 100)).toFixed(3)
         })) || []
-     });
-     if (formContainerStyle.right === "-100%") {
+      });
+    }
+    
+    if (formContainerStyle.right === "-100%") {
       setFormContainerStyle({ right: "0", width: "50%" });
       setTableContainerStyle({ marginRight: "48%", width: "52%" });
     }
+  };
+
+  const handleDeleteLine = (lineId) => {
+    Swal.fire({
+      title: "Supprimer cet ingrédient ?",
+      text: "Voulez-vous retirer cette matière première de la recette ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.delete(`/api/recettes/${lineId}`);
+          fetchData();
+          Swal.fire("Supprimé !", "L'ingrédient a été retiré.", "success");
+        } catch (error) {
+          Swal.fire("Erreur", "Une erreur est survenue.", "error");
+        }
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -279,6 +306,25 @@ const RecetteList = () => {
             />
           <TableMui
             columns={[
+              {
+                id: 'select',
+                label: 'SÉLECTION',
+                renderHeader: () => (
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.length === currentRecipeLines.length && currentRecipeLines.length > 0}
+                    onChange={handleSelectAllChange}
+                  />
+                ),
+                minWidth: 40,
+                render: (row) => (
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(row.id)}
+                    onChange={() => handleCheckboxChange(row.id)}
+                  />
+                )
+              },
               { 
                 id: 'matiere_premiere', 
                 label: 'MATIÈRE PREMIÈRE', 
@@ -311,8 +357,10 @@ const RecetteList = () => {
             handleChangePage={(e, newPage) => setPage(newPage)}
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
             produitsFiltres={currentRecipeLines}
-            hasActions={false}
-            addButtonText="Modifier Recette"
+            hasActions={true}
+            handleEdit={() => handleShowFormButtonClick()}
+            handleDelete={(row) => handleDeleteLine(row.id)}
+            addButtonText="Ajouter"
             tableContainerStyle={{ 
               ...tableContainerStyle, 
               transition: 'all 0.3s ease' 

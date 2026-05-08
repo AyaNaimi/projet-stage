@@ -28,13 +28,15 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
             color: "white",
             border: "none",
             borderRadius: "4px",
-            padding: "8px 12px",
+            padding: "10px 24px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
             cursor: hasPermission ? "pointer" : "not-allowed", // Change le curseur si désactivé
             margin: "5px",
+            minWidth: "140px",
+            fontWeight: "500",
           }}
           className="AjouteBotton"
         >
