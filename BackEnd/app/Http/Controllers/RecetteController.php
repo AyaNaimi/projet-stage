@@ -76,6 +76,8 @@ class RecetteController extends Controller
                     'matiere_premiere_id' => $line['matiere_premiere_id'],
                     'quantite' => $line['quantite'],
                     'perte' => $line['perte'] ?? 0,
+                    'unite' => $line['unite'] ?? null,
+                    'quantite_reelle' => $line['quantite_reelle'] ?? null,
                 ]);
             }
 

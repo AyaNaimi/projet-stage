@@ -36,6 +36,10 @@ class Produit extends Model
         'unite_etiquette',
         'unite_embalage_primaire',
         'unite_embalage_secondaire',
+        'grammage',
+        'rendement',
+        'temps_production',
+        'cout_horaire_mod',
     ];
 
 

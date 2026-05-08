@@ -243,41 +243,6 @@ const MatierePremiereList = () => {
                                 minWidth: 200,
                                 render: (row) => row.fournisseur?.nom || row.fournisseur?.raison_sociale || 'N/A'
                             },
-                            {
-                                id: 'actions',
-                                label: 'ACTIONS',
-                                minWidth: 150,
-                                render: (row) => (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
-                                            onClick={() => handleEdit(row)}
-                                            style={{
-                                                background: '#00afaa',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                padding: '6px 10px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <Edit3 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(row.id)}
-                                            style={{
-                                                background: '#ef4444',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                padding: '6px 10px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                )
-                            }
                         ]}
                         rows={filteredMatieres}
                         page={page}
@@ -285,6 +250,9 @@ const MatierePremiereList = () => {
                         handleChangePage={(e, newPage) => setPage(newPage)}
                         handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
                         produitsFiltres={filteredMatieres}
+                        hasActions={true}
+                        handleEdit={handleEdit}
+                        handleDelete={handleDelete}
                         addButtonText="Ajouter"
                         tableContainerStyle={{ 
                             ...tableContainerStyle, 

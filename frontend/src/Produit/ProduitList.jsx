@@ -109,13 +109,17 @@ const ProduitList = () => {
     prix_vente: "",
     marque: "Ovotec",
     logoP: "",
-    suCat_id: "",
     reference: "",
     produit_Embalg_S_id: "",
+    type_produit: "P",
     // Ajout des nouveaux champs
     unite_etiquette: "",
     unite_embalage_primaire: "",
     unite_embalage_secondaire: "",
+    grammage: "",
+    rendement: 100,
+    temps_production: "",
+    cout_horaire_mod: "",
   });
   const [errors, setErrors] = useState({
     Code_produit: "",
@@ -533,10 +537,15 @@ const ProduitList = () => {
       suCat_id: "",
       reference: "",
       produit_Embalg_S_id: "",
+      type_produit: "P",
       // Réinitialiser les nouveaux champs
       unite_etiquette: "",
       unite_embalage_primaire: "",
       unite_embalage_secondaire: "",
+      grammage: "",
+      rendement: 100,
+      temps_production: "",
+      cout_horaire_mod: "",
     });
     setErrors({
       Code_produit: "",
@@ -587,6 +596,10 @@ const ProduitList = () => {
       unite_etiquette: produit.unite_etiquette || "",
       unite_embalage_primaire: produit.unite_embalage_primaire || "",
       unite_embalage_secondaire: produit.unite_embalage_secondaire || "",
+      grammage: produit.grammage || "",
+      rendement: produit.rendement || 100,
+      temps_production: produit.temps_production || "",
+      cout_horaire_mod: produit.cout_horaire_mod || "",
     });
     setSelectedProductsDataRep(
       produit?.prix_produits?.map((prix) => ({
@@ -714,6 +727,10 @@ const ProduitList = () => {
         unite_etiquette: formData.unite_etiquette,
         unite_embalage_primaire: formData.unite_embalage_primaire,
         unite_embalage_secondaire: formData.unite_embalage_secondaire,
+        grammage: formData.grammage,
+        rendement: formData.rendement,
+        temps_production: formData.temps_production,
+        cout_horaire_mod: formData.cout_horaire_mod,
 
         prixProduits: selectedProductsDataRep.map((prix) => ({
           id: prix.id || null,
@@ -787,6 +804,10 @@ const ProduitList = () => {
       formDatad.append("unite_etiquette", formData.unite_etiquette || "");
       formDatad.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
       formDatad.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
+      formDatad.append("grammage", formData.grammage || "");
+      formDatad.append("rendement", formData.rendement || 100);
+      formDatad.append("temps_production", formData.temps_production || "");
+      formDatad.append("cout_horaire_mod", formData.cout_horaire_mod || "");
 
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);

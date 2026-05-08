@@ -6,7 +6,7 @@ import TableMui from "../components/TableMui";
 import { useOpen } from "../Acceuil/OpenProvider";
 import { useHeader } from "../Acceuil/HeaderContext";
 import { Edit3, Clock } from "lucide-react";
-import FamilleTypeCarousels from "../components/FamilleTypeCarousels";
+import ProductCarousel from "../components/ProductCarousel";
 import AddButton from "../components/AddButton";
 import FilterToggleButton from "../components/FilterToggleButton";
 import ChargeDirecteForm from "./ChargeDirecteForm";
@@ -23,6 +23,7 @@ const ChargeDirecteList = () => {
   const [sousCatFiltre, setSousCatFiltre] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [carouselSelectedProductId, setCarouselSelectedProductId] = useState('tout');
   const [formContainerStyle, setFormContainerStyle] = useState({
     right: "-100%",
   });
@@ -39,6 +40,7 @@ const ChargeDirecteList = () => {
     temps_production: 0
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const { dynamicStyles } = useOpen();
   const { setTitle, searchQuery } = useHeader();
@@ -83,6 +85,9 @@ const ChargeDirecteList = () => {
     setFilteredProduits(filtered);
   }, [produits, searchQuery, selectedCategory, sousCatFiltre]);
 
+  const selectedProduct = (produits || []).find(p => p.id === parseInt(carouselSelectedProductId));
+  const currentProductData = selectedProduct ? [selectedProduct] : [];
+
   const handleCategoryFilterChange = (catId) => {
     setSelectedCategory(catId);
     setSousCatFiltre(null);
@@ -105,19 +110,23 @@ const ChargeDirecteList = () => {
   };
 
   const handleShowFormButtonClick = () => {
-    setFormData({
-      id: null,
-      designation: "",
-      Code_produit: "",
-      cout_horaire_mod: 0,
-      temps_production: 0
-    });
-    setErrors({});
-    if (formContainerStyle.right === "-100%") {
-      setFormContainerStyle({ right: "0", width: "50%" });
-      setTableContainerStyle({ marginRight: "48%", width: "52%" });
+    if (carouselSelectedProductId && carouselSelectedProductId !== 'tout') {
+      if (selectedProduct) {
+        handleEdit(selectedProduct);
+      }
     } else {
-      closeForm();
+      setFormData({
+        id: null,
+        designation: "",
+        Code_produit: "",
+        cout_horaire_mod: 0,
+        temps_production: 0
+      });
+      setErrors({});
+      if (formContainerStyle.right === "-100%") {
+        setFormContainerStyle({ right: "0", width: "50%" });
+        setTableContainerStyle({ marginRight: "48%", width: "52%" });
+      }
     }
   };
 
@@ -146,6 +155,7 @@ const ChargeDirecteList = () => {
     const url = formData.id ? `/api/produits/${formData.id}` : `/api/produits`;
     const method = formData.id ? "put" : "post";
 
+    setLoading(true);
     try {
       await axiosInstance[method](url, formData);
       fetchData();
@@ -157,7 +167,32 @@ const ChargeDirecteList = () => {
       } else {
         Swal.fire("Erreur", "Une erreur est survenue lors de l'enregistrement.", "error");
       }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Réinitialiser ?",
+      text: "Voulez-vous réinitialiser les charges directes pour ce produit ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, réinitialiser",
+      cancelButtonText: "Annuler"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.put(`/api/produits/${id}`, { cout_horaire_mod: 0, temps_production: 0 });
+          fetchData();
+          Swal.fire("Réinitialisé !", "Les charges ont été remises à zéro.", "success");
+        } catch (error) {
+          Swal.fire("Erreur", "Une erreur est survenue.", "error");
+        }
+      }
+    });
   };
 
   const handleChange = (e) => {
@@ -185,17 +220,10 @@ const ChargeDirecteList = () => {
   return (
     <Box sx={{ ...dynamicStyles }}>
       <Box component="main" sx={{ flexGrow: 1, p: 3, marginTop: '60px' }}>
-        <FamilleTypeCarousels
-          activeIndex={0}
-          handleSelect={noop}
-          chunks={chunks}
-          selectedCategory={selectedCategory}
-          handleCategoryFilterChange={handleCategoryFilterChange}
-          activeIndexSuCat={0}
-          handleSelectSousCat={noop}
-          chunksSucat={chunksSucat}
-          sousCatFiltre={sousCatFiltre}
-          handleSousCategoryFilterChange={handleSousCategoryFilterChange}
+        <ProductCarousel
+          products={produits}
+          selectedProductId={carouselSelectedProductId}
+          onProductSelect={(id) => setCarouselSelectedProductId(id)}
         />
 
         <div
@@ -208,6 +236,7 @@ const ChargeDirecteList = () => {
             handleChange={handleChange}
             handleSubmit={handleSubmit}
             errors={errors}
+            loading={loading}
             closeForm={closeForm}
             formContainerStyle={formContainerStyle}
           />
@@ -261,37 +290,15 @@ const ChargeDirecteList = () => {
                   return <span style={{ fontWeight: 600 }}>{cost.toFixed(2)} DH</span>;
                 }
               },
-              {
-                id: 'actions',
-                label: 'ACTIONS',
-                minWidth: 100,
-                render: (row) => (
-                  <button
-                    onClick={() => handleEdit(row)}
-                    style={{
-                      background: '#00afaa',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '6px 12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Edit3 size={16} /> Configurer
-                  </button>
-                )
-              }
             ]}
-            rows={filteredProduits}
+            rows={currentProductData}
             page={page}
             rowsPerPage={rowsPerPage}
             handleChangePage={(e, newPage) => setPage(newPage)}
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
-            produitsFiltres={filteredProduits}
-            addButtonText="Ajouter"
+            produitsFiltres={currentProductData}
+            hasActions={false}
+            addButtonText="Modifier Charges"
             tableContainerStyle={{ 
               ...tableContainerStyle, 
               transition: 'all 0.3s ease' 

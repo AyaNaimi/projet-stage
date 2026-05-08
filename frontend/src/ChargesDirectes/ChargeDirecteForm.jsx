@@ -20,6 +20,7 @@ const ChargeDirecteForm = ({
   handleChange,
   handleSubmit,
   errors,
+  loading = false,
   closeForm,
   formContainerStyle
 }) => {
@@ -197,8 +198,8 @@ const ChargeDirecteForm = ({
               </div>
 
               <div className="d-flex justify-content-center mt-4 mb-5">
-                <Button type="submit" className="btn-primary-custom mx-2">
-                  {formData.id ? 'Modifier' : 'Enregistrer'}
+                <Button type="submit" className="btn-primary-custom mx-2" disabled={loading}>
+                  {loading ? 'Chargement...' : (formData.id ? 'Modifier' : 'Enregistrer')}
                 </Button>
                 <Button type="button" className="btn-secondary-custom mx-2" onClick={closeForm}>
                   Annuler

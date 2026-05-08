@@ -110,37 +110,37 @@ const navItems = [
   },
   {
     to: "/employes",
-    label: "Gestion employes",
+    label: "Gestion des employés",
     icon: <PeopleIcon />,
     match: (pathname) => pathname === "/employes",
   },
   {
     to: "/produits",
-    label: "Gestion produits",
+    label: "Produits",
     icon: <ShoppingBagIcon />,
     match: (pathname) => pathname === "/produits",
   },
   {
+    to: "/matieres-premieres",
+    label: "Matières premières",
+    icon: <ShoppingBagIcon />, 
+    match: (pathname) => pathname === "/matieres-premieres",
+  },
+  {
     to: "/recettes",
-    label: "Recettes / Nomenclature",
+    label: "Recettes",
     icon: <AssignmentIcon />,
     match: (pathname) => pathname === "/recettes",
   },
   {
     to: "/charges-directes",
-    label: "Charges Directes",
+    label: "Charges directes",
     icon: <FlashOnIcon />,
     match: (pathname) => pathname === "/charges-directes",
   },
   {
-    to: "/matieres-premieres",
-    label: "Matières Premières",
-    icon: <ShoppingBagIcon />, // Using same icon for now
-    match: (pathname) => pathname === "/matieres-premieres",
-  },
-  {
     to: "/charges-indirectes",
-    label: "Charges Indirectes",
+    label: "Charges indirectes",
     icon: <TableViewIcon />,
     match: (pathname) => pathname === "/charges-indirectes",
   },

@@ -30,7 +30,9 @@ const RecetteForm = ({
   handleChange,
   handleSubmit,
   errors,
+  loading = false,
   matierePremieres,
+  produits = [],
   closeForm,
   formContainerStyle
 }) => {
@@ -125,15 +127,47 @@ const RecetteForm = ({
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <div style={{ display: 'flex', gap: '1.5rem', width: '100%' }}>
               <div style={{ flex: 1 }}>
-                <StyledFormGroup icon={<Tag size={18} />} label="Désignation du Produit" htmlFor="designation">
-                  <input
-                    id="designation"
-                    name="designation"
-                    value={formData.designation || ''}
-                    readOnly
-                    style={{ ...inputStyle, backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                    className="form-control styled-input"
-                  />
+                <StyledFormGroup icon={<Tag size={18} />} label="Sélection du Produit" htmlFor="id">
+                  {formData.id ? (
+                    <input
+                      id="designation"
+                      name="designation"
+                      value={formData.designation || ''}
+                      readOnly
+                      style={{ ...inputStyle, backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                      className="form-control styled-input"
+                    />
+                  ) : (
+                    <select
+                      id="id"
+                      name="id"
+                      value={formData.id || ''}
+                      onChange={(e) => {
+                        const prodId = parseInt(e.target.value);
+                        const selectedProd = (produits || []).find(p => p.id === prodId);
+                        if (selectedProd) {
+                          setFormData({
+                            ...selectedProd,
+                            recette: (selectedProd.recettes || []).map(r => ({
+                              id: r.id,
+                              matiere_premiere_id: r.matiere_premiere_id,
+                              quantite: r.quantite || 0,
+                              perte: r.perte || 0,
+                              unite: r.unite || r.matiere_premiere?.unite || 'K',
+                              quantite_reelle: r.quantite_reelle || (parseFloat(r.quantite || 0) * (1 + parseFloat(r.perte || 0) / 100)).toFixed(3)
+                            })) || []
+                          });
+                        }
+                      }}
+                      style={inputStyle}
+                      className="form-select styled-input"
+                    >
+                      <option value="">Sélectionner un produit</option>
+                      {(produits || []).map(p => (
+                        <option key={p.id} value={p.id}>{p.designation}</option>
+                      ))}
+                    </select>
+                  )}
                 </StyledFormGroup>
               </div>
               <div style={{ flex: 1 }}>
@@ -174,24 +208,47 @@ const RecetteForm = ({
               <div style={{ width: '100%', marginBottom: '2rem' }}>
                 <TableForms
                   title={"Matières Premières & Ingrédients"}
-                  addButtonText={"Ajouter une ligne"}
+                  addButtonText={"Ajouter matière"}
                   items={formData.recette || []}
                   onAddItem={() => {
                     const newRecette = [...(formData.recette || []), { 
                       matiere_premiere_id: '', 
                       quantite: 0, 
                       perte: 0,
+                      quantite_reelle: 0,
                       unite: 'K' 
                     }];
                     setFormData(prev => ({ ...prev, recette: newRecette }));
                   }}
                   onDeleteItem={(index) => {
-                    const newRecette = formData.recette.filter((_, i) => i !== index);
+                    const newRecette = (formData.recette || []).filter((_, i) => i !== index);
                     setFormData(prev => ({ ...prev, recette: newRecette }));
                   }}
                   onItemChange={(index, field, value) => {
-                    const newRecette = [...formData.recette];
-                    newRecette[index][field] = value;
+                    const newRecette = [...(formData.recette || [])];
+                    const row = { ...newRecette[index] };
+                    
+                    // Handle numeric values
+                    if (field === 'quantite' || field === 'perte') {
+                      row[field] = value;
+                    } else {
+                      row[field] = value;
+                    }
+
+                    // Auto-fill unit if matiere is selected
+                    if (field === 'matiere_premiere_id') {
+                      const selectedMatiere = matierePremieres.find(m => m && m.id === parseInt(value));
+                      if (selectedMatiere) {
+                        row.unite = selectedMatiere.unite || 'K';
+                      }
+                    }
+
+                    // Calculate real quantity: Qty * (1 + Loss/100)
+                    const qty = parseFloat(row.quantite) || 0;
+                    const loss = parseFloat(row.perte) || 0;
+                    row.quantite_reelle = (qty * (1 + loss / 100)).toFixed(3);
+
+                    newRecette[index] = row;
                     setFormData(prev => ({ ...prev, recette: newRecette }));
                   }}
                   errors={errors}
@@ -199,23 +256,26 @@ const RecetteForm = ({
                   columns={[
                     { 
                       key: 'matiere_premiere_id', 
-                      label: 'Matière Première', 
-                      width: '40%', 
+                      label: 'Matière première', 
+                      width: '35%', 
                       type: 'select',
                       options: [
                         { value: '', label: 'Sélectionner une matière' },
-                        ...(Array.isArray(matierePremieres) ? matierePremieres.filter(m => m != null).map(m => ({ value: m.id, label: m.designation || 'Sans désignation' })) : [])
+                        ...(Array.isArray(matierePremieres) ? matierePremieres.filter(m => m != null).map(m => ({ value: m.id, label: m.nom || m.designation || 'Sans désignation' })) : [])
                       ]
                     },
-                    { key: 'quantite', label: 'Quantité', width: '20%', type: 'number' },
-                    { key: 'perte', label: 'Perte (%)', width: '15%', type: 'number' },
+                    { key: 'quantite', label: 'Quantité', width: '15%', type: 'number' },
                     {
-                      key: 'unite', label: 'Unité', width: '20%', type: 'select', options: [
+                      key: 'unite', label: 'Unité', width: '15%', type: 'select', options: [
                         { value: 'K', label: 'KG' },
+                        { value: 'G', label: 'Gramme' },
                         { value: 'L', label: 'Litre' },
+                        { value: 'ML', label: 'Millilitre' },
                         { value: 'U', label: 'Unité' }
                       ]
                     },
+                    { key: 'perte', label: 'Perte (%)', width: '10%', type: 'number' },
+                    { key: 'quantite_reelle', label: 'Quantité réelle', width: '20%', type: 'number', readOnly: true },
                     { key: 'actions', label: 'Action', width: '5%', type: 'actions' }
                   ]}
                 />
@@ -223,8 +283,8 @@ const RecetteForm = ({
 
               <div className="mt-4 mb-5">
                 <Form.Group className="d-flex justify-content-center">
-                  <Button type="submit" className="btn-primary-custom mb-2 mx-2">
-                    {formData.id ? 'Modifier' : 'Enregistrer'}
+                  <Button type="submit" className="btn-primary-custom mb-2 mx-2" disabled={loading}>
+                    {loading ? 'Chargement...' : (formData.id ? 'Modifier' : 'Enregistrer')}
                   </Button>
                   <Button type="button" className="btn-secondary-custom mb-2 mx-2" onClick={closeForm}>
                     Annuler

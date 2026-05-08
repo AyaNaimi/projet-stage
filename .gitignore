@@ -5,6 +5,7 @@ backend/storage/logs/
 backend/storage/framework/
 backend/.env
 
+
 # React
 frontend/node_modules/
 frontend/build/
