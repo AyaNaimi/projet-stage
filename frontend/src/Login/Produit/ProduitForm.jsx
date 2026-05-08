@@ -42,6 +42,7 @@ const ProduitForm = ({
   setShowAddCalibre,
   handleAddClibre,
   handleEditClibre,
+  handleDeleteCalibre,
   handleDeletecatgeorie,
   showEditClibreModal,
   setShowEditClibreModal,
@@ -909,7 +910,7 @@ const ProduitForm = ({
                             />
                             <span style={{ margin: "0 8px" }}></span>
                             <FontAwesomeIcon
-                              onClick={() => handleDeletecatgeorie(categ.id)}
+                              onClick={() => handleDeleteCalibre(categ.id)}
                               icon={faTrash}
                               style={{ color: "#ff0000", cursor: "pointer" }}
                             />
@@ -1119,6 +1120,14 @@ const ProduitForm = ({
                 <Form.Text className="text-danger">
                   {errors.sous_categorie}
                 </Form.Text>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Logo de la Sous-Catégorie</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setNewCategory({ ...newCategory, imageFile: e.target.files[0] })}
+                />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>

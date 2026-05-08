@@ -889,6 +889,28 @@ const handleDeletecatgeorie = async (categorieId) => {
   }
 };
 
+const handleDeleteCalibre = async (calibreId) => {
+  try {
+    await axiosInstance.delete(`calibres/${calibreId}`);
+
+    // Notification de succès
+    Swal.fire({
+      icon: "success",
+      title: "Succès!",
+      text: "Calibre supprimé avec succès.",
+    });
+    // Récupérer les nouveaux calibres après suppression
+    await fetchCalibres();
+  } catch (error) {
+    console.error("Error deleting calibre:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Erreur!",
+      text: "Échec de la suppression du calibre.",
+    });
+  }
+};
+
   console.log('cat',cat)
   const [isModalOpen, setModalOpen] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -1007,10 +1029,12 @@ const handleAddSousCategory = async () => {
     console.log('idSucategorie',idSucategorie)
 
     const formData = new FormData();
-    formData.append("categorie", newCategory.categorie);
+    formData.append("categorie", newCategory.sous_categorie || "");
     formData.append("idCatMer", idSucategorie);
 
-    formData.append("logoP", newCategory.imageFile);
+    if (newCategory.imageFile) {
+      formData.append("logoP", newCategory.imageFile);
+    }
 
     const response = await axiosInstance.post(`categories`, formData, {
       headers: {
@@ -1020,7 +1044,8 @@ const handleAddSousCategory = async () => {
 
     console.log(response.data);
     await fetchCategories(); // Refresh categories after adding
-    setShowAddCategory(false);
+    setNewCategory({ categorie: "", sous_categorie: "", imageFile: null }); // Reset
+    setShowSuModal(false);
     Swal.fire({
                 icon: "success",
                 title: "Succès!",
@@ -1029,8 +1054,7 @@ const handleAddSousCategory = async () => {
   } catch (error) {
     console.error("Error adding category:", error);
   }
-}; 
-  
+};
 
   document.addEventListener("change", async function (event) {
     if (event.target && event.target.id.startsWith("actionDropdown_")) {
@@ -1437,6 +1461,7 @@ const toggleDetail = (rowId, section) => {
   setShowAddCalibre={setShowAddCalibre}
   handleAddClibre={handleAddClibre}
   handleEditClibre={handleEditClibre}
+  handleDeleteCalibre={handleDeleteCalibre}
   handleDeletecatgeorie={handleDeletecatgeorie}
   showEditClibreModal={showEditClibreModal}
   setShowEditClibreModal={setShowEditClibreModal}
@@ -1459,6 +1484,7 @@ const toggleDetail = (rowId, section) => {
   setShowEditSousModal={setShowEditSousModal}
   // handleSaveSous prop removed (was undefined and unused)
   handleSuCategorie={handleSuCategorie}
+  idSucategorie={idSucategorie}
   handleAddEmptyRowRep={handleAddEmptyRowRep}
   selectedProductsDataRep={selectedProductsDataRep}
   handleInputChangeRep={handleInputChangeRep}

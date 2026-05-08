@@ -39,7 +39,8 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Autocomplete, Fab, TextField, Toolbar } from "@mui/material";
 import { BsShop } from "react-icons/bs";
-import { useOpen } from "../Acceuil/OpenProvider"; // Importer le hook personnalisé
+import { useOpen } from "../Acceuil/OpenProvider"; // Importer le hook personnalis�
+import { useHeader } from "../Acceuil/HeaderContext";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import {
   deleteDataFromIndexedDB,
@@ -85,6 +86,7 @@ const ProduitList = () => {
 
   const { open } = useOpen();
   const { dynamicStyles } = useOpen();
+  const { setTitle } = useHeader();
   const tableHeaderStyle = {
     background: "#007bff",
     padding: "10px",
@@ -169,7 +171,7 @@ const ProduitList = () => {
   const fetchProduits = async () => {
     try {
       const response = await axiosInstance.get("/api/produits");
-      const produits = response.data.produit.map(p => ({
+      const produits = response.data.produit.map((p) => ({
         ...p,
         logoP: toFullUrl(p.logoP),
       }));
@@ -199,7 +201,9 @@ const ProduitList = () => {
     }
   };
 
-  console.log("categories2Produit", categories2);
+  useEffect(() => {
+    setTitle("Gestion produits");
+  }, [setTitle]);
 
   console.log("cattest");
   useEffect(() => {
@@ -211,7 +215,7 @@ const ProduitList = () => {
 
         // Set the state if the data exists in IndexedDB
         if (storedProduits) {
-          const normalized = storedProduits.map(p => ({
+          const normalized = storedProduits.map((p) => ({
             ...p,
             logoP: toFullUrl(p.logoP),
           }));
@@ -312,7 +316,9 @@ const ProduitList = () => {
             const filteredSuCat = filteredProduits.filter(
               (produit) => produit.suCat_id === parseInt(sousCatFiltre),
             );
-            setFilteredProduitsByCategory(filteredSuCat.length === 0 ? [] : filteredSuCat);
+            setFilteredProduitsByCategory(
+              filteredSuCat.length === 0 ? [] : filteredSuCat,
+            );
             setPage(1);
             return;
           }
@@ -384,7 +390,7 @@ const ProduitList = () => {
   const handleChangeRowsPerPage = (event) => {
     const selectedRows = parseInt(event.target.value, 10);
     setRowsPerPage(selectedRows);
-    localStorage.setItem("rowsPerPage", selectedRows); // Store in localStorage
+    localStorage.setItem("rowsPerPage", selectedRows);
     setPage(1);
   };
 
@@ -418,37 +424,37 @@ const ProduitList = () => {
         confirmButton: "order-2",
         denyButton: "order-3",
       },
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        selectedItems.forEach((id) => {
-          axiosInstance.delete(`/api/produits/${id}`).then((response) => {
-            fetchProduits();
-            deleteDataFromIndexedDB("produits", id);
+        const deletePromises = selectedItems.map((id) =>
+          axiosInstance
+            .delete(`/api/produits/${id}`)
+            .then(() => deleteDataFromIndexedDB("produits", id))
+            .catch((err) => ({
+              error: true,
+              id,
+              msg: err.response?.data?.error,
+            })),
+        );
+        const results = await Promise.all(deletePromises);
+        const failed = results.filter((r) => r?.error);
+        fetchProduits();
+        setSelectedItems([]);
+        if (failed.length > 0) {
+          Swal.fire({
+            icon: "error",
+            title: "Erreur",
+            text: `${failed.length} produit(s) non supprimé(s).`,
           });
+        } else {
           Swal.fire({
             icon: "success",
-            title: "Success!",
-            text: "produit supprimé avec succès.",
-          }).catch((error) => {
-            console.error("Error deleting product:", error);
-            if (error.response && error.response.status === 403) {
-              Swal.fire({
-                icon: "error",
-                title: "Accès refusé",
-                text: "Vous n'avez pas l'autorisation de supprimer ce produit.",
-              });
-            } else {
-              Swal.fire({
-                icon: "error",
-                title: "Error!",
-                text: "Échec de la suppression du produit.",
-              });
-            }
+            title: "Succès!",
+            text: "Produits supprimés avec succès.",
           });
-        });
+        }
       }
     });
-    setSelectedItems([]);
   };
 
   const handleDelete = (id) => {
@@ -468,7 +474,7 @@ const ProduitList = () => {
       if (result.isConfirmed) {
         axiosInstance
           .delete(`/api/produits/${id}`)
-          .then((response) => {
+          .then(() => {
             fetchProduits();
             deleteDataFromIndexedDB("produits", id);
 
@@ -487,7 +493,6 @@ const ProduitList = () => {
                 text: "Vous n'avez pas l'autorisation de supprimer ce produit.",
               });
             } else if (error.response && error.response.status === 400) {
-              // Afficher le message d'erreur dans Swal.fire()
               Swal.fire({
                 icon: "error",
                 title: "Erreur",
@@ -506,6 +511,7 @@ const ProduitList = () => {
       }
     });
   };
+
   const handleShowFormButtonClick = () => {
     if (formContainerStyle.right === "-100%") {
       setFormContainerStyle({ right: "0" });
@@ -518,27 +524,25 @@ const ProduitList = () => {
   const closeForm = () => {
     setFormContainerStyle({ right: "-100%" });
     setTableContainerStyle({ marginRight: "0" });
-    setShowForm(false); // Hide the form
+    setShowForm(false);
     setFormData({
-      logoP: "",
-      marque: "Ovotec",
-
       Code_produit: "",
       designation: "",
       type_quantite: "",
       unite: "",
       seuil_alerte: "",
-      prix_vente: "",
       stock_initial: "",
       etat_produit: "",
       calibre_id: "",
       user_id: "",
       categorie_id: "",
+      prix_vente: "",
+      marque: "Ovotec",
+      logoP: "",
       suCat_id: "",
       reference: "",
       produit_Embalg_S_id: "",
       type_produit: "P",
-      // Réinitialiser les nouveaux champs
       unite_etiquette: "",
       unite_embalage_primaire: "",
       unite_embalage_secondaire: "",
@@ -546,6 +550,11 @@ const ProduitList = () => {
       rendement: 100,
       temps_production: "",
       cout_horaire_mod: "",
+      produit_Etiq_id: "",
+      produit_Embalg_id: "",
+      genre: "",
+      Dvie: "",
+      tva: "",
     });
     setErrors({
       Code_produit: "",
@@ -558,14 +567,12 @@ const ProduitList = () => {
       calibre_id: "",
       user_id: "",
       categorie_id: "",
-      // Réinitialiser les nouveaux champs
       unite_etiquette: "",
       unite_embalage_primaire: "",
       unite_embalage_secondaire: "",
     });
-
     setSelectedProductsDataRep([]);
-    setEditingProduit(null); // Clear editing client
+    setEditingProduit(null);
   };
 
   const handleEdit = (produit) => {
@@ -707,7 +714,8 @@ const ProduitList = () => {
             ? null
             : formData.genre,
         type:
-          formData.type_produit === undefined || formData.type_produit === "undefined"
+          formData.type_produit === undefined ||
+          formData.type_produit === "undefined"
             ? null
             : formData.type_produit,
         Dvie:
@@ -790,15 +798,34 @@ const ProduitList = () => {
       formDatad.append("prix_vente", formData.prix_vente || "");
       formDatad.append("categorie_id", formData.categorie_id || "");
       formDatad.append("suCat_id", formData.suCat_id || "");
-      formDatad.append("genre", (formData.genre === undefined || formData.genre === "undefined") ? "" : formData.genre);
-      formDatad.append("type", (formData.type_produit === undefined || formData.type_produit === "undefined") ? "" : formData.type_produit);
-      formDatad.append("Dvie", (formData.Dvie === undefined || formData.Dvie === "undefined") ? "" : formData.Dvie);
+      formDatad.append(
+        "genre",
+        formData.genre === undefined || formData.genre === "undefined"
+          ? ""
+          : formData.genre,
+      );
+      formDatad.append(
+        "type",
+        formData.type_produit === undefined ||
+          formData.type_produit === "undefined"
+          ? ""
+          : formData.type_produit,
+      );
+      formDatad.append(
+        "Dvie",
+        formData.Dvie === undefined || formData.Dvie === "undefined"
+          ? ""
+          : formData.Dvie,
+      );
       formDatad.append("reference", formData.reference || "");
       formDatad.append("tva", formData.tva || "");
 
       formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || "");
       formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || "");
-      formDatad.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || "");
+      formDatad.append(
+        "produit_Embalg_S_id",
+        formData.produit_Embalg_S_id || "",
+      );
 
       // Ajout des nouveaux champs
       formDatad.append("unite_etiquette", formData.unite_etiquette || "");
@@ -812,16 +839,30 @@ const ProduitList = () => {
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);
       }
-      
+
       if (selectedProductsDataRep && Array.isArray(selectedProductsDataRep)) {
         selectedProductsDataRep.forEach((prix, index) => {
-          formDatad.append(`prixProduits[${index}][dateDebut]`, prix.date_debut || "");
-          formDatad.append(`prixProduits[${index}][dateFin]`, prix.date_fin || "");
-          formDatad.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit || "");
-          formDatad.append(`prixProduits[${index}][typeQte]`, 
-            formData.type_quantite === "kg" ? "K" : 
-            formData.type_quantite === "litre" ? "L" : 
-            formData.type_quantite === "unite" ? "U" : (prix.type || "")
+          formDatad.append(
+            `prixProduits[${index}][dateDebut]`,
+            prix.date_debut || "",
+          );
+          formDatad.append(
+            `prixProduits[${index}][dateFin]`,
+            prix.date_fin || "",
+          );
+          formDatad.append(
+            `prixProduits[${index}][prixProduit]`,
+            prix.prixProduit || "",
+          );
+          formDatad.append(
+            `prixProduits[${index}][typeQte]`,
+            formData.type_quantite === "kg"
+              ? "K"
+              : formData.type_quantite === "litre"
+                ? "L"
+                : formData.type_quantite === "unite"
+                  ? "U"
+                  : prix.type || "",
           );
           formDatad.append(`prixProduits[${index}][Unite]`, prix.unite || "");
         });
@@ -852,20 +893,29 @@ const ProduitList = () => {
       setFormData({
         Code_produit: "",
         designation: "",
-        calibre_id: "",
         type_quantite: "",
         unite: "",
         seuil_alerte: "",
         stock_initial: "",
         etat_produit: "",
-        marque: "Ovotec",
-
+        calibre_id: "",
+        user_id: "",
         categorie_id: "",
-        logoP: null,
+        prix_vente: "",
+        marque: "Ovotec",
+        logoP: "",
         suCat_id: "",
-        genre: "",
         reference: "",
         produit_Embalg_S_id: "",
+        unite_etiquette: "",
+        unite_embalage_primaire: "",
+        unite_embalage_secondaire: "",
+        type_produit: "",
+        produit_Etiq_id: "",
+        produit_Embalg_id: "",
+        genre: "",
+        Dvie: "",
+        tva: "",
       });
       setErrors({
         Code_produit: "",
@@ -887,39 +937,57 @@ const ProduitList = () => {
       if (error.response) {
         const serverErrors = error.response.data.error;
         console.log("Erreur serveur:", serverErrors);
-        
-        if (typeof serverErrors === 'object' && serverErrors !== null) {
+
+        if (typeof serverErrors === "object" && serverErrors !== null) {
           setErrors({
             logoP: serverErrors.logoP ? serverErrors.logoP[0] : "",
-            Code_produit: serverErrors.Code_produit ? serverErrors.Code_produit[0] : "",
-            designation: serverErrors.designation ? serverErrors.designation[0] : "",
-            calibre_id: serverErrors.calibre_id ? serverErrors.calibre_id[0] : "",
-            type_quantite: serverErrors.type_quantite ? serverErrors.type_quantite[0] : "",
+            Code_produit: serverErrors.Code_produit
+              ? serverErrors.Code_produit[0]
+              : "",
+            designation: serverErrors.designation
+              ? serverErrors.designation[0]
+              : "",
+            calibre_id: serverErrors.calibre_id
+              ? serverErrors.calibre_id[0]
+              : "",
+            type_quantite: serverErrors.type_quantite
+              ? serverErrors.type_quantite[0]
+              : "",
             unite: serverErrors.unite ? serverErrors.unite[0] : "",
-            seuil_alerte: serverErrors.seuil_alerte ? serverErrors.seuil_alerte[0] : "",
-            stock_initial: serverErrors.stock_initial ? serverErrors.stock_initial[0] : "",
-            etat_produit: serverErrors.etat_produit ? serverErrors.etat_produit[0] : "",
+            seuil_alerte: serverErrors.seuil_alerte
+              ? serverErrors.seuil_alerte[0]
+              : "",
+            stock_initial: serverErrors.stock_initial
+              ? serverErrors.stock_initial[0]
+              : "",
+            etat_produit: serverErrors.etat_produit
+              ? serverErrors.etat_produit[0]
+              : "",
             marque: serverErrors.marque ? serverErrors.marque[0] : "",
-            categorie_id: serverErrors.categorie_id ? serverErrors.categorie_id[0] : "",
+            categorie_id: serverErrors.categorie_id
+              ? serverErrors.categorie_id[0]
+              : "",
           });
           Swal.fire({
-            icon: 'error',
-            title: 'Erreur de validation',
-            text: 'Veuillez vérifier les champs du formulaire.',
+            icon: "error",
+            title: "Erreur de validation",
+            text: "Veuillez vérifier les champs du formulaire.",
           });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: serverErrors || "Une erreur est survenue lors de l'enregistrement.",
+            icon: "error",
+            title: "Erreur",
+            text:
+              serverErrors ||
+              "Une erreur est survenue lors de l'enregistrement.",
           });
         }
       } else {
         console.error(error);
         Swal.fire({
-          icon: 'error',
-          title: 'Erreur Réseau',
-          text: 'Impossible de contacter le serveur.',
+          icon: "error",
+          title: "Erreur Réseau",
+          text: "Impossible de contacter le serveur.",
         });
       }
     }
@@ -953,24 +1021,47 @@ const ProduitList = () => {
         title: "Succès!",
         text: " supprimée avec succès.",
       });
-      await fetchCategories(); // Refresh categories after adding
-      await storeDataInIndexedDB(categories, "famille");
-
-      // Récupérer les nouvelles catégories après suppression
+      // Récupérer les nouvelles catégories après suppression et stocker
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
+      setCategories(latestCategories);
+      await storeDataInIndexedDB(latestCategories, "famille");
     } catch (error) {
-      console.error("Error deleting categorie:", error);
+      console.error("Error deleting calibre:", error);
       Swal.fire({
         icon: "error",
         title: "Erreur!",
-        text: "Échec de la suppression de la categorie.",
+        text: "Échec de la suppression du calibre.",
       });
     }
-  };
+    };
 
-  console.log("cat", cat);
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showEditClibreModal, setShowEditClibreModal] = useState(false);
+    const handleDeleteCalibre = async (calibreId) => {
+    try {
+      await axiosInstance.delete(`/api/calibres/${calibreId}`);
+
+      // Notification de succès
+      Swal.fire({
+        icon: "success",
+        title: "Succès!",
+        text: "Calibre supprimé avec succès.",
+      });
+      // Récupérer les nouveaux calibres après suppression
+      await fetchCalibres();
+    } catch (error) {
+      console.error("Error deleting calibre:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: "Échec de la suppression du calibre.",
+      });
+    }
+    };
+
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showEditClibreModal, setShowEditClibreModal] = useState(false);
+
 
   const [showEditSousModal, setShowEditSousModal] = useState(false);
 
@@ -992,8 +1083,76 @@ const ProduitList = () => {
   };
   const handleEditSousCategorie = (categorieId) => {
     setSelectedCategoryId(categorieId);
-    setCategorie(categorieId.categorie);
+    setNewCategory({
+      sous_categorie: categorieId.categorie || '',
+      description: categorieId.description || '',
+      idCatMer: categorieId.idCatMer || '',
+      imageFile: null,
+    });
     setShowEditSousModal(true);
+  };
+
+  const handleSaveSousCategorie = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+
+    Swal.fire({
+      title: "Traitement en cours...",
+      text: "Veuillez patienter...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("_method", "put");
+      formData.append("categorie", newCategory.sous_categorie || "");
+      formData.append("description", newCategory.description || "");
+      formData.append("idCatMer", newCategory.idCatMer || "");
+      if (newCategory.imageFile instanceof File) {
+        formData.append("logoP", newCategory.imageFile);
+      }
+
+      await axiosInstance.post(
+        `/api/categories/${selectedCategoryId.id}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+
+      await fetchCategories();
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
+      await storeDataInIndexedDB(latestCategories, "famille");
+
+      setShowEditSousModal(false);
+      setNewCategory({ sous_categorie: "", description: "", idCatMer: "", imageFile: null });
+
+      Swal.fire({
+        icon: "success",
+        title: "Succès!",
+        text: "Sous-catégorie modifiée avec succès.",
+      });
+    } catch (error) {
+      console.error("Erreur lors de la modification de la sous-catégorie :", error);
+      let errorMsg = "Échec de la modification de la sous-catégorie.";
+
+      if (error.response?.data?.error) {
+        if (typeof error.response.data.error === "object") {
+          errorMsg = Object.values(error.response.data.error).flat().join(", ");
+        } else {
+          errorMsg = error.response.data.error;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text: errorMsg,
+      });
+    }
   };
   const [idSucategorie, setIdSucategorie] = useState(null); // State for
   const handleSuCategorie = (categorieId) => {
@@ -1025,11 +1184,12 @@ const ProduitList = () => {
 
       await axiosInstance.post(
         `/api/categories/${selectedCategoryId.id}`,
-        formData
+        formData,
       );
-      
+
       await fetchCategories();
-      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
       await storeDataInIndexedDB(latestCategories, "famille");
 
       setShowEditModal(false);
@@ -1044,9 +1204,9 @@ const ProduitList = () => {
     } catch (error) {
       console.error("Erreur lors de la modification de la catégorie :", error);
       let errorMsg = "Échec de la modification de la catégorie.";
-      
+
       if (error.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
+        if (typeof error.response.data.error === "object") {
           errorMsg = Object.values(error.response.data.error).flat().join(", ");
         } else {
           errorMsg = error.response.data.error;
@@ -1090,14 +1250,22 @@ const ProduitList = () => {
 
   const handleAddCategory = async (e) => {
     if (e?.preventDefault) e.preventDefault();
-    
+
     // Validate before sending
     if (!newCategory.categorie || !newCategory.categorie.trim()) {
-      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez saisir un nom de famille." });
+      Swal.fire({
+        icon: "warning",
+        title: "Attention!",
+        text: "Veuillez saisir un nom de famille.",
+      });
       return;
     }
     if (!newCategory.imageFile) {
-      Swal.fire({ icon: "warning", title: "Attention!", text: "Veuillez sélectionner une image." });
+      Swal.fire({
+        icon: "warning",
+        title: "Attention!",
+        text: "Veuillez sélectionner une image.",
+      });
       return;
     }
 
@@ -1105,15 +1273,26 @@ const ProduitList = () => {
       title: "Traitement en cours...",
       text: "Veuillez patienter...",
       allowOutsideClick: false,
-      didOpen: () => { Swal.showLoading(); },
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
 
     try {
       console.log("Adding Category:", newCategory);
       const formData = new FormData();
       formData.append("categorie", newCategory.categorie.trim());
-      console.log("Appending imageFile:", newCategory.imageFile.name, newCategory.imageFile.type, newCategory.imageFile.size);
-      formData.append("logoP", newCategory.imageFile, newCategory.imageFile.name);
+      console.log(
+        "Appending imageFile:",
+        newCategory.imageFile.name,
+        newCategory.imageFile.type,
+        newCategory.imageFile.size,
+      );
+      formData.append(
+        "logoP",
+        newCategory.imageFile,
+        newCategory.imageFile.name,
+      );
 
       const response = await axiosInstance.post("/api/categories", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -1121,20 +1300,26 @@ const ProduitList = () => {
 
       console.log(response.data);
       await fetchCategories();
-      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
       await storeDataInIndexedDB(latestCategories, "famille");
 
       setShowAddCategory(false);
       setNewCategory({ categorie: "", imageFile: null });
 
-      Swal.fire({ icon: "success", title: "Succès!", text: "Famille ajoutée avec succès." });
+      Swal.fire({
+        icon: "success",
+        title: "Succès!",
+        text: "Famille ajoutée avec succès.",
+      });
     } catch (error) {
       console.error("Error adding category:", error);
       let errorMsg = "Échec de l'ajout de la famille.";
       if (error.response?.data?.error) {
-        errorMsg = typeof error.response.data.error === 'object'
-          ? Object.values(error.response.data.error).flat().join(", ")
-          : error.response.data.error;
+        errorMsg =
+          typeof error.response.data.error === "object"
+            ? Object.values(error.response.data.error).flat().join(", ")
+            : error.response.data.error;
       } else if (error.message) {
         errorMsg = error.message;
       }
@@ -1170,9 +1355,10 @@ const ProduitList = () => {
 
       console.log(response.data);
       await fetchCategories(); // Refresh categories after adding
-      const latestCategories = (await axiosInstance.get("/api/categories")).data;
+      const latestCategories = (await axiosInstance.get("/api/categories"))
+        .data;
       await storeDataInIndexedDB(latestCategories, "famille");
-      
+
       setShowSuModal(false);
       setNewCategory({ categorie: "", sous_categorie: "", imageFile: null }); // Reset form
       Swal.fire({
@@ -1182,10 +1368,11 @@ const ProduitList = () => {
       });
     } catch (error) {
       console.error("Error adding sub-category:", error);
-      let errorMsg = "Échec de l'ajout de la sous-catégorie. Vérifiez que vous avez bien sélectionné une image.";
-      
+      let errorMsg =
+        "Échec de l'ajout de la sous-catégorie. Vérifiez que vous avez bien sélectionné une image.";
+
       if (error.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
+        if (typeof error.response.data.error === "object") {
           errorMsg = Object.values(error.response.data.error).flat().join(", ");
         } else {
           errorMsg = error.response.data.error;
@@ -1261,12 +1448,14 @@ const ProduitList = () => {
     categories.filter((cat) => cat.idCatMer === null),
     chunkSize,
   );
-const chunksSucat = chunkArray(
-  selectedCategory === 'tout' 
-    ? categories.filter(cat => cat.idCatMer !== null)
-    : categories.filter(cat => cat.idCatMer !== null && cat.idCatMer === selectedCategory),
-  chunkSize
-);
+  const chunksSucat = chunkArray(
+    selectedCategory === "tout"
+      ? categories.filter((cat) => cat.idCatMer !== null)
+      : categories.filter(
+          (cat) => cat.idCatMer !== null && cat.idCatMer === selectedCategory,
+        ),
+    chunkSize,
+  );
 
   console.log("categori1", categories);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -1467,7 +1656,7 @@ const chunksSucat = chunkArray(
       setSelectedProductsDataRep(updatedSelectedProductsData);
 
       if (id) {
-        axiosInstance.delete(`/prixProduit/${id}`).then(() => {
+        axiosInstance.delete(`/api/prixProduit/${id}`).then(() => {
           fetchProduits();
         });
       }
@@ -1612,6 +1801,7 @@ const chunksSucat = chunkArray(
               setShowAddCalibre={setShowAddCalibre}
               handleAddClibre={handleAddClibre}
               handleEditClibre={handleEditClibre}
+              handleDeleteCalibre={handleDeleteCalibre}
               handleDeletecatgeorie={handleDeletecatgeorie}
               showEditClibreModal={showEditClibreModal}
               setShowEditClibreModal={setShowEditClibreModal}
@@ -1626,6 +1816,7 @@ const chunksSucat = chunkArray(
               setShowSuModal={setShowSuModal}
               handleAddSousCategory={handleAddSousCategory}
               handleEditSousCategorie={handleEditSousCategorie}
+              handleSaveSousCategorie={handleSaveSousCategorie}
               handleDeletecatgeorieSousCat={handleDeletecatgeorie}
               showEditModal={showEditModal}
               setShowEditModal={setShowEditModal}
@@ -1633,6 +1824,7 @@ const chunksSucat = chunkArray(
               showEditSousModal={showEditSousModal}
               setShowEditSousModal={setShowEditSousModal}
               handleSuCategorie={handleSuCategorie}
+              idSucategorie={idSucategorie}
               handleAddEmptyRowRep={handleAddEmptyRowRep}
               selectedProductsDataRep={selectedProductsDataRep}
               handleInputChangeRep={handleInputChangeRep}

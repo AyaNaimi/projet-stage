@@ -10,6 +10,7 @@ use App\Models\StockProduit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -18,73 +19,97 @@ class ProduitController extends Controller
 {
     public function index()
     {
-        $produits = Produit::with([
-            'calibre',
-            'categorie',
-            'souscategorie',
-            'user',
-            'etiquette',
-            'Embalge',
-            'EmbalgeS',
-            'prixProduits',
-            'recettes.matierePremiere'
-        ])->orderBy('id', 'desc')->get();
+        try {
+            $produits = Produit::with([
+                'categorie',
+                'calibre',
+                'user',
+                'souscategorie',
+                'prixProduits',
+                'prixProduitsLast',
+                'Embalge',
+                'etiquette',
+                'EmbalgeS',
+                'stockProduit',
+                'recettes.matierePremiere'
+            ])->orderBy('id', 'desc')->get()
+                ->map(function ($produit) {
+                    $data = $produit->toArray();
+                    $data['logoP'] = $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null;
+                    return $data;
+                });
 
-        $categories = categorie::where('parent_id', 0)->get();
+            $categories = categorie::where('parent_id', 0)->get();
 
-        return response()->json([
-            'produit' => $produits,
-            'AllProduit' => Produit::all(),
-            'categories' => $categories
-        ]);
+            return response()->json([
+                'message' => 'Liste des produits recuperee avec succes',
+                'produit' => $produits,
+                'count' => Produit::count(),
+                'AllProduit' => Produit::all(),
+                'categories' => $categories
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        if (Gate::allows('add_product')) {
-            try {
-                $validator = Validator::make($request->all(), [
-                    'Code_produit' => 'required|unique:produits',
-                    'designation' => 'required',
-                    'calibre_id' => 'nullable',
-                    'type_quantite' => 'required',
-                    'unite' => 'nullable',
-                    'seuil_alerte' => 'nullable',
-                    'stock_initial' => 'nullable',
-                    'etat_produit' => 'nullable',
-                    'categorie_id' => 'required',
-                    'genre' => 'nullable',
-                    'Dvie' => 'nullable',
-                    'tva' => 'nullable',
-                    'prixProduits' => 'nullable|array',
-                    'prixProduits.*.dateDebut' => 'nullable|date',
-                    'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
-                    'prixProduits.*.prixProduit' => 'nullable|numeric|min:0',
-                    'prixProduits.*.typeQte' => 'nullable',
-                    'prixProduits.*.Unite' => 'nullable',
-                    'unite_etiquette' => 'nullable',
-                    'unite_embalage_primaire' => 'nullable',
-                    'unite_embalage_secondaire' => 'nullable',
-                ]);
+        if (!Gate::allows('add_product') && !Gate::allows('create_product')) {
+            abort(403, 'Vous n\'avez pas l\'autorisation de creer un produit.');
+        }
 
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors()], 400);
-                }
+        try {
+            $validator = Validator::make($request->all(), [
+                'Code_produit' => 'required|unique:produits,Code_produit',
+                'designation' => 'required',
+                'calibre_id' => 'nullable',
+                'type_quantite' => 'required',
+                'unite' => 'nullable',
+                'seuil_alerte' => 'nullable',
+                'stock_initial' => 'nullable',
+                'etat_produit' => 'nullable',
+                'categorie_id' => 'required',
+                'genre' => 'nullable',
+                'type' => 'nullable',
+                'Dvie' => 'nullable',
+                'reference' => 'nullable',
+                'tva' => 'nullable',
+                'prixProduits' => 'nullable|array',
+                'prixProduits.*.dateDebut' => 'nullable|date',
+                'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
+                'prixProduits.*.prixProduit' => 'nullable|numeric|min:0',
+                'prixProduits.*.typeQte' => 'nullable',
+                'prixProduits.*.Unite' => 'nullable',
+                'unite_etiquette' => 'nullable',
+                'unite_embalage_primaire' => 'nullable',
+                'unite_embalage_secondaire' => 'nullable',
+            ]);
 
-                $data = $request->except(['prixProduits', 'lines']);
-                $data['user_id'] = Auth::id();
-                $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
-                $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
-                $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
 
-                $produit = Produit::create($data);
+            $data = $request->except(['prixProduits', 'lines']);
+            $data['user_id'] = Auth::id();
+            $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
+            $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
+            $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
 
-                // Sync Recipes (Nomenclature)
-                if ($request->has('lines')) {
-                    $lines = is_string($request->input('lines')) 
-                        ? json_decode($request->input('lines'), true) 
-                        : $request->input('lines');
-                    
+            if ($request->hasFile('logoP')) {
+                $photoPath = $request->file('logoP')->store('logop', 'public');
+                $data['logoP'] = 'storage/' . $photoPath;
+            }
+
+            $produit = Produit::create($data);
+
+            if ($request->has('lines')) {
+                $linesInput = $request->input('lines');
+                $lines = is_string($linesInput) 
+                    ? json_decode($linesInput, true) 
+                    : $linesInput;
+                
+                if (is_array($lines)) {
                     foreach ($lines as $line) {
                         if (!empty($line['matiere_premiere_id'])) {
                             $produit->recettes()->create([
@@ -97,11 +122,13 @@ class ProduitController extends Controller
                         }
                     }
                 }
+            }
 
-                if ($request->has('prixProduits')) {
-                    foreach ($request->input('prixProduits') as $prix) {
+            if ($request->has('prixProduits')) {
+                $prixInput = $request->input('prixProduits');
+                if (is_array($prixInput)) {
+                    foreach ($prixInput as $prix) {
                         $produit->prixProduits()->create([
-                            'produit_id' => $produit->id,
                             'dateDebut' => $prix['dateDebut'] ?? null,
                             'dateFin' => $prix['dateFin'] ?? null,
                             'prixProduit' => $prix['prixProduit'] ?? null,
@@ -110,66 +137,72 @@ class ProduitController extends Controller
                         ]);
                     }
                 }
-
-                return response()->json(['message' => 'Produit ajouté avec succès', 'produit' => $produit], 201);
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 500);
             }
-        } else {
-            return response()->json(['error' => 'Unauthorized'], 403);
+
+            return response()->json([
+                'message' => 'Produit ajouté avec succès',
+                'produit' => array_merge(
+                    $produit->toArray(),
+                    ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null]
+                )
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
-        // Bypassing gate for debugging purposes
-        // if (Gate::allows('edit_product')) {
-            try {
-                $validator = Validator::make($request->all(), [
-                    'Code_produit' => 'required|unique:produits,Code_produit,' . $id,
-                    'designation' => 'required',
-                    'calibre_id' => 'nullable',
-                    'type_quantite' => 'required',
-                    'unite' => 'nullable',
-                    'seuil_alerte' => 'nullable',
-                    'stock_initial' => 'nullable',
-                    'etat_produit' => 'nullable',
-                    'categorie_id' => 'nullable',
-                    'genre' => 'nullable',
-                    'Dvie' => 'nullable',
-                    'tva' => 'nullable',
-                    'prixProduits' => 'nullable|array',
-                    'prixProduits.*.dateDebut' => 'nullable|date',
-                    'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
-                    'prixProduits.*.prixProduit' => 'nullable|numeric|min:0',
-                    'prixProduits.*.typeQte' => 'nullable',
-                    'prixProduits.*.Unite' => 'nullable',
-                    'unite_etiquette' => 'nullable',
-                    'unite_embalage_primaire' => 'nullable',
-                    'unite_embalage_secondaire' => 'nullable',
-                ]);
+        if (!Gate::allows('edit_product')) {
+            abort(403, 'Vous n\'avez pas l\'autorisation de modifier ce produit.');
+        }
 
-                if ($validator->fails()) {
-                    return response()->json(['error' => $validator->errors(), $request->all()], 400);
-                }
+        try {
+            $validator = Validator::make($request->all(), [
+                'Code_produit' => 'required|unique:produits,Code_produit,' . $id,
+                'designation' => 'required',
+                'calibre_id' => 'nullable',
+                'type_quantite' => 'required',
+                'unite' => 'nullable',
+                'seuil_alerte' => 'nullable',
+                'stock_initial' => 'nullable',
+                'etat_produit' => 'nullable',
+                'categorie_id' => 'nullable',
+                'genre' => 'nullable',
+                'Dvie' => 'nullable',
+                'tva' => 'nullable',
+                'prixProduits' => 'nullable|array',
+                'prixProduits.*.dateDebut' => 'nullable|date',
+                'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
+                'prixProduits.*.prixProduit' => 'nullable|numeric|min:0',
+                'prixProduits.*.typeQte' => 'nullable',
+                'prixProduits.*.Unite' => 'nullable',
+                'unite_etiquette' => 'nullable',
+                'unite_embalage_primaire' => 'nullable',
+                'unite_embalage_secondaire' => 'nullable',
+            ]);
 
-                $produit = Produit::findOrFail($id);
-                $data = $request->except(['prixProduits', 'lines']);
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 400);
+            }
 
-                $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
-                $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
-                $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
-                $data['user_id'] = Auth::id() ?: $produit->user_id;
+            $produit = Produit::findOrFail($id);
+            $data = $request->except(['prixProduits', 'lines']);
+            $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
+            $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
+            $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
+            $data['user_id'] = Auth::id() ?: $produit->user_id;
 
-                $produit->update($data);
+            $produit->update($data);
 
-                // Sync Recipes (Nomenclature)
-                if ($request->has('lines')) {
-                    $produit->recettes()->delete(); 
-                    $lines = is_string($request->input('lines')) 
-                        ? json_decode($request->input('lines'), true) 
-                        : $request->input('lines');
-                    
+            if ($request->has('lines')) {
+                $produit->recettes()->delete(); 
+                $linesInput = $request->input('lines');
+                $lines = is_string($linesInput) 
+                    ? json_decode($linesInput, true) 
+                    : $linesInput;
+                
+                if (is_array($lines)) {
                     foreach ($lines as $line) {
                         if (!empty($line['matiere_premiere_id'])) {
                             $produit->recettes()->create([
@@ -182,11 +215,17 @@ class ProduitController extends Controller
                         }
                     }
                 }
+            }
 
-                if ($request->has('prixProduits')) {
-                    foreach ($request->input('prixProduits') as $prix) {
+            if ($request->has('prixProduits')) {
+                $prixInput = $request->input('prixProduits');
+                if (is_array($prixInput)) {
+                    foreach ($prixInput as $prix) {
                         if (isset($prix['id']) && $prix['id']) {
-                            $prixProduit = PrixProduit::findOrFail($prix['id']);
+                            $prixProduit = PrixProduit::where('id', $prix['id'])
+                                ->where('produit_id', $produit->id)
+                                ->firstOrFail();
+
                             $prixProduit->update([
                                 'dateDebut' => $prix['dateDebut'] ?? null,
                                 'dateFin' => $prix['dateFin'] ?? null,
@@ -206,14 +245,54 @@ class ProduitController extends Controller
                         }
                     }
                 }
-
-                return response()->json(['message' => 'Produit mis à jour avec succès', 'produit' => $produit]);
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 500);
             }
-        // } else {
-        //     return response()->json(['error' => 'Unauthorized'], 403);
-        // }
+
+            return response()->json([
+                'message' => 'Produit modifie avec succes',
+                'produit' => array_merge(
+                    $produit->toArray(),
+                    ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null]
+                ),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updateLogo(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'logoP' => 'required|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+            ]);
+
+            $produit = Produit::findOrFail($id);
+
+            if ($request->hasFile('logoP')) {
+                if ($produit->logoP) {
+                    $oldFilePath = str_replace('storage/', '', parse_url($produit->logoP, PHP_URL_PATH));
+                    if (Storage::disk('public')->exists($oldFilePath)) {
+                        Storage::disk('public')->delete($oldFilePath);
+                    }
+                }
+
+                $photoPath = $request->file('logoP')->store('logop', 'public');
+                $produit->logoP = 'storage/' . $photoPath;
+            }
+
+            $produit->save();
+
+            return response()->json([
+                'message' => 'Logo updated successfully!',
+                'logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json([
+                'error' => 'Failed to update logo',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function show($id)
@@ -231,48 +310,53 @@ class ProduitController extends Controller
 
     public function destroy($id)
     {
-        if (Gate::allows('delete_product')) {
-            try {
-                $produit = Produit::findOrFail($id);
-                $produit->delete();
-                return response()->json(['message' => 'Produit supprimé avec succès'], 200);
-            } catch (\Illuminate\Database\QueryException $e) {
-                if ($e->errorInfo[1] === 1451) {
-                    return response()->json(['error' => 'Impossible de supprimer un produit car il est utilisé dans d\'autres plateformes.'], 400);
-                } else {
-                    return response()->json(['error' => $e->getMessage()], 500);
-                }
+        if (!Gate::allows('delete_product')) {
+            abort(403, 'Vous n\'avez pas l\'autorisation de supprimer ce produit.');
+        }
+
+        try {
+            $produit = Produit::findOrFail($id);
+            $produit->delete();
+            return response()->json(['message' => 'Produit supprime avec succes'], 200);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->errorInfo[1] === 1451) {
+                return response()->json([
+                    'error' => 'Impossible de supprimer un produit car il est utilise dans d\'autres plateformes.',
+                ], 400);
             }
-        } else {
-            return response()->json(['error' => 'Unauthorized'], 403);
+
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function deleteSelected(Request $request)
     {
-        $ids = $request->input('ids'); 
+        $ids = $request->input('ids');
 
-        if (!empty($ids)) {
-            $errors = [];
-            foreach ($ids as $id) {
-                try {
-                    $produit = Produit::findOrFail($id);
-                    $produit->delete();
-                } catch (\Illuminate\Database\QueryException $e) {
-                    if ($e->errorInfo[1] === 1451) {
-                        $errors[] = "Produit #$id est utilisé dans d'autres plateformes.";
-                    } else {
-                        $errors[] = "Produit #$id: " . $e->getMessage();
-                    }
-                }
-            }
-            if (!empty($errors)) {
-                return response()->json(['errors' => $errors], 400);
-            }
-            return response()->json(['message' => 'Éléments supprimés avec succès']);
+        if (empty($ids)) {
+            return response()->json(['message' => 'Aucun element selectionne'], 400);
         }
 
-        return response()->json(['message' => 'Aucun élément sélectionné'], 400);
+        $errors = [];
+
+        foreach ($ids as $id) {
+            try {
+                $produit = Produit::findOrFail($id);
+                $produit->delete();
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->errorInfo[1] === 1451) {
+                    $errors[] = "Produit #$id est utilise dans d'autres plateformes.";
+                } else {
+                    $errors[] = "Produit #$id: " . $e->getMessage();
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            return response()->json(['errors' => $errors], 400);
+        }
+
+        return response()->json(['message' => 'Elements supprimes avec succes']);
     }
 
     public function destroyPrix($id)
@@ -293,8 +377,26 @@ class ProduitController extends Controller
     public function produitsAvecStock()
     {
         try {
-            $produits = Produit::has('stockProduit')->get();
-            return response()->json(['produits' => $produits]);
+            $produits = Produit::whereHas('stockProduit')
+                ->with(['categorie', 'calibre', 'user', 'souscategorie', 'stockProduit'])
+                ->get()
+                ->map(function ($produit) {
+                    $stock = $produit->stockProduit->first();
+                    if ($stock) {
+                        $quantite = ($stock->qte_kg_litre > 0) ? $stock->qte_kg_litre : $stock->qte_unite;
+                    } else {
+                        $quantite = 0;
+                    }
+
+                    return array_merge($produit->toArray(), [
+                        'stock' => $quantite,
+                    ]);
+                });
+
+            return response()->json([
+                'message' => 'Liste des produits avec stock recuperee avec succes',
+                'produits' => $produits,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -313,19 +415,6 @@ class ProduitController extends Controller
     {
         $produits = Produit::where('categorie_id', $categorieId)->get();
         return response()->json(['produits' => $produits]);
-    }
-
-    public function updateLogo(Request $request, $id)
-    {
-        $produit = Produit::findOrFail($id);
-        if ($request->hasFile('logoP')) {
-            if ($produit->logoP) {
-                Storage::disk('public')->delete($produit->logoP);
-            }
-            $path = $request->file('logoP')->store('logos', 'public');
-            $produit->update(['logoP' => $path]);
-        }
-        return response()->json(['message' => 'Logo mis à jour', 'logo_url' => asset('storage/' . $produit->logoP)]);
     }
 
     public function chartProduitData()

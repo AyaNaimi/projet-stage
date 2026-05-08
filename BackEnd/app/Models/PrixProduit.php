@@ -22,7 +22,7 @@ class PrixProduit extends Model
      * @var array
      */
     protected $fillable = [
-        'id_produit',
+        'produit_id',
         'dateDebut',
         'dateFin',
         'prixProduit',

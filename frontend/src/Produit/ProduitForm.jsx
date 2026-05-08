@@ -73,6 +73,7 @@ const ProduitForm = ({
   setShowAddCalibre,
   handleAddClibre,
   handleEditClibre,
+  handleDeleteCalibre,
   handleDeletecatgeorie,
   showEditClibreModal,
   setShowEditClibreModal,
@@ -87,6 +88,7 @@ const ProduitForm = ({
   setShowSuModal,
   handleAddSousCategory,
   handleEditSousCategorie,
+  handleSaveSousCategorie,
   handleDeletecatgeorieSousCat,
   showEditModal,
   setShowEditModal,
@@ -94,6 +96,7 @@ const ProduitForm = ({
   showEditSousModal,
   setShowEditSousModal,
   handleSuCategorie,
+  idSucategorie,
   handleAddEmptyRowRep,
   selectedProductsDataRep,
   handleInputChangeRep,
@@ -923,7 +926,7 @@ const ProduitForm = ({
                             />
                             <span style={{ margin: "0 8px" }}></span>
                             <FontAwesomeIcon
-                              onClick={() => handleDeletecatgeorie(categ.id)}
+                              onClick={() => handleDeleteCalibre(categ.id)}
                               icon={faTrash}
                               style={{ color: "#ff0000", cursor: "pointer" }}
                             />
@@ -1147,6 +1150,17 @@ const ProduitForm = ({
                 </Form.Text>
               </Form.Group>
               <Form.Group className="mb-3">
+                <Form.Label>Logo de la Sous-Catégorie</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setNewCategory(prev => ({ ...prev, imageFile: file }));
+                  }}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>
                 <Form.Control
                   type="text"
@@ -1169,6 +1183,40 @@ const ProduitForm = ({
                   Annuler
                 </Fab>
               </Form.Group>
+              <Form.Group className="mt-3">
+                <div className="form-group mt-3" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Id</th>
+                        <th>Sous-Catégorie</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.filter((cat) => cat.idCatMer !== null && cat.idCatMer === Number(idSucategorie)).map(categ => (
+                        <tr key={categ.id}>
+                          <td>{categ.id}</td>
+                          <td>{categ.categorie}</td>
+                          <td>
+                            <FontAwesomeIcon
+                              onClick={() => handleEditSousCategorie(categ)}
+                              icon={faEdit}
+                              style={{ color: "#007bff", cursor: "pointer" }}
+                            />
+                            <span style={{ margin: "0 8px" }}></span>
+                            <FontAwesomeIcon
+                              onClick={() => handleDeletecatgeorieSousCat(categ.id)}
+                              icon={faTrash}
+                              style={{ color: "#ff0000", cursor: "pointer" }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Form.Group>
             </Form>
           </Modal.Body>
         </Modal>
@@ -1177,7 +1225,7 @@ const ProduitForm = ({
             <Modal.Title>Modifier la Sous-Catégorie</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={handleEditSousCategorie}>
+            <Form onSubmit={handleSaveSousCategorie}>
               <Form.Group className="mb-3">
                 <Form.Label>Nom de la Sous-Catégorie</Form.Label>
                 <Form.Control
@@ -1196,6 +1244,26 @@ const ProduitForm = ({
                 <Form.Text className="text-danger">
                   {errors.sous_categorie}
                 </Form.Text>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Logo de la Sous-Catégorie</Form.Label>
+                {selectedCategoryId?.logoP && (
+                  <div className="mb-2">
+                    <img
+                      src={toFullUrl(selectedCategoryId.logoP)}
+                      alt="Logo actuel"
+                      style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '50%', border: '1px solid #ddd' }}
+                    />
+                  </div>
+                )}
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    setNewCategory(prev => ({ ...prev, imageFile: file }));
+                  }}
+                />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>
