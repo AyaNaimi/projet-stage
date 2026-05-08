@@ -23,7 +23,7 @@ const ColumnVisibilityMenu = ({
   menuRef
 }) => {
   return (
-    <div  style={{ position: 'relative', marginLeft: 'auto' }}>
+    <div style={{ position: 'relative', marginLeft: 'auto' }}>
       <button
         className="btn btn-outline-primary shadow-sm column-visibility-btn"
         type="button"
@@ -63,9 +63,9 @@ const ColumnVisibilityMenu = ({
         className={`dropdown-menu${show ? ' show' : ''}`}
         aria-labelledby="dropdownMenuButtonColumns"
         ref={menuRef}
-        style={{ minWidth: 210, maxHeight: 350,marginLeft:'-150px', overflowY: 'auto', padding: 10, borderRadius: 12, boxShadow: '0 4px 16pxrgb(26, 26, 26)' }}
+        style={{ minWidth: 210, maxHeight: 350, marginLeft: '-150px', overflowY: 'auto', padding: 10, borderRadius: 12, boxShadow: '0 4px 16pxrgb(26, 26, 26)' }}
       >
-        <li style={{ fontWeight: 700,     color: '#4b5563', fontSize: 16, padding: '6px 8px 10px 8px', borderBottom: '1px solid rgb(142, 141, 141)', marginBottom: 6 }}>Colonnes à afficher</li>
+        <li style={{ fontWeight: 700, color: '#4b5563', fontSize: 16, padding: '6px 8px 10px 8px', borderBottom: '1px solid rgb(142, 141, 141)', marginBottom: 6 }}>Colonnes à afficher</li>
         {columns.map((col) => (
           <li key={col.id || col.key} style={{ padding: '4px 8px' }}>
             <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: 15, margin: 0, fontWeight: 500, color: '#333' }}>
@@ -97,7 +97,7 @@ ColumnVisibilityMenu.propTypes = {
   show: PropTypes.bool,
   onToggleMenu: PropTypes.func.isRequired,
   menuRef: PropTypes.oneOfType([
-    PropTypes.func, 
+    PropTypes.func,
     PropTypes.shape({ current: PropTypes.instanceOf(Element) })
   ])
 };

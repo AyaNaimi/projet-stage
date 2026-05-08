@@ -267,7 +267,7 @@ const MatierePremiereList = () => {
                         showFilters={showFilters}
                         toggleFilters={() => setShowFilters(!showFilters)}
                         handleShowFormButtonClick={handleShowFormButtonClick}
-                        heightOffset={{ trueOffset: 388, falseOffset: 338 }}
+                        heightOffset={{ trueOffset: 250, falseOffset: 200 }}
                         FiltreInput={
                             <AnimatePresence>
                                 {showFilters && (
