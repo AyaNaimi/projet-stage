@@ -595,6 +595,7 @@ const ProduitList = () => {
       unite_etiquette: produit.unite_etiquette || "",
       unite_embalage_primaire: produit.unite_embalage_primaire || "",
       unite_embalage_secondaire: produit.unite_embalage_secondaire || "",
+      logoP: produit.logoP || null,
     });
     setSelectedProductsDataRep(
       produit?.prix_produits?.map((prix) => ({

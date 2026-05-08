@@ -23,7 +23,6 @@ import {
   Layers,
   List,
   Text,
-  Type,
   Calendar,
   LineChart,
   Scale,
