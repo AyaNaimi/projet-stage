@@ -60,4 +60,17 @@ class ChargeIndirecteController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    public function deleteSelected(Request $request)
+    {
+        try {
+            $ids = $request->input('ids', []);
+            if (empty($ids)) {
+                return response()->json(['message' => 'Aucun ID fourni'], 400);
+            }
+            ChargeIndirecte::whereIn('id', $ids)->delete();
+            return response()->json(['message' => 'Charges indirectes supprimées avec succès'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

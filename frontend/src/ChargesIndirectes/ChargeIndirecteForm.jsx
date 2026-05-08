@@ -20,6 +20,7 @@ const ChargeIndirecteForm = ({
   handleChange,
   handleSubmit,
   errors,
+  loading = false,
   closeForm,
   formContainerStyle
 }) => {
@@ -101,16 +102,22 @@ const ChargeIndirecteForm = ({
           minHeight: 0
         }}>
           <div style={{ flex: 1 }}>
-            <StyledFormGroup icon={<Tag size={18} />} label="Nom de la Charge" htmlFor="nom">
-              <input
+            <StyledFormGroup icon={<Tag size={18} />} label="Type de charge" htmlFor="nom">
+              <select
                 id="nom"
                 name="nom"
                 value={formData.nom || ''}
                 onChange={handleChange}
                 style={inputStyle}
-                placeholder="Ex: Électricité, Loyer..."
-                className={`form-control styled-input ${errors.nom ? 'is-invalid' : ''}`}
-              />
+                className={`form-select styled-select ${errors.nom ? 'is-invalid' : ''}`}
+              >
+                <option value="">Sélectionner un type...</option>
+                <option value="Électricité">Électricité</option>
+                <option value="Eau">Eau</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Amortissement">Amortissement</option>
+                <option value="Logistique">Logistique</option>
+              </select>
             </StyledFormGroup>
           </div>
         </div>
@@ -131,11 +138,11 @@ const ChargeIndirecteForm = ({
             marginRight: '-0.7%' 
           }}
         >
-          <Tab eventKey="configuration" title={<span><DollarSign className="me-2" size={16} />Montant & Fréquence</span>}>
+          <Tab eventKey="configuration" title={<span><DollarSign className="me-2" size={16} />Montant & Période</span>}>
             <Form onSubmit={handleSubmit} style={{ padding: '0 1rem' }}>
               <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 <div style={{ flex: 1 }}>
-                  <StyledFormGroup icon={<DollarSign size={18} />} label="Montant (DH)" htmlFor="montant">
+                  <StyledFormGroup icon={<DollarSign size={18} />} label="Montant total (DH)" htmlFor="montant">
                     <input
                       id="montant"
                       type="number"
@@ -150,25 +157,23 @@ const ChargeIndirecteForm = ({
                   </StyledFormGroup>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <StyledFormGroup icon={<RefreshCw size={18} />} label="Fréquence" htmlFor="frequence">
-                    <select
+                  <StyledFormGroup icon={<RefreshCw size={18} />} label="Période (mois)" htmlFor="frequence">
+                    <input
                       id="frequence"
+                      type="number"
                       name="frequence"
-                      value={formData.frequence || 'mensuel'}
+                      value={formData.frequence || ''}
                       onChange={handleChange}
                       style={inputStyle}
-                      className="form-select styled-select"
-                    >
-                      <option value="mensuel">Mensuel</option>
-                      <option value="trimestriel">Trimestriel</option>
-                      <option value="annuel">Annuel</option>
-                    </select>
+                      placeholder="Nombre de mois"
+                      className={`form-control styled-input ${errors.frequence ? 'is-invalid' : ''}`}
+                    />
                   </StyledFormGroup>
                 </div>
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
-                <StyledFormGroup icon={<Layers size={18} />} label="Méthode de Répartition" htmlFor="methode_repartition">
+                <StyledFormGroup icon={<Layers size={18} />} label="Méthode de répartition" htmlFor="methode_repartition">
                   <select
                     id="methode_repartition"
                     name="methode_repartition"
@@ -177,16 +182,16 @@ const ChargeIndirecteForm = ({
                     style={inputStyle}
                     className="form-select styled-select"
                   >
-                    <option value="volume">Volume de production</option>
+                    <option value="volume">Volume</option>
                     <option value="quantite">Quantité produite</option>
-                    <option value="temps_machine">Temps machine / MOD</option>
+                    <option value="temps_machine">Temps machine</option>
                   </select>
                 </StyledFormGroup>
               </div>
 
               <div className="d-flex justify-content-center mt-5 mb-5">
-                <Button type="submit" className="btn-primary-custom mx-2">
-                  {formData.id ? 'Modifier' : 'Enregistrer'}
+                <Button type="submit" className="btn-primary-custom mx-2" disabled={loading}>
+                  {loading ? 'Chargement...' : (formData.id ? 'Modifier' : 'Enregistrer')}
                 </Button>
                 <Button type="button" className="btn-secondary-custom mx-2" onClick={closeForm}>
                   Annuler
@@ -195,12 +200,6 @@ const ChargeIndirecteForm = ({
             </Form>
           </Tab>
 
-          <Tab eventKey="info" title={<span><Info className="me-2" size={16} />Informations</span>}>
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-              <Package size={48} style={{ marginBottom: '1rem', opacity: 0.3 }} />
-              <p>Configuration des charges indirectes et de leur clé de répartition.</p>
-            </div>
-          </Tab>
         </Tabs>
       </div>
     </div>

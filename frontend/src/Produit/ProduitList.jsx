@@ -111,13 +111,17 @@ const ProduitList = () => {
     prix_vente: "",
     marque: "Ovotec",
     logoP: "",
-    suCat_id: "",
     reference: "",
     produit_Embalg_S_id: "",
+    type_produit: "P",
     // Ajout des nouveaux champs
     unite_etiquette: "",
     unite_embalage_primaire: "",
     unite_embalage_secondaire: "",
+    grammage: "",
+    rendement: 100,
+    temps_production: "",
+    cout_horaire_mod: "",
   });
   const [errors, setErrors] = useState({
     Code_produit: "",
@@ -538,10 +542,14 @@ const ProduitList = () => {
       suCat_id: "",
       reference: "",
       produit_Embalg_S_id: "",
+      type_produit: "P",
       unite_etiquette: "",
       unite_embalage_primaire: "",
       unite_embalage_secondaire: "",
-      type_produit: "",
+      grammage: "",
+      rendement: 100,
+      temps_production: "",
+      cout_horaire_mod: "",
       produit_Etiq_id: "",
       produit_Embalg_id: "",
       genre: "",
@@ -595,7 +603,6 @@ const ProduitList = () => {
       unite_etiquette: produit.unite_etiquette || "",
       unite_embalage_primaire: produit.unite_embalage_primaire || "",
       unite_embalage_secondaire: produit.unite_embalage_secondaire || "",
-      logoP: produit.logoP || null,
     });
     setSelectedProductsDataRep(
       produit?.prix_produits?.map((prix) => ({
@@ -724,6 +731,10 @@ const ProduitList = () => {
         unite_etiquette: formData.unite_etiquette,
         unite_embalage_primaire: formData.unite_embalage_primaire,
         unite_embalage_secondaire: formData.unite_embalage_secondaire,
+        grammage: formData.grammage,
+        rendement: formData.rendement,
+        temps_production: formData.temps_production,
+        cout_horaire_mod: formData.cout_horaire_mod,
 
         prixProduits: selectedProductsDataRep.map((prix) => ({
           id: prix.id || null,
@@ -814,14 +825,12 @@ const ProduitList = () => {
 
       // Ajout des nouveaux champs
       formDatad.append("unite_etiquette", formData.unite_etiquette || "");
-      formDatad.append(
-        "unite_embalage_primaire",
-        formData.unite_embalage_primaire || "",
-      );
-      formDatad.append(
-        "unite_embalage_secondaire",
-        formData.unite_embalage_secondaire || "",
-      );
+      formDatad.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
+      formDatad.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
+      formDatad.append("grammage", formData.grammage || "");
+      formDatad.append("rendement", formData.rendement || 100);
+      formDatad.append("temps_production", formData.temps_production || "");
+      formDatad.append("cout_horaire_mod", formData.cout_horaire_mod || "");
 
       if (formData.logoP) {
         formDatad.append("logoP", formData.logoP);

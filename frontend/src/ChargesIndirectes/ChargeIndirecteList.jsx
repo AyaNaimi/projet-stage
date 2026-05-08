@@ -5,7 +5,7 @@ import TableMui from "../components/TableMui";
 import { useOpen } from "../Acceuil/OpenProvider";
 import { useHeader } from "../Acceuil/HeaderContext";
 import { Edit3, Trash2 } from "lucide-react";
-import FamilleTypeCarousels from "../components/FamilleTypeCarousels";
+import ProductCarousel from "../components/ProductCarousel";
 import AddButton from "../components/AddButton";
 import FilterToggleButton from "../components/FilterToggleButton";
 import ChargeIndirecteForm from "./ChargeIndirecteForm";
@@ -19,6 +19,8 @@ const ChargeIndirecteList = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [produits, setProduits] = useState([]);
+  const [carouselSelectedProductId, setCarouselSelectedProductId] = useState('tout');
   const [formContainerStyle, setFormContainerStyle] = useState({
     right: "-100%",
   });
@@ -31,10 +33,11 @@ const ChargeIndirecteList = () => {
     id: null,
     nom: "",
     montant: "",
-    frequence: "mensuel",
+    frequence: "",
     methode_repartition: "volume"
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const { dynamicStyles } = useOpen();
   const { setTitle, searchQuery } = useHeader();
@@ -45,10 +48,15 @@ const ChargeIndirecteList = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axiosInstance.get("/api/charges-indirectes");
-      setCharges(Array.isArray(response.data) ? response.data : []);
+      const [chargesRes, prodRes] = await Promise.all([
+        axiosInstance.get("/api/charges-indirectes").catch(() => ({ data: [] })),
+        axiosInstance.get("/api/produits").catch(() => ({ data: [] }))
+      ]);
+      setCharges(Array.isArray(chargesRes.data) ? chargesRes.data : []);
+      const prodData = prodRes.data?.produit || prodRes.data;
+      setProduits(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
-      console.error("Error fetching charges:", error);
+      console.error("Error fetching data:", error);
     }
   };
 
@@ -141,6 +149,7 @@ const ChargeIndirecteList = () => {
     const url = formData.id ? `/api/charges-indirectes/${formData.id}` : `/api/charges-indirectes`;
     const method = formData.id ? "put" : "post";
 
+    setLoading(true);
     try {
       await axiosInstance[method](url, formData);
       fetchData();
@@ -152,6 +161,8 @@ const ChargeIndirecteList = () => {
       } else {
         Swal.fire("Erreur", "Une erreur est survenue lors de l'enregistrement.", "error");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,22 +174,41 @@ const ChargeIndirecteList = () => {
   const chunks = [[{ id: 'tout', categorie: 'Toutes les charges' }]];
   const chunksSucat = [[{ id: 'tout', sous_categorie: 'Tous les types' }]];
 
-  const noop = () => {};
+  const handleDeleteSelected = () => {
+    if (selectedItems.length === 0) return;
+    
+    Swal.fire({
+      title: "Supprimer la sélection ?",
+      text: `Voulez-vous supprimer les ${selectedItems.length} charges sélectionnées ?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await Promise.all(selectedItems.map(id => 
+            axiosInstance.delete(`/api/charges-indirectes/${id}`)
+          ));
+          fetchData();
+          setSelectedItems([]);
+          Swal.fire("Supprimé !", "La sélection a été supprimée.", "success");
+        } catch (error) {
+          Swal.fire("Erreur", "Une erreur est survenue.", "error");
+        }
+      }
+    });
+  };
 
   return (
     <Box sx={{ ...dynamicStyles }}>
       <Box component="main" sx={{ flexGrow: 1, p: 3, marginTop: '60px' }}>
-        <FamilleTypeCarousels
-          activeIndex={0}
-          handleSelect={noop}
-          chunks={chunks}
-          selectedCategory={'tout'}
-          handleCategoryFilterChange={noop}
-          activeIndexSuCat={0}
-          handleSelectSousCat={noop}
-          chunksSucat={chunksSucat}
-          sousCatFiltre={'tout'}
-          handleSousCategoryFilterChange={noop}
+        <ProductCarousel
+          products={produits}
+          selectedProductId={carouselSelectedProductId}
+          onProductSelect={(id) => setCarouselSelectedProductId(id)}
         />
 
         <div
@@ -191,6 +221,7 @@ const ChargeIndirecteList = () => {
             handleChange={handleChange}
             handleSubmit={handleSubmit}
             errors={errors}
+            loading={loading}
             closeForm={closeForm}
             formContainerStyle={formContainerStyle}
           />
@@ -216,57 +247,22 @@ const ChargeIndirecteList = () => {
                   />
                 )
               },
-              { id: 'nom', label: 'DÉSIGNATION', minWidth: 200 },
+              { id: 'nom', label: 'TYPE', minWidth: 200 },
               { id: 'montant', label: 'MONTANT', minWidth: 120, render: (row) => `${row.montant} DH` },
-              { id: 'frequence', label: 'FRÉQUENCE', minWidth: 120 },
+              { id: 'frequence', label: 'PÉRIODE', minWidth: 120, render: (row) => `${row.frequence} mois` },
               { 
                 id: 'methode_repartition', 
-                label: 'RÉPARTITION', 
+                label: 'MÉTHODE', 
                 minWidth: 200,
                 render: (row) => {
                   const methods = {
-                    volume: 'Volume de production',
+                    volume: 'Volume',
                     quantite: 'Quantité produite',
-                    temps_machine: 'Temps machine / MOD'
+                    temps_machine: 'Temps machine'
                   };
                   return methods[row.methode_repartition] || row.methode_repartition;
                 }
               },
-              {
-                id: 'actions',
-                label: 'ACTIONS',
-                minWidth: 150,
-                render: (row) => (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => handleEdit(row)}
-                      style={{
-                        background: '#00afaa',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 10px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Edit3 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(row.id)}
-                      style={{
-                        background: '#ef4444',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 10px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )
-              }
             ]}
             rows={filteredCharges}
             page={page}
@@ -274,13 +270,16 @@ const ChargeIndirecteList = () => {
             handleChangePage={(e, newPage) => setPage(newPage)}
             handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
             produitsFiltres={filteredCharges}
-            addButtonText="Ajouter Charge"
+            hasActions={true}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+            addButtonText="Ajouter"
             tableContainerStyle={{ 
               ...tableContainerStyle, 
               transition: 'all 0.3s ease' 
             }}
             selectedItems={selectedItems}
-            handleDeleteSelected={noop}
+            handleDeleteSelected={handleDeleteSelected}
             AddButton={AddButton}
             FilterToggleButton={FilterToggleButton}
             showFilters={showFilters}

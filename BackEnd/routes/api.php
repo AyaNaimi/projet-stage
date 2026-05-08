@@ -669,6 +669,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post("/register", [AuthController::class, 'register']);
     Route::get("/user", [AuthController::class, 'user']);
+    Route::delete('matiere-premieres/delete-selected', [MatierePremiereController::class, 'deleteSelected']);
     Route::apiResource('matiere-premieres', MatierePremiereController::class);
     Route::apiResource('famille-matieres', FamilleMatiereController::class);
     Route::apiResource('type-matieres', TypeMatiereController::class);
@@ -1257,6 +1258,8 @@ Route::apiResource('horaire-exceptionnel', HoraireExceptionnelController::class)
 // Cost Calculation Module Routes
 Route::get('recettes/produit/{produitId}', [RecetteController::class, 'index']);
 Route::post('recettes/sync/{produitId}', [RecetteController::class, 'sync']);
+Route::delete('recettes/delete-selected', [RecetteController::class, 'deleteSelected']);
+Route::delete('charges-indirectes/delete-selected', [ChargeIndirecteController::class, 'deleteSelected']);
 Route::apiResource('recettes', RecetteController::class)->except(['index']);
 Route::apiResource('charges-indirectes', ChargeIndirecteController::class);
 });

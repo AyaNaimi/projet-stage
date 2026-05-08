@@ -2,22 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categorie;
-use App\Models\PrixProduit;
 use App\Models\Produit;
+use App\Models\categorie;
+use App\Models\PrixProduit;
+use App\Models\Calibre;
+use App\Models\StockProduit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class ProduitController extends Controller
 {
     public function index()
     {
         try {
-            $produits = Produit::with(
+            $produits = Produit::with([
                 'categorie',
                 'calibre',
                 'user',
@@ -29,18 +32,21 @@ class ProduitController extends Controller
                 'EmbalgeS',
                 'stockProduit',
                 'recettes.matierePremiere'
-            )->orderBy('id', 'desc')->get()
+            ])->orderBy('id', 'desc')->get()
                 ->map(function ($produit) {
                     $data = $produit->toArray();
                     $data['logoP'] = $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null;
                     return $data;
                 });
 
+            $categories = categorie::where('parent_id', 0)->get();
+
             return response()->json([
                 'message' => 'Liste des produits recuperee avec succes',
                 'produit' => $produits,
                 'count' => Produit::count(),
                 'AllProduit' => Produit::all(),
+                'categories' => $categories
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -49,12 +55,9 @@ class ProduitController extends Controller
 
     public function store(Request $request)
     {
-        if (!Gate::allows('create_product')) {
+        if (!Gate::allows('add_product') && !Gate::allows('create_product')) {
             abort(403, 'Vous n\'avez pas l\'autorisation de creer un produit.');
         }
-
-        Log::info('debut de store');
-        Log::info('request recu dans store', $request->all());
 
         try {
             $validator = Validator::make($request->all(), [
@@ -66,19 +69,16 @@ class ProduitController extends Controller
                 'seuil_alerte' => 'nullable',
                 'stock_initial' => 'nullable',
                 'etat_produit' => 'nullable',
-                'marque' => 'nullable',
-                'logoP' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
                 'categorie_id' => 'required',
-                'suCat_id' => 'nullable',
                 'genre' => 'nullable',
                 'type' => 'nullable',
                 'Dvie' => 'nullable',
                 'reference' => 'nullable',
                 'tva' => 'nullable',
                 'prixProduits' => 'nullable|array',
-                'prixProduits.*.dateDebut' => 'nullable',
-                'prixProduits.*.dateFin' => 'nullable',
-                'prixProduits.*.prixProduit' => 'nullable',
+                'prixProduits.*.dateDebut' => 'nullable|date',
+                'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
+                'prixProduits.*.prixProduit' => 'nullable|numeric|min:0',
                 'prixProduits.*.typeQte' => 'nullable',
                 'prixProduits.*.Unite' => 'nullable',
                 'unite_etiquette' => 'nullable',
@@ -90,76 +90,62 @@ class ProduitController extends Controller
                 return response()->json(['error' => $validator->errors()], 400);
             }
 
-            $produit = new Produit();
-            $produit->Code_produit = $request->input('Code_produit');
-            $produit->designation = $request->input('designation');
-            $produit->calibre_id = $request->input('calibre_id');
-            $produit->type_quantite = $request->input('type_quantite');
-            $produit->unite = $request->input('unite');
-            $produit->seuil_alerte = $request->input('seuil_alerte');
-            $produit->stock_initial = $request->input('stock_initial');
-            $produit->etat_produit = $request->input('etat_produit');
-            $produit->marque = $request->input('marque');
-            $produit->categorie_id = $request->input('categorie_id');
-            $produit->prix_vente = $request->input('prix_vente');
-            $produit->suCat_id = $request->input('suCat_id');
-            $produit->genre = $request->input('genre');
-            $produit->tva = $request->input('tva');
-            $produit->type = $request->input('type');
-            $produit->Dvie = $request->input('Dvie');
-            $produit->reference = $request->input('reference');
-            $produit->produit_Etiq_id = $request->input('produit_Etiq_id') ?: null;
-            $produit->produit_Embalg_id = $request->input('produit_Embalg_id') ?: null;
-            $produit->produit_Embalg_S_id = $request->input('produit_Embalg_S_id') ?: null;
-            $produit->unite_etiquette = $request->input('unite_etiquette');
-            $produit->unite_embalage_primaire = $request->input('unite_embalage_primaire');
-            $produit->unite_embalage_secondaire = $request->input('unite_embalage_secondaire');
-            $produit->user_id = Auth::id();
+            $data = $request->except(['prixProduits', 'lines']);
+            $data['user_id'] = Auth::id();
+            $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
+            $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
+            $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
 
             if ($request->hasFile('logoP')) {
                 $photoPath = $request->file('logoP')->store('logop', 'public');
-                $produit->logoP = 'storage/' . $photoPath;
+                $data['logoP'] = 'storage/' . $photoPath;
             }
 
-            $produit->save();
+            $produit = Produit::create($data);
 
             if ($request->has('lines')) {
-                $lines = is_string($request->input('lines'))
-                    ? json_decode($request->input('lines'), true)
-                    : $request->input('lines');
+                $linesInput = $request->input('lines');
+                $lines = is_string($linesInput) 
+                    ? json_decode($linesInput, true) 
+                    : $linesInput;
+                
+                if (is_array($lines)) {
+                    foreach ($lines as $line) {
+                        if (!empty($line['matiere_premiere_id'])) {
+                            $produit->recettes()->create([
+                                'matiere_premiere_id' => $line['matiere_premiere_id'],
+                                'quantite' => $line['quantite'] ?? 0,
+                                'perte' => $line['perte'] ?? 0,
+                                'unite' => $line['unite'] ?? null,
+                                'quantite_reelle' => $line['quantite_reelle'] ?? null,
+                            ]);
+                        }
+                    }
+                }
+            }
 
-                foreach ($lines as $line) {
-                    if (!empty($line['matiere_premiere_id'])) {
-                        $produit->recettes()->create([
-                            'matiere_premiere_id' => $line['matiere_premiere_id'],
-                            'quantite' => $line['quantite'] ?? 0,
-                            'perte' => $line['perte'] ?? 0,
+            if ($request->has('prixProduits')) {
+                $prixInput = $request->input('prixProduits');
+                if (is_array($prixInput)) {
+                    foreach ($prixInput as $prix) {
+                        $produit->prixProduits()->create([
+                            'dateDebut' => $prix['dateDebut'] ?? null,
+                            'dateFin' => $prix['dateFin'] ?? null,
+                            'prixProduit' => $prix['prixProduit'] ?? null,
+                            'typeQte' => $prix['typeQte'] ?? null,
+                            'Unite' => $prix['Unite'] ?? null,
                         ]);
                     }
                 }
             }
 
-            $prixProduits = $request->input('prixProduits');
-            if (is_array($prixProduits)) {
-                foreach ($prixProduits as $prix) {
-                    $produit->prixProduits()->create([
-                        'produit_id' => $produit->id,
-                        'dateDebut' => $prix['dateDebut'] ?? null,
-                        'dateFin' => $prix['dateFin'] ?? null,
-                        'prixProduit' => $prix['prixProduit'] ?? null,
-                        'typeQte' => $prix['typeQte'] ?? null,
-                        'Unite' => $prix['Unite'] ?? null,
-                    ]);
-                }
-            }
-
             return response()->json([
-                'message' => 'Produit ajoute avec succes',
+                'message' => 'Produit ajouté avec succès',
                 'produit' => array_merge(
                     $produit->toArray(),
                     ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null]
-                ),
-            ], 200);
+                )
+            ], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -197,7 +183,7 @@ class ProduitController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors(), $request->all()], 400);
+                return response()->json(['error' => $validator->errors()], 400);
             }
 
             $produit = Produit::findOrFail($id);
@@ -205,50 +191,58 @@ class ProduitController extends Controller
             $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
             $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
             $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
-            $data['user_id'] = Auth::id();
+            $data['user_id'] = Auth::id() ?: $produit->user_id;
 
             $produit->update($data);
 
             if ($request->has('lines')) {
-                $produit->recettes()->delete();
-                $lines = is_string($request->input('lines'))
-                    ? json_decode($request->input('lines'), true)
-                    : $request->input('lines');
-
-                foreach ($lines as $line) {
-                    if (!empty($line['matiere_premiere_id'])) {
-                        $produit->recettes()->create([
-                            'matiere_premiere_id' => $line['matiere_premiere_id'],
-                            'quantite' => $line['quantite'] ?? 0,
-                            'perte' => $line['perte'] ?? 0,
-                        ]);
+                $produit->recettes()->delete(); 
+                $linesInput = $request->input('lines');
+                $lines = is_string($linesInput) 
+                    ? json_decode($linesInput, true) 
+                    : $linesInput;
+                
+                if (is_array($lines)) {
+                    foreach ($lines as $line) {
+                        if (!empty($line['matiere_premiere_id'])) {
+                            $produit->recettes()->create([
+                                'matiere_premiere_id' => $line['matiere_premiere_id'],
+                                'quantite' => $line['quantite'] ?? 0,
+                                'perte' => $line['perte'] ?? 0,
+                                'unite' => $line['unite'] ?? null,
+                                'quantite_reelle' => $line['quantite_reelle'] ?? null,
+                            ]);
+                        }
                     }
                 }
             }
 
             if ($request->has('prixProduits')) {
-                foreach ($request->input('prixProduits') as $prix) {
-                    if (isset($prix['id']) && $prix['id']) {
-                        $prixProduit = PrixProduit::where('id', $prix['id'])
-                            ->where('produit_id', $produit->id)
-                            ->firstOrFail();
+                $prixInput = $request->input('prixProduits');
+                if (is_array($prixInput)) {
+                    foreach ($prixInput as $prix) {
+                        if (isset($prix['id']) && $prix['id']) {
+                            $prixProduit = PrixProduit::where('id', $prix['id'])
+                                ->where('produit_id', $produit->id)
+                                ->firstOrFail();
 
-                        $prixProduit->update([
-                            'dateDebut' => $prix['dateDebut'] ?? null,
-                            'dateFin' => $prix['dateFin'] ?? null,
-                            'prixProduit' => $prix['prixProduit'] ?? null,
-                            'typeQte' => $prix['typeQte'] ?? null,
-                            'Unite' => $prix['Unite'] ?? null,
-                        ]);
-                    } else {
-                        $produit->prixProduits()->create([
-                            'produit_id' => $produit->id,
-                            'dateDebut' => $prix['dateDebut'] ?? null,
-                            'dateFin' => $prix['dateFin'] ?? null,
-                            'prixProduit' => $prix['prixProduit'] ?? null,
-                            'typeQte' => $prix['typeQte'] ?? null,
-                            'Unite' => $prix['Unite'] ?? null,
-                        ]);
+                            $prixProduit->update([
+                                'dateDebut' => $prix['dateDebut'] ?? null,
+                                'dateFin' => $prix['dateFin'] ?? null,
+                                'prixProduit' => $prix['prixProduit'] ?? null,
+                                'typeQte' => $prix['typeQte'] ?? null,
+                                'Unite' => $prix['Unite'] ?? null,
+                            ]);
+                        } else {
+                            $produit->prixProduits()->create([
+                                'produit_id' => $produit->id,
+                                'dateDebut' => $prix['dateDebut'] ?? null,
+                                'dateFin' => $prix['dateFin'] ?? null,
+                                'prixProduit' => $prix['prixProduit'] ?? null,
+                                'typeQte' => $prix['typeQte'] ?? null,
+                                'Unite' => $prix['Unite'] ?? null,
+                            ]);
+                        }
                     }
                 }
             }
@@ -370,15 +364,13 @@ class ProduitController extends Controller
         try {
             $prixProduit = PrixProduit::findOrFail($id);
             $prixProduit->delete();
-            return response()->json(['message' => 'Produit supprime avec succes'], 200);
+            return response()->json(['message' => 'Prix supprimé avec succès'], 200);
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->errorInfo[1] === 1451) {
-                return response()->json([
-                    'error' => 'Impossible de supprimer un produit car il est utilise dans d\'autres plateformes.',
-                ], 400);
+                return response()->json(['error' => 'Impossible de supprimer ce prix car il est lié à d\'autres enregistrements.'], 400);
+            } else {
+                return response()->json(['error' => $e->getMessage()], 500);
             }
-
-            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -390,7 +382,11 @@ class ProduitController extends Controller
                 ->get()
                 ->map(function ($produit) {
                     $stock = $produit->stockProduit->first();
-                    $quantite = ($stock->qte_kg_litre > 0) ? $stock->qte_kg_litre : $stock->qte_unite;
+                    if ($stock) {
+                        $quantite = ($stock->qte_kg_litre > 0) ? $stock->qte_kg_litre : $stock->qte_unite;
+                    } else {
+                        $quantite = 0;
+                    }
 
                     return array_merge($produit->toArray(), [
                         'stock' => $quantite,
@@ -404,5 +400,26 @@ class ProduitController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        $produits = Produit::where('designation', 'like', "%$query%")
+            ->orWhere('Code_produit', 'like', "%$query%")
+            ->get();
+        return response()->json(['produits' => $produits]);
+    }
+
+    public function byCategorie($categorieId)
+    {
+        $produits = Produit::where('categorie_id', $categorieId)->get();
+        return response()->json(['produits' => $produits]);
+    }
+
+    public function chartProduitData()
+    {
+        $data = Produit::select('designation', 'stock_initial')->take(10)->get();
+        return response()->json($data);
     }
 }

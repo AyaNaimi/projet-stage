@@ -7,12 +7,12 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
   const { permissions } = useAuth();
 
   // Vérifier si l'utilisateur a la permission requise
-  const hasPermission =  true;
+  const hasPermission = true;
 
   return (
     <div
       style={{
-        width: "100%",
+        width: "auto",
         display: "flex",
         justifyContent: align === "right" ? "flex-end" : "flex-start",
         alignItems: "center",
@@ -27,14 +27,20 @@ const AddButton = ({ onClick, text, align = "left", filtre, requiredPermission }
             backgroundColor: hasPermission ? "#00796b" : "#b0bec5", // Gris si désactivé
             color: "white",
             border: "none",
-            borderRadius: "4px",
-            padding: "8px 12px",
+            borderRadius: "6px",
+            padding: "6px 60px",
+            fontSize: "15px",
+            fontWeight: "600",
+            minWidth: "300px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "8px",
+            gap: "12px",
             cursor: hasPermission ? "pointer" : "not-allowed", // Change le curseur si désactivé
             margin: "5px",
+
+            boxShadow: "0 4px 6px rgba(0,0,0,0.15)",
+            transition: "all 0.3s ease",
           }}
           className="AjouteBotton"
         >
