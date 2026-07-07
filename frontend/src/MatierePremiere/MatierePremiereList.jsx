@@ -37,6 +37,9 @@ const MatierePremiereList = () => {
         historiques: []
     });
     const [errors, setErrors] = useState({});
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importResult, setImportResult] = useState(null);
+    const [importing, setImporting] = useState(false);
     const [formContainerStyle, setFormContainerStyle] = useState({
         right: "-100%",
     });
@@ -181,6 +184,33 @@ const MatierePremiereList = () => {
         }
     };
 
+    const fileInputRef = React.useRef(null);
+    const handleImportClick = () => {
+        setImportResult(null);
+        setShowImportModal(true);
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const data = new FormData();
+        data.append('file', file);
+        setImporting(true);
+        try {
+            const resp = await axiosInstance.post('/api/matiere-premieres/import-csv', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            fetchMatieres();
+            setImportResult({ imported: resp.data.imported, updated: resp.data.updated });
+        } catch (err) {
+            const payload = err?.response?.data || { message: 'Échec de l\'import CSV' };
+            setImportResult({ error: payload });
+        } finally {
+            setImporting(false);
+            e.target.value = null;
+        }
+    };
+
     const handleSelectAllChange = (e) => {
         if (e.target.checked) {
             setSelectedItems(filteredMatieres.map(m => m.id));
@@ -240,6 +270,74 @@ const MatierePremiereList = () => {
                         formContainerStyle={formContainerStyle}
                         fetchFournisseurs={fetchFournisseurs}
                     />
+                    <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                        <button onClick={handleShowFormButtonClick} className="btn btn-primary" style={{ borderRadius: 6 }}>
+                            Ajouter
+                        </button>
+                        <button onClick={handleImportClick} className="btn btn-secondary" style={{ borderRadius: 6 }}>
+                            Importer CSV
+                        </button>
+                    </div>
+
+                    {/* Import Modal */}
+                    {showImportModal && (
+                        <div className="modal show" style={{ display: 'block', background: 'rgba(0,0,0,0.4)' }}>
+                            <div className="modal-dialog modal-lg" role="document">
+                                <div className="modal-content">
+                                    <div className="modal-header">
+                                        <h5 className="modal-title">Importer Matières Premières (CSV)</h5>
+                                        <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowImportModal(false)} />
+                                    </div>
+                                    <div className="modal-body">
+                                        <p>Format attendu : <code>nom,prix_achat,unite,fournisseur</code></p>
+                                        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                            <button className="btn btn-outline-primary" onClick={() => {
+                                                const sample = 'nom,prix_achat,unite,fournisseur\nFarine,12.50,kg,Avril Supply\nSucre,8.30,kg,SweetCo\n';
+                                                const blob = new Blob([sample], { type: 'text/csv;charset=utf-8;' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'matiere_template.csv';
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                a.remove();
+                                                URL.revokeObjectURL(url);
+                                            }}>Télécharger le template</button>
+                                            <label className="btn btn-primary mb-0" style={{ cursor: 'pointer' }}>
+                                                Choisir fichier CSV
+                                                <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+                                            </label>
+                                        </div>
+
+                                        {importing && <div>Import en cours...</div>}
+
+                                        {importResult && (
+                                            <div style={{ marginTop: 12 }}>
+                                                {importResult.error ? (
+                                                    <div className="alert alert-danger">
+                                                        <strong>Erreur:</strong> {typeof importResult.error === 'string' ? importResult.error : (importResult.error.message || JSON.stringify(importResult.error))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="alert alert-success">
+                                                        Importés: <strong>{importResult.imported}</strong>, Mis à jour: <strong>{importResult.updated}</strong>
+                                                        {importResult.skipped ? (
+                                                            <div style={{ marginTop: 8 }}>
+                                                                Lignes ignorées: <strong>{importResult.skipped}</strong> — <a href={importResult.log_url} target="_blank" rel="noreferrer">Télécharger le rapport</a>
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" onClick={() => setShowImportModal(false)}>Fermer</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <TableMui
                         columns={[

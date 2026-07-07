@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useOpen } from "./OpenProvider";
 import { 
   Card, 
   CardContent, 
@@ -241,15 +242,13 @@ const Dashboard = () => {
     </Card>
   );
 
+  const { dynamicStyles } = useOpen();
+
   return (
     <ThemeProvider theme={createTheme()}>
       <Box sx={{
-        position: 'absolute',
-        top: '0px',
-        left: '220px',
-        width: '90%',
-        backgroundColor: '#f8fafc',
-        minHeight: '100vh'
+        ...dynamicStyles,
+        backgroundColor: '#f8fafc'
       }}>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Toolbar />

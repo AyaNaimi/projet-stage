@@ -1,307 +1,373 @@
-import React from 'react';
-import { Form, Button, Tab, Tabs } from 'react-bootstrap';
-import {
-  Tag,
-  Barcode,
-  Plus,
-  Layers,
-  List,
-  Info,
-  Package,
-} from 'lucide-react';
-import TableForms from '../etat/TableForms';
-
-// Extracted outside to avoid remounting on every render
-const StyledFormGroup = React.memo(({ icon, label, htmlFor, children }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
-    <label htmlFor={htmlFor} style={{ fontWeight: 500, color: '#4b5563', fontSize: '0.875rem ', marginBottom: 2, display: 'flex', alignItems: 'center' }}>
-      <span style={{ marginRight: 6, color: '#4b5563', fontSize: 16 }}>
-        {icon}
-      </span>
-      {label}
-    </label>
-    {children}
-  </div>
-));
+import React from "react";
+import { Form, Button } from "react-bootstrap";
+import { Tag, Barcode } from "lucide-react";
+import { width } from "@mui/system";
 
 const RecetteForm = ({
+  show,
   formData,
   setFormData,
-  handleChange,
   handleSubmit,
-  errors,
-  loading = false,
-  matierePremieres,
-  produits = [],
+  loading,
+  matierePremieres = [],
   closeForm,
-  formContainerStyle
+  formContainerStyle,
 }) => {
-  const [tabKey, setTabKey] = React.useState('composition');
 
-  // Common input style
+
+
+  if (!show) {
+    return null;
+  }
+
+
   const inputStyle = {
-    borderRadius: '0.5rem',
-    border: '1px solid #d1d5db',
-    padding: '0.6rem 1rem',
-    fontSize: 15,
-    background: '#fff',
-    color: '#000',
+    borderRadius: "0.5rem",
+    border: "1px solid #d1d5db",
+    padding: "0.6rem 1rem",
+    fontSize: "15px",
+    background: "#fff",
+    width:"100%",
   };
 
-  return (
-    <div style={{ marginTop: "45px" }}>
-      {/* Add custom CSS for placeholder styling */}
-      <style>
-        {`
-          .styled-input::placeholder {
-            color: #9ca3af !important;
-            opacity: 1 !important;
-            font-size: 15px !important;
-          }
-          
-          .styled-select {
-            color: #000 !important;
-          }
-          
-          .styled-select option:first-child {
-            color: #9ca3af !important;
-          }
-          
-          .btn-primary-custom {
-            background-color: #00afaa !important;
-            color: #fff !important;
-            border-radius: 0.375rem !important;
-            font-weight: 500 !important;
-            padding: 0.5rem 3rem !important;
-            border: none !important;
-            transition: background-color 0.15s;
-          }
-          .btn-primary-custom:hover:not(:disabled) {
-            background-color: #009691 !important;
-          }
-          .btn-secondary-custom {
-            background-color: gray !important;
-            color: #fff !important;
-            border-radius: 0.375rem !important;
-            font-weight: 500 !important;
-            padding: 0.5rem 3rem !important;
-            border: none !important;
-            transition: background-color 0.15s;
-          }
-          .btn-secondary-custom:hover:not(:disabled) {
-            background-color: #4b5563 !important;
-          }
 
-          /* Red border when invalid */
-          .is-invalid {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.1);
-          }
-        `}
-      </style>
+
+  const handleChange = (index, field, value) => {
+    const updatedRecettes = [...(formData.recette || [])];
+  
+    updatedRecettes[index] = {
+      ...updatedRecettes[index],
+      [field]: value,
+    };
+  
+    const quantite =
+      parseFloat(updatedRecettes[index].quantite) || 0;
+  
+    const perte =
+      parseFloat(updatedRecettes[index].perte) || 0;
+  
+    updatedRecettes[index].quantite_reelle = (
+      quantite +
+      (quantite * perte) / 100
+    ).toFixed(2);
+  
+    setFormData((prev) => ({
+      ...prev,
+      recette: updatedRecettes,
+    }));
+  };
+
+  
+
+  return (
+    <div
+      id="formContainerunique"
+      style={{
+        ...formContainerStyle,
+
+        position: "fixed",
+        //top: "90px",
+        bottom:"20px",
+
+        right: show ? 0 : "-100%",
+
+        width: "42%",
+        height: "62vh",
+
+        overflowY: "auto",
+
+        background: "#fff",
+
+        padding: "18px",
+
+        borderRadius: "16px 0 0 16px",
+
+        boxShadow:
+          "-5px 0 20px rgba(0,0,0,0.08)",
+
+        zIndex: 999,
+
+        transition: "all 0.3s ease",
+      }}
+    >
+
+
 
       <div
-        id="formContainerunique"
-        style={{ 
-          ...formContainerStyle, 
-          marginTop: '-0px', 
-          height: `calc(99.6vh - 300px)`, 
-          overflow: 'auto',
-          zIndex: 1050 
+        style={{
+          marginBottom: "25px",
         }}
       >
-        {/* Styled card/cadre for top section, matching ProduitForm */}
-        <div style={{
-          background: '#fff',
-          borderRadius: '1rem',
-          padding: '0.7rem 2rem',
-          marginBottom: '0.7rem',
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '1.5rem',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          minHeight: 0
-        }}>
-          {/* Main info section */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', gap: '1.5rem', width: '100%' }}>
-              <div style={{ flex: 1 }}>
-                <StyledFormGroup icon={<Tag size={18} />} label="Sélection du Produit" htmlFor="id">
-                  {formData.id ? (
-                    <input
-                      id="designation"
-                      name="designation"
-                      value={formData.designation || ''}
-                      readOnly
-                      style={{ ...inputStyle, backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                      className="form-control styled-input"
-                    />
-                  ) : (
-                    <select
-                      id="id"
-                      name="id"
-                      value={formData.id || ''}
-                      onChange={(e) => {
-                        const prodId = parseInt(e.target.value);
-                        const selectedProd = (produits || []).find(p => p.id === prodId);
-                        if (selectedProd) {
-                          setFormData({
-                            ...selectedProd,
-                            recette: (selectedProd.recettes || []).map(r => ({
-                              id: r.id,
-                              matiere_premiere_id: r.matiere_premiere_id,
-                              quantite: r.quantite || 0,
-                              perte: r.perte || 0,
-                              unite: r.unite || r.matiere_premiere?.unite || 'K',
-                              quantite_reelle: r.quantite_reelle || (parseFloat(r.quantite || 0) * (1 + parseFloat(r.perte || 0) / 100)).toFixed(3)
-                            })) || []
-                          });
-                        }
-                      }}
-                      style={inputStyle}
-                      className="form-select styled-input"
+        <h4
+          style={{
+            fontWeight: 700,
+            color: "#0f172a",
+          }}
+        >
+          Composition de la recette
+        </h4>
+      </div>
+
+
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection:"column",
+          gap: "15px",
+          marginBottom: "25px",
+        }}
+      >
+
+
+        <div style={{ flex: 1 }}>
+          <label
+            style={{
+              fontWeight: 600,
+              marginBottom: "8px",
+              display: "block",
+            }}
+          >
+            <Tag size={16} /> Produit
+          </label>
+
+          <input
+            type="text"
+            className="form-control"
+            value={formData.designation || ""}
+            readOnly
+            style={{
+              ...inputStyle,
+              background: "#f3f4f6",
+            }}
+          />
+        </div>
+
+       
+
+        <div style={{ flex: 1 }}>
+          <label
+            style={{
+              fontWeight: 600,
+              marginBottom: "8px",
+              display: "block",
+            }}
+          >
+            <Barcode size={16} /> Code Produit
+          </label>
+
+          <input
+            type="text"
+            className="form-control"
+            value={
+              formData.Code_produit || ""
+            }
+            readOnly
+            style={{
+              ...inputStyle,
+              background: "#f3f4f6",
+            }}
+          />
+        </div>
+      </div>
+
+      <Form onSubmit={handleSubmit}>
+        
+        {(formData.recette || []).map((line, index) => (
+          <div
+            key={index}
+            style={{
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              padding: "15px",
+              marginBottom: "15px",
+              background: "#fafafa",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "15px",
+              }}
+            >
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  Matière première
+                </label>
+        
+                <select
+                  className="form-select"
+                  style={inputStyle}
+                  value={line.matiere_premiere_id || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      index,
+                      "matiere_premiere_id",
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="">
+                    Sélectionner
+                  </option>
+        
+                  {matierePremieres.map((m) => (
+                    <option
+                      key={m.id}
+                      value={m.id}
                     >
-                      <option value="">Sélectionner un produit</option>
-                      {(produits || []).map(p => (
-                        <option key={p.id} value={p.id}>{p.designation}</option>
-                      ))}
-                    </select>
-                  )}
-                </StyledFormGroup>
+                      {m.nom || m.designation}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div style={{ flex: 1 }}>
-                <StyledFormGroup icon={<Barcode size={18} />} label="Code Référence" htmlFor="Code_produit">
-                  <input
-                    id="Code_produit"
-                    name="Code_produit"
-                    value={formData.Code_produit || ''}
-                    readOnly
-                    style={{ ...inputStyle, backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                    className="form-control styled-input"
-                  />
-                </StyledFormGroup>
+        
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  Quantité
+                </label>
+        
+                <input
+                  type="number"
+                  className="form-control"
+                  style={inputStyle}
+                  value={line.quantite || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      index,
+                      "quantite",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+        
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  Unité
+                </label>
+        
+                <input
+                  type="text"
+                  className="form-control"
+                  style={inputStyle}
+                  value={line.unite || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      index,
+                      "unite",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+        
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  Perte (%)
+                </label>
+        
+                <input
+                  type="number"
+                  className="form-control"
+                  style={inputStyle}
+                  value={line.perte || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      index,
+                      "perte",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+        
+              <div>
+                <label
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                    display: "block",
+                  }}
+                >
+                  Quantité réelle
+                </label>
+        
+                <input
+                  type="text"
+                  className="form-control"
+                  readOnly
+                  style={{
+                    ...inputStyle,
+                    background: "#f3f4f6",
+                  }}
+                  value={line.quantite_reelle || ""}
+                />
               </div>
             </div>
           </div>
-        </div>
+        ))}
 
-        {/* Tabs section matching ProduitForm */}
-        <Tabs
-          id="recette-form-tabs"
-          activeKey={tabKey}
-          onSelect={(k) => setTabKey(k)}
-          className="mb-4 nav-tabs"
-          style={{ 
-            justifyContent: 'center', 
-            position: 'sticky', 
-            top: '-1%', 
-            backgroundColor: '#fff', 
-            zIndex: 100, 
-            flexShrink: 0, 
-            marginLeft: '-0.5%', 
-            marginRight: '-0.7%' 
+        <div
+          style={{
+            marginTop: "35px",
+            textAlign: "center",
           }}
         >
-          <Tab eventKey="composition" title={<span><List className="me-2" size={16} />Composition de la Recette</span>}>
-            <Form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', padding: '0 1rem' }}>
-              <div style={{ width: '100%', marginBottom: '2rem' }}>
-                <TableForms
-                  title={"Matières Premières & Ingrédients"}
-                  addButtonText={"Ajouter matière"}
-                  items={formData.recette || []}
-                  onAddItem={() => {
-                    const newRecette = [...(formData.recette || []), { 
-                      matiere_premiere_id: '', 
-                      quantite: 0, 
-                      perte: 0,
-                      quantite_reelle: 0,
-                      unite: 'K' 
-                    }];
-                    setFormData(prev => ({ ...prev, recette: newRecette }));
-                  }}
-                  onDeleteItem={(index) => {
-                    const newRecette = (formData.recette || []).filter((_, i) => i !== index);
-                    setFormData(prev => ({ ...prev, recette: newRecette }));
-                  }}
-                  onItemChange={(index, field, value) => {
-                    const newRecette = [...(formData.recette || [])];
-                    const row = { ...newRecette[index] };
-                    
-                    // Handle numeric values
-                    if (field === 'quantite' || field === 'perte') {
-                      row[field] = value;
-                    } else {
-                      row[field] = value;
-                    }
+          <Button
+            type="submit"
+            disabled={loading}
+            style={{
+              background: "#00afaa",
+              border: "none",
+              padding:
+                "10px 35px",
+              marginRight: "10px",
+            }}
+          >
+            {loading
+              ? "Chargement..."
+              : "Enregistrer"}
+          </Button>
 
-                    // Auto-fill unit if matiere is selected
-                    if (field === 'matiere_premiere_id') {
-                      const selectedMatiere = matierePremieres.find(m => m && m.id === parseInt(value));
-                      if (selectedMatiere) {
-                        row.unite = selectedMatiere.unite || 'K';
-                      }
-                    }
-
-                    // Calculate real quantity: Qty * (1 + Loss/100)
-                    const qty = parseFloat(row.quantite) || 0;
-                    const loss = parseFloat(row.perte) || 0;
-                    row.quantite_reelle = (qty * (1 + loss / 100)).toFixed(3);
-
-                    newRecette[index] = row;
-                    setFormData(prev => ({ ...prev, recette: newRecette }));
-                  }}
-                  errors={errors}
-                  showExpandableDetails={false}
-                  columns={[
-                    { 
-                      key: 'matiere_premiere_id', 
-                      label: 'Matière première', 
-                      width: '35%', 
-                      type: 'select',
-                      options: [
-                        { value: '', label: 'Sélectionner une matière' },
-                        ...(Array.isArray(matierePremieres) ? matierePremieres.filter(m => m != null).map(m => ({ value: m.id, label: m.nom || m.designation || 'Sans désignation' })) : [])
-                      ]
-                    },
-                    { key: 'quantite', label: 'Quantité', width: '15%', type: 'number' },
-                    {
-                      key: 'unite', label: 'Unité', width: '15%', type: 'select', options: [
-                        { value: 'K', label: 'KG' },
-                        { value: 'G', label: 'Gramme' },
-                        { value: 'L', label: 'Litre' },
-                        { value: 'ML', label: 'Millilitre' },
-                        { value: 'U', label: 'Unité' }
-                      ]
-                    },
-                    { key: 'perte', label: 'Perte (%)', width: '10%', type: 'number' },
-                    { key: 'quantite_reelle', label: 'Quantité réelle', width: '20%', type: 'number', readOnly: true },
-                    { key: 'actions', label: 'Action', width: '5%', type: 'actions' }
-                  ]}
-                />
-              </div>
-
-              <div className="mt-4 mb-5">
-                <Form.Group className="d-flex justify-content-center">
-                  <Button type="submit" className="btn-primary-custom mb-2 mx-2" disabled={loading}>
-                    {loading ? 'Chargement...' : (formData.id ? 'Modifier' : 'Enregistrer')}
-                  </Button>
-                  <Button type="button" className="btn-secondary-custom mb-2 mx-2" onClick={closeForm}>
-                    Annuler
-                  </Button>
-                </Form.Group>
-              </div>
-            </Form>
-          </Tab>
-          
-          <Tab eventKey="details" title={<span><Info className="me-2" size={16} />Détails & Notes</span>}>
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-              <Package size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-              <p>Informations complémentaires sur la fiche technique.</p>
-            </div>
-          </Tab>
-        </Tabs>
-      </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={closeForm}
+            style={{
+              padding:
+                "10px 35px"
+            }}
+          >
+            Annuler
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 };

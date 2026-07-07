@@ -20,37 +20,45 @@ class ProduitController extends Controller
     public function index()
     {
         try {
-            $produits = Produit::with([
-                'categorie',
-                'calibre',
-                'user',
-                'souscategorie',
-                'prixProduits',
-                'prixProduitsLast',
-                'Embalge',
-                'etiquette',
-                'EmbalgeS',
-                'stockProduit',
-                'recettes.matierePremiere'
-            ])->orderBy('id', 'desc')->get()
-                ->map(function ($produit) {
-                    $data = $produit->toArray();
-                    $data['logoP'] = $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null;
-                    return $data;
-                });
+        $produits = Produit::with([
+            'categorie',
+            'calibre',
+            'user',
+            'souscategorie',
+            'prixProduits',
+            'prixProduitsLast',
+            'Embalge',
+            'etiquette',
+            'EmbalgeS',
+            'stockProduit',
+            'recettes.matierePremiere'
+        ])->orderBy('id', 'desc')->get();
 
-            $categories = categorie::where('parent_id', 0)->get();
+        $produits->transform(function ($produit) {
 
-            return response()->json([
-                'message' => 'Liste des produits recuperee avec succes',
-                'produit' => $produits,
-                'count' => Produit::count(),
-                'AllProduit' => Produit::all(),
-                'categories' => $categories
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+            $produit->logoP = $produit->logoP
+                ? asset(ltrim($produit->logoP, '/'))
+                : null;
+
+            return $produit;
+        });
+
+        $categories = categorie::where('idCatMer', 0)->get();
+
+        return response()->json([
+            'message' => 'Liste des produits recuperee avec succes',
+            'produit' => $produits,
+            'count' => Produit::count(),
+            'AllProduit' => Produit::all(),
+            'categories' => $categories
+        ], 200);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
+    }
     }
 
     public function store(Request $request)
@@ -196,7 +204,7 @@ class ProduitController extends Controller
             $produit->update($data);
 
             if ($request->has('lines')) {
-                $produit->recettes()->delete(); 
+               // $produit->recettes()->delete(); 
                 $linesInput = $request->input('lines');
                 $lines = is_string($linesInput) 
                     ? json_decode($linesInput, true) 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import axiosInstance from "../axiosInstance";
@@ -349,3 +350,223 @@ const ChargeDirecteList = () => {
 };
 
 export default ChargeDirecteList;
+/*
+import React, { useState, useEffect } from "react";
+import axiosInstance from "../axiosInstance";
+import Box from "@mui/material/Box";
+import TableMui from "../components/TableMui";
+import { useOpen } from "../Acceuil/OpenProvider";
+import { useHeader } from "../Acceuil/HeaderContext";
+import { Clock, Layers, Package } from "lucide-react";
+import ProductCarousel from "../components/ProductCarousel";
+import AddButton from "../components/AddButton";
+import FilterToggleButton from "../components/FilterToggleButton";
+import ChargeDirecteForm from "./ChargeDirecteForm";
+import Swal from "sweetalert2";
+import "../Produit/All.css";
+
+const ChargeDirecteList = () => {
+  const [produits, setProduits] = useState([]);
+  const [filteredProduits, setFilteredProduits] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedCategory, setSelectedCategory] = useState('tout');
+  const [sousCatFiltre, setSousCatFiltre] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [carouselSelectedProductId, setCarouselSelectedProductId] = useState('tout');
+  
+  // Rendre le formulaire visible par défaut (A droite)
+  const [formContainerStyle, setFormContainerStyle] = useState({ right: "0", width: "42%" });
+  const [tableContainerStyle, setTableContainerStyle] = useState({ marginRight: "40%", width: "58%" });
+
+  const [formData, setFormData] = useState({
+    id: null,
+    designation: "",
+    Code_produit: "",
+    cout_horaire_mod: 0,
+    temps_production: 0
+  });
+  const [loading, setLoading] = useState(false);
+
+  const { dynamicStyles } = useOpen();
+  const { setTitle, searchQuery } = useHeader();
+
+  useEffect(() => {
+    setTitle("Gestion des Charges Directes");
+  }, [setTitle]);
+
+  const fetchData = async () => {
+    try {
+      const [prodRes, catRes] = await Promise.all([
+        axiosInstance.get('/api/produits').catch(() => ({ data: {} })),
+        axiosInstance.get('/api/categories').catch(() => ({ data: [] }))
+      ]);
+      const prodData = prodRes.data?.produit || prodRes.data;
+      const dataArray = Array.isArray(prodData) ? prodData : [];
+      setProduits(dataArray);
+      setCategories(Array.isArray(catRes.data) ? catRes.data : []);
+
+      // Sélectionner par défaut le premier produit s'il y en a
+      if (dataArray.length > 0 && !formData.id) {
+        handleEdit(dataArray[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Déclencher le changement de produit depuis le Carousel du haut
+  useEffect(() => {
+    if (carouselSelectedProductId && carouselSelectedProductId !== 'tout') {
+      const prod = produits.find(p => p.id === parseInt(carouselSelectedProductId));
+      if (prod) handleEdit(prod);
+    }
+  }, [carouselSelectedProductId, produits]);
+
+  useEffect(() => {
+    const safeSearchQuery = (searchQuery || '').toLowerCase();
+    let filtered = produits.filter((p) =>
+      p.designation?.toLowerCase().includes(safeSearchQuery) ||
+      p.Code_produit?.toLowerCase().includes(safeSearchQuery)
+    );
+
+    if (selectedCategory && selectedCategory !== 'tout') {
+      filtered = filtered.filter(p => p.categorie_id === parseInt(selectedCategory));
+    }
+
+    if (sousCatFiltre && sousCatFiltre !== 'tout') {
+      filtered = filtered.filter(p => p.suCat_id === parseInt(sousCatFiltre));
+    }
+
+    setFilteredProduits(filtered);
+  }, [produits, searchQuery, selectedCategory, sousCatFiltre]);
+
+  const selectedProduct = (produits || []).find(p => p.id === parseInt(carouselSelectedProductId));
+  const currentProductData = selectedProduct ? [selectedProduct] : filteredProduits;
+
+  const handleShowFormButtonClick = () => {
+    if (selectedProduct) {
+      handleEdit(selectedProduct);
+    }
+  };
+
+  const closeForm = () => {
+    // Garder ouvert ou réinitialiser sans fermer complètement le panneau
+    setFormContainerStyle({ right: "0", width: "42%" });
+    setTableContainerStyle({ marginRight: "40%", width: "58%" });
+  };
+
+  const handleEdit = (row) => {
+    setFormData({
+       id: row.id,
+       designation: row.designation || "",
+       Code_produit: row.Code_produit || "",
+       cout_horaire_mod: row.cout_horaire_mod || 0,
+       temps_production: row.temps_production || 0
+    });
+    setFormContainerStyle({ right: "0", width: "42%" });
+    setTableContainerStyle({ marginRight: "40%", width: "58%" });
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    try {
+      await axiosInstance.put(`/api/produits/${formData.id}`, {
+        cout_horaire_mod: formData.cout_horaire_mod,
+        temps_production: formData.temps_production
+      });
+      fetchData();
+      Swal.fire("Succès", "Charges MOD enregistrées avec succès.", "success");
+    } catch (error) {
+      Swal.fire("Erreur", "Une erreur est survenue.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box sx={{ ...dynamicStyles }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, marginTop: '60px' }}>
+        <ProductCarousel
+          products={produits}
+          selectedProductId={carouselSelectedProductId}
+          onProductSelect={(id) => setCarouselSelectedProductId(id)}
+        />
+
+        <div className="container-d-flex justify-content-start" style={{ marginTop: "35px", position: "relative" }}>
+          
+          <TableMui
+            columns={[
+              { id: 'Code_produit', label: 'CODE', minWidth: 80 },
+              { id: 'designation', label: 'DÉSIGNATION', minWidth: 120 },
+              { 
+                id: 'cout_matieres', 
+                label: 'MATIÈRES (U)', 
+                minWidth: 100,
+                render: (row) => `${Number(row.cout_matieres_calculé || 0).toFixed(2)} DH`
+              },
+              { 
+                id: 'total_mod', 
+                label: 'MOD (U)', 
+                minWidth: 90,
+                render: (row) => {
+                  const costMOD = ((row.cout_horaire_mod || 0) * (row.temps_production || 0)) / 60;
+                  return `${costMOD.toFixed(2)} DH`;
+                }
+              },
+              {
+                id: 'cout_packaging',
+                label: 'PACK (U)',
+                minWidth: 90,
+                render: (row) => `${Number(row.cout_packaging_calculé || 0).toFixed(2)} DH`
+              },
+              { 
+                id: 'total_charges_directes', 
+                label: 'TOTAL DIRECT', 
+                minWidth: 110,
+                render: (row) => {
+                  const costMOD = ((row.cout_horaire_mod || 0) * (row.temps_production || 0)) / 60;
+                  const totalDirect = Number(row.cout_matieres_calculé || 0) + costMOD + Number(row.cout_packaging_calculé || 0);
+                  return <span style={{ fontWeight: 700, color: '#00afaa' }}>{totalDirect.toFixed(2)} DH</span>;
+                }
+              },
+            ]}
+            rows={currentProductData}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            handleChangePage={(e, newPage) => setPage(newPage)}
+            handleChangeRowsPerPage={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
+            produitsFiltres={currentProductData}
+            hasActions={true}
+            handleEdit={handleEdit}
+            handleDelete={(row) => handleEdit(row)}
+            addButtonText="Configurer"
+            tableContainerStyle={{ ...tableContainerStyle, transition: 'all 0.3s ease' }}
+            selectedItems={selectedItems}
+            handleShowFormButtonClick={handleShowFormButtonClick}
+          />
+
+          <ChargeDirecteForm
+            formContainerStyle={formContainerStyle}
+            formData={formData}
+            handleChange={(e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+            handleSubmit={handleSubmit}
+            loading={loading}
+            closeForm={closeForm}
+          />
+
+        </div>
+      </Box>
+    </Box>
+  );
+};
+
+export default ChargeDirecteList;
+*/

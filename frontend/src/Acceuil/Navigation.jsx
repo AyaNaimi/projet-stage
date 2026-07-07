@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axiosInstance from "../axiosInstance";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { alpha, styled } from "@mui/material/styles";
+import { alpha, styled, useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
@@ -154,6 +155,8 @@ const navItems = [
 
 const Navigation = () => {
   const { open, toggleOpen } = useOpen();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const {
     title,
     searchQuery,
@@ -243,8 +246,12 @@ const Navigation = () => {
           backgroundColor: "#f9fafb",
           color: "#2c3e50",
           boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-          width: open ? `calc(100% - ${drawerWidth}px)` : "calc(100% - 72px)",
-          ml: open ? `${drawerWidth}px` : "72px",
+          width: isMobile
+            ? "100%"
+            : open
+            ? `calc(100% - ${drawerWidth}px)`
+            : "calc(100% - 72px)",
+          ml: isMobile ? 0 : open ? `${drawerWidth}px` : "72px",
           transition: (theme) =>
             theme.transitions.create(["width", "margin"], {
               easing: theme.transitions.easing.sharp,
@@ -253,7 +260,7 @@ const Navigation = () => {
         }}
       >
         <Toolbar sx={{ gap: 2 }}>
-          {!open && (
+          {(!open || isMobile) && (
             <IconButton color="inherit" edge="start" onClick={toggleOpen}>
               <MenuIcon />
             </IconButton>
@@ -334,16 +341,22 @@ const Navigation = () => {
       </AppBar>
 
       <Drawer
-        variant="permanent"
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? open : true}
+        onClose={isMobile ? toggleOpen : undefined}
+        ModalProps={isMobile ? { keepMounted: true } : undefined}
         sx={{
-          width: open ? drawerWidth : 72,
+          width: isMobile ? "auto" : open ? drawerWidth : 72,
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: open ? drawerWidth : 72,
+            width: isMobile ? "80%" : open ? drawerWidth : 72,
             boxSizing: "border-box",
             backgroundColor: "#2c767c",
             color: "#ffffff",
             overflowX: "hidden",
+            overflowY: "auto",
+            top: isMobile ? '56px' : '64px',
+            height: isMobile ? 'calc(100% - 56px)' : 'calc(100% - 64px)',
             transition: (theme) =>
               theme.transitions.create("width", {
                 easing: theme.transitions.easing.sharp,

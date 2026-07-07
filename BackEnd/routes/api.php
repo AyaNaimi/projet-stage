@@ -670,6 +670,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post("/register", [AuthController::class, 'register']);
     Route::get("/user", [AuthController::class, 'user']);
     Route::delete('matiere-premieres/delete-selected', [MatierePremiereController::class, 'deleteSelected']);
+    Route::post('matiere-premieres/import-csv', [MatierePremiereController::class, 'importCsv']);
+    Route::get('matiere-premieres/{id}/price-at', [MatierePremiereController::class, 'priceAt']);
     Route::apiResource('matiere-premieres', MatierePremiereController::class);
     Route::apiResource('famille-matieres', FamilleMatiereController::class);
     Route::apiResource('type-matieres', TypeMatiereController::class);
