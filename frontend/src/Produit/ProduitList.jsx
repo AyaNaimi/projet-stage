@@ -15,8 +15,10 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const toFullUrl = (path) => {
   if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const clean = path.startsWith("/") ? path.slice(1) : path;
+  const value = String(path).trim();
+  if (!value) return "";
+  if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("data:image/")) return value;
+  const clean = value.startsWith("/") ? value.slice(1) : value;
   return `${API_BASE}/${clean}`;
 };
 
@@ -54,6 +56,7 @@ import FamilleTypeCarousels from "../components/FamilleTypeCarousels";
 import ProduitForm from "./ProduitForm";
 import Header from "../components/Header";
 import TableMui from "../components/TableMui";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const ProduitList = () => {
   const [produits, setProduits] = useState([]);
@@ -173,7 +176,7 @@ const ProduitList = () => {
       const response = await axiosInstance.get("/api/produits");
       const produits = response.data.produit.map((p) => ({
         ...p,
-        logoP: toFullUrl(p.logoP),
+        logoP: p.logoP ? toFullUrl(p.logoP) : "",
       }));
       setProduits(produits);
       await storeDataInIndexedDB(produits, "produits");
@@ -217,7 +220,7 @@ const ProduitList = () => {
         if (storedProduits) {
           const normalized = storedProduits.map((p) => ({
             ...p,
-            logoP: toFullUrl(p.logoP),
+            logoP: p.logoP ? toFullUrl(p.logoP) : "",
           }));
           setProduits(normalized);
         }
@@ -592,12 +595,13 @@ const ProduitList = () => {
       suCat_id: produit.suCat_id,
       genre: produit.genre,
       Dvie: produit.Dvie,
-      produit_Etiq_id: produit.produit_Etiq_id,
-      produit_Embalg_id: produit.produit_Embalg_id,
-      produit_Embalg_S_id: Number(produit.produit_Embalg_S_id),
+      produit_Etiq_id: produit.produit_Etiq_id ? Number(produit.produit_Etiq_id) : "",
+      produit_Embalg_id: produit.produit_Embalg_id ? Number(produit.produit_Embalg_id) : "",
+      produit_Embalg_S_id: produit.produit_Embalg_S_id ? Number(produit.produit_Embalg_S_id) : "",
 
       type_produit: produit.type,
       reference: produit.reference,
+      logoP: produit.logoP || "",
 
       // Remplir les nouveaux champs
       unite_etiquette: produit.unite_etiquette || "",
@@ -688,169 +692,65 @@ const ProduitList = () => {
     const url = editingProduit
       ? `/api/produits/${editingProduit.id}`
       : `/api/produits`;
-    const method = editingProduit ? "put" : "post";
+    const method = "post";
 
-    let requestData;
+    const requestData = new FormData();
 
-    if (editingProduit) {
-      requestData = {
-        Code_produit: formData.Code_produit,
-        designation: formData.designation,
-        calibre_id: formData.calibre_id,
-        type_quantite: formData.type_quantite,
-        unite: formData.unite,
-        seuil_alerte: formData.seuil_alerte,
-        stock_initial: formData.stock_initial,
-        etat_produit: formData.etat_produit,
-        marque: formData.marque,
-        prix_vente: formData.prix_vente,
-        // Avoid persisting literal "undefined" strings in DB
-        genre:
-          formData.genre === undefined || formData.genre === "undefined"
-            ? null
-            : formData.genre,
-        type:
-          formData.type_produit === undefined ||
-          formData.type_produit === "undefined"
-            ? null
-            : formData.type_produit,
-        Dvie:
-          formData.Dvie === undefined || formData.Dvie === "undefined"
-            ? null
-            : formData.Dvie,
-        reference: formData.reference,
-
-        produit_Embalg_id: formData.produit_Embalg_id,
-        produit_Embalg_S_id: formData.produit_Embalg_S_id,
-
-        produit_Etiq_id: formData.produit_Etiq_id,
-
-        categorie_id: formData.categorie_id,
-        suCat_id: formData.suCat_id,
-        // Ajout des nouveaux champs
-        unite_etiquette: formData.unite_etiquette,
-        unite_embalage_primaire: formData.unite_embalage_primaire,
-        unite_embalage_secondaire: formData.unite_embalage_secondaire,
-        grammage: formData.grammage,
-        rendement: formData.rendement,
-        temps_production: formData.temps_production,
-        cout_horaire_mod: formData.cout_horaire_mod,
-
-        prixProduits: selectedProductsDataRep.map((prix) => ({
-          id: prix.id || null,
-          dateDebut: prix.date_debut,
-          dateFin: prix.date_fin,
-          prixProduit: prix.prixProduit,
-          typeQte:
-            formData.type_quantite === "kg"
-              ? "K"
-              : formData.type_quantite === "litre"
-                ? "L"
-                : formData.type_quantite === "unite"
-                  ? "U"
-                  : prix.type,
-          Unite: prix.unite,
-        })),
-      };
-      console.log("requestData", requestData);
-      // Only upload when a NEW file was selected (existing logo is often a URL string)
-      if (formData.logoP instanceof File) {
-        setMessage("");
-        const formData2 = new FormData();
-        formData2.append("logoP", formData.logoP);
-
-        try {
-          const token =
-            localStorage.getItem("token") || localStorage.getItem("API_TOKEN");
-          const response = await axiosInstance.post(
-            `/api/produit/${editingProduit.id}/update-logo`,
-            formData2,
-            {
-              // Let Axios set the proper multipart boundary automatically
-            },
-          );
-          // Refresh logo immediately in UI if needed
-          if (response?.data?.logoP) {
-            setFormData((prev) => ({ ...prev, logoP: response.data.logoP }));
-          }
-        } catch (error) {
-          setMessage("Error uploading the logo.");
-          console.error(error);
-        }
-      }
-
-      // Create a FormData object and append the file
-    } else {
-      const formDatad = new FormData();
-      formDatad.append("Code_produit", formData.Code_produit || "");
-      formDatad.append("designation", formData.designation || "");
-      formDatad.append("calibre_id", formData.calibre_id || "");
-      formDatad.append("type_quantite", formData.type_quantite || "");
-      formDatad.append("unite", formData.unite || "");
-      formDatad.append("seuil_alerte", formData.seuil_alerte || "");
-      formDatad.append("stock_initial", formData.stock_initial || "");
-      formDatad.append("etat_produit", formData.etat_produit || "");
-      formDatad.append("marque", formData.marque || "");
-      formDatad.append("prix_vente", formData.prix_vente || "");
-      formDatad.append("categorie_id", formData.categorie_id || "");
-      formDatad.append("suCat_id", formData.suCat_id || "");
-      formDatad.append(
+    const appendCommonProductFields = (payload) => {
+      payload.append("Code_produit", formData.Code_produit || "");
+      payload.append("designation", formData.designation || "");
+      payload.append("calibre_id", formData.calibre_id || "");
+      payload.append("type_quantite", formData.type_quantite || "");
+      payload.append("unite", formData.unite || "");
+      payload.append("seuil_alerte", formData.seuil_alerte || "");
+      payload.append("stock_initial", formData.stock_initial || "");
+      payload.append("etat_produit", formData.etat_produit || "");
+      payload.append("marque", formData.marque || "");
+      payload.append("prix_vente", formData.prix_vente || "");
+      payload.append("categorie_id", formData.categorie_id || "");
+      payload.append("suCat_id", formData.suCat_id || "");
+      payload.append(
         "genre",
         formData.genre === undefined || formData.genre === "undefined"
           ? ""
           : formData.genre,
       );
-      formDatad.append(
+      payload.append(
         "type",
-        formData.type_produit === undefined ||
-          formData.type_produit === "undefined"
+        formData.type_produit === undefined || formData.type_produit === "undefined"
           ? ""
           : formData.type_produit,
       );
-      formDatad.append(
+      payload.append(
         "Dvie",
         formData.Dvie === undefined || formData.Dvie === "undefined"
           ? ""
           : formData.Dvie,
       );
-      formDatad.append("reference", formData.reference || "");
-      formDatad.append("tva", formData.tva || "");
+      payload.append("reference", formData.reference || "");
+      payload.append("tva", formData.tva || "");
+      payload.append("produit_Etiq_id", formData.produit_Etiq_id || "");
+      payload.append("produit_Embalg_id", formData.produit_Embalg_id || "");
+      payload.append("produit_Embalg_S_id", formData.produit_Embalg_S_id || "");
+      payload.append("unite_etiquette", formData.unite_etiquette || "");
+      payload.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
+      payload.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
+      payload.append("grammage", formData.grammage || "");
+      payload.append("rendement", formData.rendement || 100);
+      payload.append("temps_production", formData.temps_production || "");
+      payload.append("cout_horaire_mod", formData.cout_horaire_mod || "");
 
-      formDatad.append("produit_Etiq_id", formData.produit_Etiq_id || "");
-      formDatad.append("produit_Embalg_id", formData.produit_Embalg_id || "");
-      formDatad.append(
-        "produit_Embalg_S_id",
-        formData.produit_Embalg_S_id || "",
-      );
-
-      // Ajout des nouveaux champs
-      formDatad.append("unite_etiquette", formData.unite_etiquette || "");
-      formDatad.append("unite_embalage_primaire", formData.unite_embalage_primaire || "");
-      formDatad.append("unite_embalage_secondaire", formData.unite_embalage_secondaire || "");
-      formDatad.append("grammage", formData.grammage || "");
-      formDatad.append("rendement", formData.rendement || 100);
-      formDatad.append("temps_production", formData.temps_production || "");
-      formDatad.append("cout_horaire_mod", formData.cout_horaire_mod || "");
-
-      if (formData.logoP) {
-        formDatad.append("logoP", formData.logoP);
+      const logoValue = formData.logoP;
+      if (logoValue instanceof File) {
+        payload.append("logoP", logoValue);
       }
 
       if (selectedProductsDataRep && Array.isArray(selectedProductsDataRep)) {
         selectedProductsDataRep.forEach((prix, index) => {
-          formDatad.append(
-            `prixProduits[${index}][dateDebut]`,
-            prix.date_debut || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][dateFin]`,
-            prix.date_fin || "",
-          );
-          formDatad.append(
-            `prixProduits[${index}][prixProduit]`,
-            prix.prixProduit || "",
-          );
-          formDatad.append(
+          payload.append(`prixProduits[${index}][dateDebut]`, prix.date_debut || "");
+          payload.append(`prixProduits[${index}][dateFin]`, prix.date_fin || "");
+          payload.append(`prixProduits[${index}][prixProduit]`, prix.prixProduit || "");
+          payload.append(
             `prixProduits[${index}][typeQte]`,
             formData.type_quantite === "kg"
               ? "K"
@@ -860,10 +760,15 @@ const ProduitList = () => {
                   ? "U"
                   : prix.type || "",
           );
-          formDatad.append(`prixProduits[${index}][Unite]`, prix.unite || "");
+          payload.append(`prixProduits[${index}][Unite]`, prix.unite || "");
         });
       }
-      requestData = formDatad;
+    };
+
+    appendCommonProductFields(requestData);
+
+    if (editingProduit) {
+      requestData.append("_method", "PUT");
     }
 
     try {
@@ -931,7 +836,12 @@ const ProduitList = () => {
       Swal.close();
 
       if (error.response) {
-        const serverErrors = error.response.data.error;
+        const serverErrors = error.response.data?.error;
+        const errorMessage =
+          typeof serverErrors === "string"
+            ? serverErrors
+            : error.response.data?.message ||
+              "Une erreur est survenue lors de l'enregistrement.";
         console.log("Erreur serveur:", serverErrors);
 
         if (typeof serverErrors === "object" && serverErrors !== null) {
@@ -967,15 +877,13 @@ const ProduitList = () => {
           Swal.fire({
             icon: "error",
             title: "Erreur de validation",
-            text: "Veuillez vérifier les champs du formulaire.",
+            text: errorMessage || "Veuillez vérifier les champs du formulaire.",
           });
         } else {
           Swal.fire({
             icon: "error",
             title: "Erreur",
-            text:
-              serverErrors ||
-              "Une erreur est survenue lors de l'enregistrement.",
+            text: errorMessage,
           });
         }
       } else {
@@ -1873,24 +1781,25 @@ const ProduitList = () => {
                     id: "logo",
                     label: "Logo",
                     minWidth: 60,
-                    render: (row) => (
-                      <img
-                        src={
-                          row.logoP &&
-                          row.logoP !== "" &&
-                          row.logoP !== null &&
-                          row.logoP !== undefined
-                            ? row.logoP
-                            : "../../public/images/bayd.jpg"
-                        }
-                        alt="Logo"
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          borderRadius: "50%",
-                        }}
-                      />
-                    ),
+                    render: (row) => {
+                      const imageSrc = resolveImageUrl(row.logoP || row.logo_url || row.imageUrl || row.photo_url, '');
+                      if (!imageSrc) {
+                        return null;
+                      }
+
+                      return (
+                        <img
+                          src={imageSrc}
+                          alt="Logo"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      );
+                    },
                   },
                   { id: "Code_produit", label: "Code", minWidth: 80 },
                   { id: "designation", label: "Désignation", minWidth: 120 },

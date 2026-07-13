@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import "../Produit/All.css";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const MatierePremiereList = () => {
     const [matieres, setMatieres] = useState([]);
@@ -57,8 +58,34 @@ const MatierePremiereList = () => {
 
     const fetchMatieres = async () => {
         try {
-            const response = await axiosInstance.get("/api/matiere-premieres");
-            setMatieres(response.data.data);
+            const [matiereResponse, produitsResponse] = await Promise.all([
+                axiosInstance.get("/api/matiere-premieres"),
+                axiosInstance.get("/api/produits")
+            ]);
+
+            const matiereRows = (matiereResponse.data.data || []).map((item) => ({
+                ...item,
+                source: "matiere",
+                imageUrl: item.photo_url || item.logoP || null,
+            }));
+
+            const produitRows = (produitsResponse.data.produit || [])
+                .filter((produit) => produit.type === "M")
+                .map((item) => ({
+                    ...item,
+                    id: `produit-${item.id}`,
+                    source: "produit",
+                    nom: item.designation || item.nom,
+                    prix_achat: item.prix_vente ?? item.prix_achat ?? null,
+                    unite: item.unite || "",
+                    fournisseur_id: null,
+                    fournisseur: null,
+                    photo_url: item.logoP || null,
+                    imageUrl: item.logoP || null,
+                    historiques: [],
+                }));
+
+            setMatieres([...matiereRows, ...produitRows]);
         } catch (error) {
             console.error("Error fetching matieres:", error);
         }
@@ -82,7 +109,8 @@ const MatierePremiereList = () => {
         const safeSearchQuery = (searchQuery || '').toLowerCase();
         const filtered = matieres.filter((m) => {
             const matchesSearch = (
-                m.nom?.toLowerCase().includes(safeSearchQuery) ||
+                (m.nom || "").toLowerCase().includes(safeSearchQuery) ||
+                (m.designation || "").toLowerCase().includes(safeSearchQuery) ||
                 (m.fournisseur?.nom && m.fournisseur.nom.toLowerCase().includes(safeSearchQuery)) ||
                 (m.fournisseur?.raison_sociale && m.fournisseur.raison_sociale.toLowerCase().includes(safeSearchQuery))
             );
@@ -271,19 +299,11 @@ const MatierePremiereList = () => {
                         fetchFournisseurs={fetchFournisseurs}
                     />
                     <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                        <button onClick={handleShowFormButtonClick} className="btn btn-primary" style={{ borderRadius: 6 }}>
-                            Ajouter
-                        </button>
-                        <button onClick={handleImportClick} className="btn btn-secondary" style={{ borderRadius: 6 }}>
-                            Importer CSV
-                        </button>
-                    </div>
 
                     {/* Import Modal */}
                     {showImportModal && (
-                        <div className="modal show" style={{ display: 'block', background: 'rgba(0,0,0,0.4)' }}>
-                            <div className="modal-dialog modal-lg" role="document">
+                        <div className="modal show" style={{ display: 'block', background: 'rgba(0,0,0,0.4)', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1050 }}>
+                            <div className="modal-dialog modal-lg" role="document" style={{ marginTop: '80px' }}>
                                 <div className="modal-content">
                                     <div className="modal-header">
                                         <h5 className="modal-title">Importer Matières Premières (CSV)</h5>
@@ -364,6 +384,25 @@ const MatierePremiereList = () => {
                             { id: 'prix_achat', label: 'PRIX D\'ACHAT', minWidth: 150, render: (row) => `${row.prix_achat} DH` },
                             { id: 'unite', label: 'UNITÉ', minWidth: 100 },
                             {
+                                id: 'image',
+                                label: 'IMAGE',
+                                minWidth: 80,
+                                render: (row) => {
+                                    const imageSrc = resolveImageUrl(row.imageUrl || row.photo_url || row.logoP, '/images/bayd.jpg');
+                                    return (
+                                        <img
+                                            src={imageSrc}
+                                            alt={row.nom || row.designation || 'image'}
+                                            style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8 }}
+                                            onError={(e) => {
+                                                e.currentTarget.onerror = null;
+                                                e.currentTarget.src = '/images/bayd.jpg';
+                                            }}
+                                        />
+                                    );
+                                }
+                            },
+                            {
                                 id: 'fournisseur',
                                 label: 'FOURNISSEUR',
                                 minWidth: 200,
@@ -380,6 +419,35 @@ const MatierePremiereList = () => {
                         handleEdit={handleEdit}
                         handleDelete={handleDelete}
                         addButtonText="Ajouter"
+                        hasChart={true}
+                        ChartActionButton={() => (
+                            <button
+                                onClick={handleImportClick}
+                                style={{
+                                    backgroundColor: "#00796b",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    padding: "6px 20px",
+                                    fontSize: "15px",
+                                    fontWeight: "600",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    cursor: "pointer",
+                                    margin: "5px",
+                                    boxShadow: "0 4px 6px rgba(0,0,0,0.15)",
+                                    transition: "all 0.3s ease",
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="white" viewBox="0 0 16 16">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+                                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
+                                </svg>
+                                Importer CSV
+                            </button>
+                        )}
+                        handleShowFormButtonClickChart={() => {}}
                         tableContainerStyle={{ 
                             ...tableContainerStyle, 
                             transition: 'all 0.3s ease' 

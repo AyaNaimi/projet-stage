@@ -878,7 +878,7 @@ Route::apiResource('groupe-arrondi', GroupeArrondiController::class);
     Route::match(['post', 'options'], 'produit/{id}/update-logo', [ProduitController::class, 'updateLogo']);
     Route::delete('deleteSelectProd', [ProduitController::class, 'deleteSelected']);
     Route::delete('prixProduit/{id}', [ProduitController::class, 'destroyPrix']);
-    Route::put('produits/{produit}', [ProduitController::class, 'update']);
+    Route::match(['put', 'post', 'options'], 'produits/{produit}', [ProduitController::class, 'update']);
     Route::delete('produits/{produit}', [ProduitController::class, 'destroy']);
     Route::post('produits', [ProduitController::class, 'store']);
 

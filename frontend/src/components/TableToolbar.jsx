@@ -21,9 +21,8 @@ export default function TableToolbar({
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px 0 0' }}>
-      {hasChart && handleShowFormButtonClick && (
-        <ChartActionButton onClick={() => handleShowFormButtonClickChart(true)} />
-
+      {hasChart && ChartActionButton && (
+        <ChartActionButton />
       )}
       {FilterToggleButton && showFilters !== undefined && toggleFilters && (
         <FilterToggleButton

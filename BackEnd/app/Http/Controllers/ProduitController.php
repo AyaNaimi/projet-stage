@@ -14,9 +14,96 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProduitController extends Controller
 {
+    private function storeProductLogo($file)
+    {
+        $photoPath = $file->store('logop', 'public');
+
+        return 'storage/' . $photoPath;
+    }
+
+    private function removeStoredLogo(?string $logoPath): void
+    {
+        if (!$logoPath) {
+            return;
+        }
+
+        $relativePath = str_replace('storage/', '', parse_url($logoPath, PHP_URL_PATH) ?: $logoPath);
+
+        if ($relativePath && Storage::disk('public')->exists($relativePath)) {
+            Storage::disk('public')->delete($relativePath);
+        }
+    }
+
+    private function formatProduit($produit)
+    {
+        $produit->logoP = $produit->logoP
+            ? asset(ltrim($produit->logoP, '/'))
+            : null;
+
+        // Aliases expected by the frontend (lowercase keys)
+        $produit->embalge = $produit->Embalge ?? $produit->embalge ?? null;
+        $produit->embalge_s = $produit->EmbalgeS ?? $produit->embalge_s ?? null;
+        $produit->etiquette_produit = $produit->etiquette ?? $produit->etiquette_produit ?? null;
+
+        return $produit;
+    }
+
+    private function clearInvalidLogoInput(Request $request): void
+    {
+        $hasFile = $request->hasFile('logoP');
+        $logoInput = $request->input('logoP');
+
+        $shouldClear = !$hasFile && (
+            $logoInput === false ||
+            $logoInput === 'false' ||
+            $logoInput === '' ||
+            $logoInput === null ||
+            (is_string($logoInput) && (
+                str_starts_with($logoInput, 'http://') ||
+                str_starts_with($logoInput, 'https://') ||
+                str_starts_with($logoInput, '/storage/') ||
+                str_starts_with($logoInput, 'storage/')
+            ))
+        );
+
+        if ($shouldClear) {
+            $request->request->remove('logoP');
+            $request->files->remove('logoP');
+            $request->offsetUnset('logoP');
+        }
+    }
+
+    private function filterPayloadForTable(string $table, array $data): array
+    {
+        try {
+            $columns = Schema::getColumnListing($table);
+        } catch (\Throwable $e) {
+            return $data;
+        }
+
+        return array_filter(
+            $data,
+            fn ($key) => in_array($key, $columns, true),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    private function buildPrixProduitPayload(array $prix, int $produitId): array
+    {
+        return $this->filterPayloadForTable('prix_produits', [
+            'produit_id' => $produitId,
+            'dateDebut' => $prix['dateDebut'] ?? null,
+            'dateFin' => $prix['dateFin'] ?? null,
+            'prixProduit' => $prix['prixProduit'] ?? null,
+            'typeQte' => $prix['typeQte'] ?? null,
+            'Unite' => $prix['Unite'] ?? null,
+        ]);
+    }
+
     public function index()
     {
         try {
@@ -34,14 +121,7 @@ class ProduitController extends Controller
             'recettes.matierePremiere'
         ])->orderBy('id', 'desc')->get();
 
-        $produits->transform(function ($produit) {
-
-            $produit->logoP = $produit->logoP
-                ? asset(ltrim($produit->logoP, '/'))
-                : null;
-
-            return $produit;
-        });
+        $produits->transform(fn ($produit) => $this->formatProduit($produit));
 
         $categories = categorie::where('idCatMer', 0)->get();
 
@@ -63,15 +143,25 @@ class ProduitController extends Controller
 
     public function store(Request $request)
     {
-        if (!Gate::allows('add_product') && !Gate::allows('create_product')) {
-            abort(403, 'Vous n\'avez pas l\'autorisation de creer un produit.');
-        }
-
         try {
+            Log::info('[PRODUIT][STORE] incoming payload', [
+                'keys' => array_keys($request->all()),
+                'designation' => $request->input('designation'),
+                'Code_produit' => $request->input('Code_produit'),
+                'categorie_id' => $request->input('categorie_id'),
+                'calibre_id' => $request->input('calibre_id'),
+                'produit_Etiq_id' => $request->input('produit_Etiq_id'),
+                'produit_Embalg_id' => $request->input('produit_Embalg_id'),
+                'produit_Embalg_S_id' => $request->input('produit_Embalg_S_id'),
+                'logoP' => $request->hasFile('logoP'),
+            ]);
+
+            $this->clearInvalidLogoInput($request);
+
             $validator = Validator::make($request->all(), [
                 'Code_produit' => 'required|unique:produits,Code_produit',
                 'designation' => 'required',
-                'calibre_id' => 'nullable',
+                'calibre_id' => 'nullable|exists:calibre,id',
                 'type_quantite' => 'required',
                 'unite' => 'nullable',
                 'seuil_alerte' => 'nullable',
@@ -83,6 +173,10 @@ class ProduitController extends Controller
                 'Dvie' => 'nullable',
                 'reference' => 'nullable',
                 'tva' => 'nullable',
+                'logoP' => 'nullable|sometimes|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+                'produit_Etiq_id' => 'nullable|exists:produits,id',
+                'produit_Embalg_id' => 'nullable|exists:produits,id',
+                'produit_Embalg_S_id' => 'nullable|exists:produits,id',
                 'prixProduits' => 'nullable|array',
                 'prixProduits.*.dateDebut' => 'nullable|date',
                 'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
@@ -95,19 +189,28 @@ class ProduitController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::warning('[PRODUIT][STORE] validation failed', [
+                    'errors' => $validator->errors()->toArray(),
+                ]);
                 return response()->json(['error' => $validator->errors()], 400);
             }
 
-            $data = $request->except(['prixProduits', 'lines']);
+            $data = $this->filterPayloadForTable('produits', $request->except(['prixProduits', 'lines']));
             $data['user_id'] = Auth::id();
             $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
             $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
             $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
 
             if ($request->hasFile('logoP')) {
-                $photoPath = $request->file('logoP')->store('logop', 'public');
-                $data['logoP'] = 'storage/' . $photoPath;
+                $data['logoP'] = $this->storeProductLogo($request->file('logoP'));
             }
+
+            Log::info('[PRODUIT][STORE] sanitized payload', [
+                'data_keys' => array_keys($data),
+                'produit_Etiq_id' => $data['produit_Etiq_id'] ?? null,
+                'produit_Embalg_id' => $data['produit_Embalg_id'] ?? null,
+                'produit_Embalg_S_id' => $data['produit_Embalg_S_id'] ?? null,
+            ]);
 
             $produit = Produit::create($data);
 
@@ -136,13 +239,10 @@ class ProduitController extends Controller
                 $prixInput = $request->input('prixProduits');
                 if (is_array($prixInput)) {
                     foreach ($prixInput as $prix) {
-                        $produit->prixProduits()->create([
-                            'dateDebut' => $prix['dateDebut'] ?? null,
-                            'dateFin' => $prix['dateFin'] ?? null,
-                            'prixProduit' => $prix['prixProduit'] ?? null,
-                            'typeQte' => $prix['typeQte'] ?? null,
-                            'Unite' => $prix['Unite'] ?? null,
-                        ]);
+                        $payload = $this->buildPrixProduitPayload($prix, $produit->id);
+                        if (!empty($payload)) {
+                            $produit->prixProduits()->create($payload);
+                        }
                     }
                 }
             }
@@ -154,31 +254,51 @@ class ProduitController extends Controller
                     ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null]
                 )
             ], 201);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('[PRODUIT][STORE] exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
-        if (!Gate::allows('edit_product')) {
-            abort(403, 'Vous n\'avez pas l\'autorisation de modifier ce produit.');
-        }
-
         try {
+            Log::info('[PRODUIT][UPDATE] incoming payload', [
+                'id' => $id,
+                'keys' => array_keys($request->all()),
+                'designation' => $request->input('designation'),
+                'Code_produit' => $request->input('Code_produit'),
+                'categorie_id' => $request->input('categorie_id'),
+                'calibre_id' => $request->input('calibre_id'),
+                'produit_Etiq_id' => $request->input('produit_Etiq_id'),
+                'produit_Embalg_id' => $request->input('produit_Embalg_id'),
+                'produit_Embalg_S_id' => $request->input('produit_Embalg_S_id'),
+                'logoP' => $request->hasFile('logoP'),
+            ]);
+
+            $this->clearInvalidLogoInput($request);
+
             $validator = Validator::make($request->all(), [
                 'Code_produit' => 'required|unique:produits,Code_produit,' . $id,
                 'designation' => 'required',
-                'calibre_id' => 'nullable',
+                'calibre_id' => 'nullable|exists:calibre,id',
                 'type_quantite' => 'required',
                 'unite' => 'nullable',
                 'seuil_alerte' => 'nullable',
                 'stock_initial' => 'nullable',
                 'etat_produit' => 'nullable',
-                'categorie_id' => 'nullable',
+                'categorie_id' => 'required|exists:categories,id',
                 'genre' => 'nullable',
                 'Dvie' => 'nullable',
                 'tva' => 'nullable',
+                'logoP' => 'nullable|sometimes|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+                'produit_Etiq_id' => 'nullable|exists:produits,id',
+                'produit_Embalg_id' => 'nullable|exists:produits,id',
+                'produit_Embalg_S_id' => 'nullable|exists:produits,id',
                 'prixProduits' => 'nullable|array',
                 'prixProduits.*.dateDebut' => 'nullable|date',
                 'prixProduits.*.dateFin' => 'nullable|date|after_or_equal:prixProduits.*.dateDebut',
@@ -191,15 +311,36 @@ class ProduitController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::warning('[PRODUIT][UPDATE] validation failed', [
+                    'id' => $id,
+                    'errors' => $validator->errors()->toArray(),
+                ]);
                 return response()->json(['error' => $validator->errors()], 400);
             }
 
             $produit = Produit::findOrFail($id);
-            $data = $request->except(['prixProduits', 'lines']);
+            Log::info('[PRODUIT][UPDATE] existing product loaded', [
+                'id' => $produit->id,
+                'current_code' => $produit->Code_produit,
+            ]);
+            $data = $this->filterPayloadForTable('produits', $request->except(['prixProduits', 'lines']));
             $data['produit_Etiq_id'] = $request->input('produit_Etiq_id') ?: null;
             $data['produit_Embalg_id'] = $request->input('produit_Embalg_id') ?: null;
             $data['produit_Embalg_S_id'] = $request->input('produit_Embalg_S_id') ?: null;
             $data['user_id'] = Auth::id() ?: $produit->user_id;
+
+            if ($request->hasFile('logoP')) {
+                $this->removeStoredLogo($produit->logoP);
+                $data['logoP'] = $this->storeProductLogo($request->file('logoP'));
+            }
+
+            Log::info('[PRODUIT][UPDATE] sanitized payload', [
+                'id' => $id,
+                'data_keys' => array_keys($data),
+                'produit_Etiq_id' => $data['produit_Etiq_id'] ?? null,
+                'produit_Embalg_id' => $data['produit_Embalg_id'] ?? null,
+                'produit_Embalg_S_id' => $data['produit_Embalg_S_id'] ?? null,
+            ]);
 
             $produit->update($data);
 
@@ -234,22 +375,15 @@ class ProduitController extends Controller
                                 ->where('produit_id', $produit->id)
                                 ->firstOrFail();
 
-                            $prixProduit->update([
-                                'dateDebut' => $prix['dateDebut'] ?? null,
-                                'dateFin' => $prix['dateFin'] ?? null,
-                                'prixProduit' => $prix['prixProduit'] ?? null,
-                                'typeQte' => $prix['typeQte'] ?? null,
-                                'Unite' => $prix['Unite'] ?? null,
-                            ]);
+                            $prixPayload = $this->buildPrixProduitPayload($prix, $produit->id);
+                            if (!empty($prixPayload)) {
+                                $prixProduit->update($prixPayload);
+                            }
                         } else {
-                            $produit->prixProduits()->create([
-                                'produit_id' => $produit->id,
-                                'dateDebut' => $prix['dateDebut'] ?? null,
-                                'dateFin' => $prix['dateFin'] ?? null,
-                                'prixProduit' => $prix['prixProduit'] ?? null,
-                                'typeQte' => $prix['typeQte'] ?? null,
-                                'Unite' => $prix['Unite'] ?? null,
-                            ]);
+                            $prixPayload = $this->buildPrixProduitPayload($prix, $produit->id);
+                            if (!empty($prixPayload)) {
+                                $produit->prixProduits()->create($prixPayload);
+                            }
                         }
                     }
                 }
@@ -262,7 +396,13 @@ class ProduitController extends Controller
                     ['logoP' => $produit->logoP ? asset(ltrim($produit->logoP, '/')) : null]
                 ),
             ], 200);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('[PRODUIT][UPDATE] exception', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -277,15 +417,8 @@ class ProduitController extends Controller
             $produit = Produit::findOrFail($id);
 
             if ($request->hasFile('logoP')) {
-                if ($produit->logoP) {
-                    $oldFilePath = str_replace('storage/', '', parse_url($produit->logoP, PHP_URL_PATH));
-                    if (Storage::disk('public')->exists($oldFilePath)) {
-                        Storage::disk('public')->delete($oldFilePath);
-                    }
-                }
-
-                $photoPath = $request->file('logoP')->store('logop', 'public');
-                $produit->logoP = 'storage/' . $photoPath;
+                $this->removeStoredLogo($produit->logoP);
+                $produit->logoP = $this->storeProductLogo($request->file('logoP'));
             }
 
             $produit->save();
@@ -318,10 +451,6 @@ class ProduitController extends Controller
 
     public function destroy($id)
     {
-        if (!Gate::allows('delete_product')) {
-            abort(403, 'Vous n\'avez pas l\'autorisation de supprimer ce produit.');
-        }
-
         try {
             $produit = Produit::findOrFail($id);
             $produit->delete();
@@ -389,6 +518,7 @@ class ProduitController extends Controller
                 ->with(['categorie', 'calibre', 'user', 'souscategorie', 'stockProduit'])
                 ->get()
                 ->map(function ($produit) {
+                    $produit = $this->formatProduit($produit);
                     $stock = $produit->stockProduit->first();
                     if ($stock) {
                         $quantite = ($stock->qte_kg_litre > 0) ? $stock->qte_kg_litre : $stock->qte_unite;
@@ -415,13 +545,18 @@ class ProduitController extends Controller
         $query = $request->input('query');
         $produits = Produit::where('designation', 'like', "%$query%")
             ->orWhere('Code_produit', 'like', "%$query%")
-            ->get();
+            ->with(['categorie', 'calibre', 'user', 'souscategorie', 'prixProduits', 'prixProduitsLast', 'Embalge', 'etiquette', 'EmbalgeS', 'stockProduit', 'recettes.matierePremiere'])
+            ->get()
+            ->map(fn ($produit) => $this->formatProduit($produit));
         return response()->json(['produits' => $produits]);
     }
 
     public function byCategorie($categorieId)
     {
-        $produits = Produit::where('categorie_id', $categorieId)->get();
+        $produits = Produit::where('categorie_id', $categorieId)
+            ->with(['categorie', 'calibre', 'user', 'souscategorie', 'prixProduits', 'prixProduitsLast', 'Embalge', 'etiquette', 'EmbalgeS', 'stockProduit', 'recettes.matierePremiere'])
+            ->get()
+            ->map(fn ($produit) => $this->formatProduit($produit));
         return response()->json(['produits' => $produits]);
     }
 

@@ -134,6 +134,14 @@ public function stockProduit()
 
     public function getUnitCostAttribute()
     {
+        static $visited = [];
+
+        if (isset($visited[$this->id])) {
+            return 0;
+        }
+
+        $visited[$this->id] = true;
+
         // 1. Matières Premières
         $matiereCost = 0;
         foreach ($this->recettes as $recette) {
@@ -155,10 +163,13 @@ public function stockProduit()
         if ($this->Embalge) $packagingCost += $this->Embalge->unit_cost ?? 0;
         if ($this->EmbalgeS) $packagingCost += $this->EmbalgeS->unit_cost ?? 0;
 
-        return round($matiereCost + $modCost + $packagingCost, 4);
+        $result = round($matiereCost + $modCost + $packagingCost, 4);
+        unset($visited[$this->id]);
+
+        return $result;
     }
 
-    protected $appends = ['logo_url', 'unit_cost'];
+    protected $appends = ['logo_url'];
 
 public function stock()
 {

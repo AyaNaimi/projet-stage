@@ -113,6 +113,19 @@ const ProduitForm = ({
       : null
   );
 
+  // Sync preview when formData.logoP changes (e.g. switching between edit/create)
+  React.useEffect(() => {
+    if (!formData.logoP) {
+      setLogoPreview(null);
+    } else if (formData.logoP instanceof File) {
+      const objectUrl = URL.createObjectURL(formData.logoP);
+      setLogoPreview(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    } else {
+      setLogoPreview(toFullUrl(formData.logoP));
+    }
+  }, [formData.logoP]);
+
   // Update preview on file change
   const handleLogoChange = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -672,7 +685,7 @@ const ProduitForm = ({
                           produit_Etiq_id: selected?.id,
                         }))
                       }}
-                      value={formData.produit_Etiq_id ? produits.find((prod) => prod.id === formData.produit_Etiq_id) : null}
+                      value={formData.produit_Etiq_id ? produits.find((prod) => Number(prod.id) === Number(formData.produit_Etiq_id)) : null}
                       renderInput={(params) => {
                         const hasError = !formData.produit_Etiq_id;
                         return (
@@ -736,7 +749,7 @@ const ProduitForm = ({
                           produit_Embalg_S_id: selected?.id,
                         }));
                       }}
-                      value={formData.produit_Embalg_S_id ? produits.find((prod) => prod.id === formData.produit_Embalg_S_id) : null}
+                      value={formData.produit_Embalg_S_id ? produits.find((prod) => Number(prod.id) === Number(formData.produit_Embalg_S_id)) : null}
                       renderInput={(params) => {
                         const hasError = !formData.produit_Embalg_S_id;
                         return (
@@ -800,7 +813,7 @@ const ProduitForm = ({
                           produit_Embalg_id: selected?.id,
                         }));
                       }}
-                      value={formData.produit_Embalg_id ? produits.find((prod) => prod.id === formData.produit_Embalg_id) : null}
+                      value={formData.produit_Embalg_id ? produits.find((prod) => Number(prod.id) === Number(formData.produit_Embalg_id)) : null}
                       renderInput={(params) => {
                         const hasError = !formData.produit_Embalg_id;
                         return (
