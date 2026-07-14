@@ -33,6 +33,9 @@ import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import TableViewIcon from "@mui/icons-material/TableView";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
+import CalculateIcon from "@mui/icons-material/Calculate";
+import TuneIcon from "@mui/icons-material/Tune";
+import SellIcon from "@mui/icons-material/Sell";
 import { useOpen } from "./OpenProvider";
 import { useHeader } from "./HeaderContext";
 
@@ -144,6 +147,24 @@ const navItems = [
     label: "Charges indirectes",
     icon: <TableViewIcon />,
     match: (pathname) => pathname === "/charges-indirectes",
+  },
+  {
+    to: "/cout-produits",
+    label: "Coût de revient",
+    icon: <CalculateIcon />,
+    match: (pathname) => pathname === "/cout-produits",
+  },
+  {
+    to: "/simulation",
+    label: "Simulation",
+    icon: <TuneIcon />,
+    match: (pathname) => pathname === "/simulation",
+  },
+  {
+    to: "/pricing-marges",
+    label: "Pricing & Marges",
+    icon: <SellIcon />,
+    match: (pathname) => pathname === "/pricing-marges",
   },
   {
     to: "/emphistorique",

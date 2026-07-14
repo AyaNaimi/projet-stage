@@ -125,6 +125,8 @@ const ProduitList = () => {
     rendement: 100,
     temps_production: "",
     cout_horaire_mod: "",
+    quantite_production_mensuelle: "",
+    temps_machine: "",
   });
   const [errors, setErrors] = useState({
     Code_produit: "",
@@ -553,6 +555,8 @@ const ProduitList = () => {
       rendement: 100,
       temps_production: "",
       cout_horaire_mod: "",
+      quantite_production_mensuelle: "",
+      temps_machine: "",
       produit_Etiq_id: "",
       produit_Embalg_id: "",
       genre: "",
@@ -607,6 +611,12 @@ const ProduitList = () => {
       unite_etiquette: produit.unite_etiquette || "",
       unite_embalage_primaire: produit.unite_embalage_primaire || "",
       unite_embalage_secondaire: produit.unite_embalage_secondaire || "",
+      grammage: produit.grammage || "",
+      rendement: produit.rendement || 100,
+      temps_production: produit.temps_production || "",
+      cout_horaire_mod: produit.cout_horaire_mod || "",
+      quantite_production_mensuelle: produit.quantite_production_mensuelle || "",
+      temps_machine: produit.temps_machine || "",
     });
     setSelectedProductsDataRep(
       produit?.prix_produits?.map((prix) => ({
@@ -739,6 +749,8 @@ const ProduitList = () => {
       payload.append("rendement", formData.rendement || 100);
       payload.append("temps_production", formData.temps_production || "");
       payload.append("cout_horaire_mod", formData.cout_horaire_mod || "");
+      payload.append("quantite_production_mensuelle", formData.quantite_production_mensuelle || "");
+      payload.append("temps_machine", formData.temps_machine || "");
 
       const logoValue = formData.logoP;
       if (logoValue instanceof File) {
@@ -811,6 +823,12 @@ const ProduitList = () => {
         unite_etiquette: "",
         unite_embalage_primaire: "",
         unite_embalage_secondaire: "",
+        grammage: "",
+        rendement: 100,
+        temps_production: "",
+        cout_horaire_mod: "",
+        quantite_production_mensuelle: "",
+        temps_machine: "",
         type_produit: "",
         produit_Etiq_id: "",
         produit_Embalg_id: "",

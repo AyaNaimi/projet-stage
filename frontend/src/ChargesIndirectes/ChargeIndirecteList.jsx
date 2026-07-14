@@ -11,6 +11,16 @@ import FilterToggleButton from "../components/FilterToggleButton";
 import ChargeIndirecteForm from "./ChargeIndirecteForm";
 import Swal from "sweetalert2";
 import "../Produit/All.css";
+const formatFrequence = (frequence) => {
+  const labels = {
+    mensuel: 'Mensuel',
+    trimestriel: 'Trimestriel',
+    annuel: 'Annuel',
+  };
+
+  const value = String(frequence ?? '');
+  return labels[value] || (value ? `${value} mois` : '-');
+};
 
 const ChargeIndirecteList = () => {
   const [charges, setCharges] = useState([]);
@@ -52,7 +62,8 @@ const ChargeIndirecteList = () => {
         axiosInstance.get("/api/charges-indirectes").catch(() => ({ data: [] })),
         axiosInstance.get("/api/produits").catch(() => ({ data: [] }))
       ]);
-      setCharges(Array.isArray(chargesRes.data) ? chargesRes.data : []);
+      const chargesData = chargesRes.data?.data ?? chargesRes.data;
+      setCharges(Array.isArray(chargesData) ? chargesData : []);
       const prodData = prodRes.data?.produit || prodRes.data;
       setProduits(Array.isArray(prodData) ? prodData : []);
     } catch (error) {
@@ -112,7 +123,7 @@ const ChargeIndirecteList = () => {
       id: charge.id,
       nom: charge.nom,
       montant: charge.montant,
-      frequence: charge.frequence,
+      frequence: String(charge.frequence ?? "mensuel"),
       methode_repartition: charge.methode_repartition
     });
     if (formContainerStyle.right === "-100%") {
@@ -249,7 +260,7 @@ const ChargeIndirecteList = () => {
               },
               { id: 'nom', label: 'TYPE', minWidth: 200 },
               { id: 'montant', label: 'MONTANT', minWidth: 120, render: (row) => `${row.montant} DH` },
-              { id: 'frequence', label: 'PÉRIODE', minWidth: 120, render: (row) => `${row.frequence} mois` },
+              { id: 'frequence', label: 'PÉRIODE', minWidth: 120, render: (row) => formatFrequence(row.frequence) },
               { 
                 id: 'methode_repartition', 
                 label: 'MÉTHODE', 

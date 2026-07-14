@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Button, Tab, Tabs } from 'react-bootstrap';
-import { Layers, Tag, DollarSign, RefreshCw, Info, Package } from 'lucide-react';
+import { Layers, Tag, DollarSign, RefreshCw, Info, Package, Plus } from 'lucide-react';
 
 // Extracted outside to avoid remounting
 const StyledFormGroup = React.memo(({ icon, label, htmlFor, children }) => (
@@ -14,7 +14,15 @@ const StyledFormGroup = React.memo(({ icon, label, htmlFor, children }) => (
     {children}
   </div>
 ));
-
+const FREQUENCE_OPTIONS = [
+  { value: 'mensuel', label: 'Mensuel' },
+  { value: 'trimestriel', label: 'Trimestriel' },
+  { value: 'annuel', label: 'Annuel' },
+  { value: '1', label: '1 mois' },
+  { value: '3', label: '3 mois' },
+  { value: '6', label: '6 mois' },
+  { value: '12', label: '12 mois' },
+];
 const ChargeIndirecteForm = ({
   formData,
   handleChange,
@@ -25,6 +33,31 @@ const ChargeIndirecteForm = ({
   formContainerStyle
 }) => {
   const [tabKey, setTabKey] = React.useState('configuration');
+  const [isAddingCustomFrequence, setIsAddingCustomFrequence] = React.useState(false);
+  const frequence = String(formData.frequence ?? '');
+  const isCustomFrequence = frequence !== '' && !FREQUENCE_OPTIONS.some((option) => option.value === frequence);
+  const showCustomFrequenceInput = isAddingCustomFrequence || isCustomFrequence;
+  const selectedFrequence = isCustomFrequence ? '' : frequence;
+
+  const allFrequenceOptions = React.useMemo(() => {
+    if (isCustomFrequence && frequence) {
+      const exists = FREQUENCE_OPTIONS.some((o) => o.value === frequence);
+      if (!exists) {
+        return [...FREQUENCE_OPTIONS, { value: frequence, label: `${frequence} mois` }];
+      }
+    }
+    return FREQUENCE_OPTIONS;
+  }, [frequence, isCustomFrequence]);
+
+  const handleFrequenceChange = (event) => {
+    setIsAddingCustomFrequence(false);
+    handleChange({ target: { name: 'frequence', value: event.target.value } });
+  };
+
+  const handleAddCustomFrequence = () => {
+    setIsAddingCustomFrequence(true);
+    handleChange({ target: { name: 'frequence', value: '' } });
+  };
 
   const inputStyle = {
     borderRadius: '0.5rem',
@@ -111,12 +144,13 @@ const ChargeIndirecteForm = ({
                 style={inputStyle}
                 className={`form-select styled-select ${errors.nom ? 'is-invalid' : ''}`}
               >
-                <option value="">Sélectionner un type...</option>
+                <option value="">Selectionner un type...</option>
                 <option value="Électricité">Électricité</option>
                 <option value="Eau">Eau</option>
                 <option value="Maintenance">Maintenance</option>
                 <option value="Amortissement">Amortissement</option>
-                <option value="Logistique">Logistique</option>
+                <option value="Salaires indirects">Salaires indirects</option>
+                <option value="Logistique interne">Logistique interne</option>
               </select>
             </StyledFormGroup>
           </div>
@@ -146,6 +180,7 @@ const ChargeIndirecteForm = ({
                     <input
                       id="montant"
                       type="number"
+                      min="0"
                       step="0.01"
                       name="montant"
                       value={formData.montant || ''}
@@ -157,17 +192,46 @@ const ChargeIndirecteForm = ({
                   </StyledFormGroup>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <StyledFormGroup icon={<RefreshCw size={18} />} label="Période (mois)" htmlFor="frequence">
-                    <input
-                      id="frequence"
-                      type="number"
-                      name="frequence"
-                      value={formData.frequence || ''}
-                      onChange={handleChange}
-                      style={inputStyle}
-                      placeholder="Nombre de mois"
-                      className={`form-control styled-input ${errors.frequence ? 'is-invalid' : ''}`}
-                    />
+                  <StyledFormGroup icon={<RefreshCw size={18} />} label="Fréquence" htmlFor="frequence">
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                          <select
+                                            id="frequence"
+                                            name="frequence"
+                                            value={selectedFrequence}
+                                            onChange={handleFrequenceChange}
+                                            style={{ ...inputStyle, flex: 1 }}
+                                            className={`form-select styled-select ${errors.frequence ? 'is-invalid' : ''}`}
+                                          >
+                                            <option value="">Sélectionner une fréquence...</option>
+                                            {allFrequenceOptions.map((option) => (
+                                              <option key={option.value} value={option.value}>{option.label}</option>
+                                            ))}
+                                          </select>
+                                          <Button
+                                            type="button"
+                                            variant="outline-primary"
+                                            size="sm"
+                                            style={{ borderRadius: '50%', padding: '0.25rem 0.5rem', marginLeft: 4 }}
+                                            onClick={handleAddCustomFrequence}
+                                            title="Ajouter une fréquence personnalisée"
+                                            aria-label="Ajouter une fréquence personnalisée"
+                                          >
+                                            <Plus size={14} />
+                                          </Button>
+                                        </div>
+                                        {showCustomFrequenceInput && (
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            name="frequence"
+                                            value={frequence}
+                                            onChange={handleChange}
+                                            style={{ ...inputStyle, marginTop: 8 }}
+                                            placeholder="Nombre de mois"
+                                            className={`form-control styled-input ${errors.frequence ? 'is-invalid' : ''}`}
+                                          />
+                                        )}
                   </StyledFormGroup>
                 </div>
               </div>

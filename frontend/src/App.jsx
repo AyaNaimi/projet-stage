@@ -15,6 +15,9 @@ import RecetteList from "./Recette/RecetteList.jsx";
 import ChargeDirecteList from "./ChargesDirectes/ChargeDirecteList.jsx";
 import MatierePremiereList from "./MatierePremiere/MatierePremiereList.jsx";
 import ChargeIndirecteList from "./ChargesIndirectes/ChargeIndirecteList.jsx";
+import CoutProduitList from "./CoutProduit/CoutProduitList.jsx";
+import SimulationPage from "./Simulation/SimulationPage.jsx";
+import PricingMargesPage from "./Pricing/PricingMargesPage.jsx";
 
 const App = () => {
   const location = useLocation();
@@ -34,6 +37,9 @@ const App = () => {
             <Route path="/charges-directes" element={<ChargeDirecteList />} />
             <Route path="/matieres-premieres" element={<MatierePremiereList />} />
             <Route path="/charges-indirectes" element={<ChargeIndirecteList />} />
+            <Route path="/cout-produits" element={<CoutProduitList />} />
+            <Route path="/simulation" element={<SimulationPage />} />
+            <Route path="/pricing-marges" element={<PricingMargesPage />} />
             <Route path="/emphistorique" element={<EmpHistorique />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             
