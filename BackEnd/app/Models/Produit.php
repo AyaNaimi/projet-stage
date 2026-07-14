@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\CostEngineService;
 
 
 class Produit extends Model
@@ -40,6 +41,9 @@ class Produit extends Model
         'rendement',
         'temps_production',
         'cout_horaire_mod',
+        // Champs CostEngine (personne 5)
+        'quantite_production_mensuelle',
+        'temps_machine',
     ];
 
 
@@ -132,44 +136,34 @@ public function stockProduit()
         return $this->hasMany(Recette::class);
     }
 
-    public function getUnitCostAttribute()
+    /**
+     * Attribut calculé : coût unitaire via CostEngineService.
+     *
+     * Délègue au moteur central pour garantir la cohérence avec l'API
+     * /api/produits/{id}/cout-unitaire.
+     * Protégé contre la récursion (packaging → etiquette → unit_cost).
+     */
+    public function getUnitCostAttribute(): float
     {
-        static $visited = [];
+        static $guard = [];
 
-        if (isset($visited[$this->id])) {
-            return 0;
+        if (isset($guard[$this->id])) {
+            return 0.0;
         }
+        $guard[$this->id] = true;
 
-        $visited[$this->id] = true;
-
-        // 1. Matières Premières
-        $matiereCost = 0;
-        foreach ($this->recettes as $recette) {
-            if ($recette->matierePremiere) {
-                // Coût = Quantité * Prix / (1 - Perte)
-                $lossFactor = 1 - ($recette->perte / 100);
-                if ($lossFactor > 0) {
-                    $matiereCost += ($recette->quantite * $recette->matierePremiere->prix_achat) / $lossFactor;
-                }
-            }
+        try {
+            $engine = app(CostEngineService::class);
+            $result = $engine->calculerCoutUnitaire($this);
+            return (float) $result['cout_unitaire'];
+        } catch (\Throwable $e) {
+            return 0.0;
+        } finally {
+            unset($guard[$this->id]);
         }
-
-        // 2. MOD
-        $modCost = $this->temps_production * $this->cout_horaire_mod;
-
-        // 3. Packaging
-        $packagingCost = 0;
-        if ($this->etiquette) $packagingCost += $this->etiquette->unit_cost ?? 0;
-        if ($this->Embalge) $packagingCost += $this->Embalge->unit_cost ?? 0;
-        if ($this->EmbalgeS) $packagingCost += $this->EmbalgeS->unit_cost ?? 0;
-
-        $result = round($matiereCost + $modCost + $packagingCost, 4);
-        unset($visited[$this->id]);
-
-        return $result;
     }
 
-    protected $appends = ['logo_url'];
+    protected $appends = ['logo_url', 'unit_cost'];
 
 public function stock()
 {

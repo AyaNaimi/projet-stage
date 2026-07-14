@@ -9,5 +9,7 @@ class ChargeIndirecte extends Model
 {
     use HasFactory;
 
+    protected $table = 'charges_indirectes';
+
     protected $guarded = [];
 }

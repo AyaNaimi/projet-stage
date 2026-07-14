@@ -412,6 +412,7 @@ use App\Http\Controllers\RecetteController;
 use App\Http\Controllers\ChargeIndirecteController;
 use App\Http\Controllers\FamilleMatiereController;
 use App\Http\Controllers\TypeMatiereController;
+use App\Http\Controllers\CostEngineController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutorisationController;
 use App\Http\Controllers\BonLivraisonController;
@@ -1264,4 +1265,17 @@ Route::delete('recettes/delete-selected', [RecetteController::class, 'deleteSele
 Route::delete('charges-indirectes/delete-selected', [ChargeIndirecteController::class, 'deleteSelected']);
 Route::apiResource('recettes', RecetteController::class)->except(['index']);
 Route::apiResource('charges-indirectes', ChargeIndirecteController::class);
+
+// ── CostEngine (personne 5) ───────────────────────────────────────────────────
+// Tableau de bord global (doit être avant la route paramétrée)
+Route::get('cout-produits', [CostEngineController::class, 'tableau']);
+
+// Calcul pour un produit
+Route::get('produits/{id}/cout-unitaire', [CostEngineController::class, 'coutUnitaire']);
+Route::get('produits/{id}/cout-lot',      [CostEngineController::class, 'coutLot']);
+Route::post('produits/{id}/simuler-cout', [CostEngineController::class, 'simulerCout']);
+Route::post('produits/{id}/pricing',      [CostEngineController::class, 'pricing']);
+
+// Calcul batch (plusieurs produits en un appel)
+Route::post('produits/cout-batch', [CostEngineController::class, 'coutBatch']);
 });
