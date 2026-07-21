@@ -1,0 +1,16 @@
+Code_produit,designation,categorie,prix_vente,type_quantite,unite,seuil_alerte,stock_initial,grammage,temps_production,cout_horaire_mod,quantite_production_mensuelle,temps_machine,emballage_primaire_label,emballage_secondaire_label,etiquette_label
+PROD-001,Sablé Vanille,Biscuits,45.50,unite,1,10,500,120.5,2.5,150.00,10000,3.0,Barquette Plastique,Carton 24 unités,Etiquette Vanille
+PROD-002,Gâteau au Beurre,Pâtisserie,32.00,unite,1,5,300,200.0,3.0,180.00,5000,4.5,Boîte Kraft,Carton 12 unités,Etiquette Beurre
+PROD-003,Cookie Pépites Chocolat,Biscuits,28.75,unite,1,8,800,85.0,2.0,120.00,15000,2.5,Sachet Kraft,Carton 30 unités,Etiquette Chocolat
+PROD-004,Croissant Pur Beurre,Viennoiserie,15.00,unite,1,20,1000,60.0,1.5,100.00,20000,2.0,Barquette Transparente,Carton 48 unités,Etiquette Croissant
+PROD-005,Pain au Chocolat,Viennoiserie,18.50,unite,1,15,600,75.0,1.8,110.00,12000,2.2,Sachet Plastique,Carton 24 unités,Etiquette Chocolat
+PROD-006,Brioche Dorée,Viennoiserie,22.00,unite,1,10,400,95.0,2.2,130.00,8000,2.8,Boîte Carton,Carton 12 unités,Etiquette Brioche
+PROD-007,Madeleine Citron,Pâtisserie,12.50,unite,1,25,1200,40.0,1.2,90.00,25000,1.5,Barquette Plastique,Carton 60 unités,Etiquette Citron
+PROD-008,Éclair Café,Pâtisserie,35.00,unite,1,6,250,110.0,2.8,160.00,4000,3.5,Boîte Transparente,Carton 10 unités,Etiquette Café
+PROD-009,Tarte aux Fruits,Saison,55.00,unite,1,3,100,350.0,5.0,200.00,2000,6.0,Boîte Kraft Grande,Carton 4 unités,Etiquette Fruits
+PROD-010,Millefeuille Vanille,Pâtisserie,42.00,unite,1,4,150,180.0,4.0,175.00,3000,5.0,Barquette Renforcée,Carton 8 unités,Etiquette Vanille
+PROD-011,Financier Amande,Pâtisserie,25.00,unite,1,12,700,50.0,1.5,115.00,18000,2.0,Sachet Kraft,Carton 36 unités,Etiquette Amande
+PROD-012,Chocolat Chaud,Poudre,8.50,kg,1,30,2000,0,0,0,0,0,Sachet 500g,Carton 20 sachets,Etiquette Chocolat
+PROD-013,Sirop de Vergeoise,Liquide,12.00,litre,1,20,1500,0,0,0,0,0,Bidon 5L,Carton 4 bidons,Etiquette Vergeoise
+PROD-014,Farine T55,Matière première,3.50,kg,50,5000,0,0,0,0,0,Sac 25kg,Palette 40 sacs,Etiquette Farine
+PROD-015,Beurre Doux,Matière première,8.00,kg,20,3000,0,0,0,0,0,Barquette 500g,Carton 12 barquettes,Etiquette Beurre
