@@ -511,6 +511,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UniteController;
 use App\Http\Controllers\PosteController;
 use App\Http\Controllers\GpCalendrierEmployeController;
+use App\Http\Controllers\GpCategorieEmployeController;
 use App\Http\Controllers\RegleCompEmployeController;
 use App\Http\Controllers\GpBanqueController;
 use App\Http\Controllers\GpAgenceController;
@@ -706,11 +707,12 @@ Route::get('/villes', [VilleController::class, 'getVilles']);
 
 Route::get('/communes', [CommuneController::class, 'getCommunes']);
 
-Route::apiResource('postes ', PosteController::class);
+Route::apiResource('postes', PosteController::class);
 Route::get('postes/{id}/hierarchy', [PosteController::class, 'getHierarchy']);
 
 Route::apiResource('services', ServiceController::class);
 Route::apiResource('unites', UniteController::class);
+Route::apiResource('categories-employes', GpCategorieEmployeController::class);
 
 Route::get('/departements/{id}/services', [DepartementController::class, 'getServices']);
 Route::get('/services/{id}/unites', [ServiceController::class, 'getUnitesByService']);
@@ -809,7 +811,7 @@ Route::post('/themes/{id}/definir-par-defaut', [ThemeBultinModelController::clas
 Route::get('departements/hierarchy', [DepartementController::class, 'getHierarchy']);
 
 Route::get('/departements/{id}', [DepartementController::class, 'show']);
-Route::get('/constantes-rubriques', [ConstantesRubriquesController::class, 'index']);
+// Route::get('/constantes-rubriques', [ConstantesRubriquesController::class, 'index']);
 Route::post('/employes/{employe}/bulletins', [GpEmployeBulletinController::class, 'store']);
 
 

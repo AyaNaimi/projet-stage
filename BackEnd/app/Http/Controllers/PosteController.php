@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Poste;
 use Illuminate\Http\Request;
 
 class PosteController extends Controller
@@ -11,15 +12,29 @@ class PosteController extends Controller
      */
     public function index()
     {
-        //
+        $postes = Poste::orderBy('id', 'desc')->get();
+        return response()->json($postes);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Retrieve postes by unite ID.
      */
-    public function create()
+    public function getPostesByUnite(string $uniteId)
     {
-        //
+        $postes = Poste::where('unite_id', $uniteId)->orderBy('id', 'desc')->get();
+        return response()->json($postes);
+    }
+
+    /**
+     * Retrieve hierarchy for a poste.
+     */
+    public function getHierarchy(string $id)
+    {
+        $poste = Poste::with('unite.service')->find($id);
+        if (!$poste) {
+            return response()->json(['message' => 'Poste non trouvé'], 404);
+        }
+        return response()->json($poste);
     }
 
     /**
@@ -27,7 +42,13 @@ class PosteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'unite_id' => 'nullable|exists:gp_unites,id',
+        ]);
+
+        $poste = Poste::create($request->all());
+        return response()->json($poste, 201);
     }
 
     /**
@@ -35,15 +56,11 @@ class PosteController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        $poste = Poste::find($id);
+        if (!$poste) {
+            return response()->json(['message' => 'Poste non trouvé'], 404);
+        }
+        return response()->json($poste);
     }
 
     /**
@@ -51,7 +68,18 @@ class PosteController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $poste = Poste::find($id);
+        if (!$poste) {
+            return response()->json(['message' => 'Poste non trouvé'], 404);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'unite_id' => 'nullable|exists:gp_unites,id',
+        ]);
+
+        $poste->update($request->all());
+        return response()->json($poste);
     }
 
     /**
@@ -59,6 +87,12 @@ class PosteController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $poste = Poste::find($id);
+        if (!$poste) {
+            return response()->json(['message' => 'Poste non trouvé'], 404);
+        }
+
+        $poste->delete();
+        return response()->json(null, 204);
     }
 }

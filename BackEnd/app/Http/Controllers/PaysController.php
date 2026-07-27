@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pays;
 use Illuminate\Http\Request;
 
 class PaysController extends Controller
@@ -11,15 +12,17 @@ class PaysController extends Controller
      */
     public function index()
     {
-        //
+        $pays = Pays::orderBy('nom', 'asc')->get();
+        return response()->json($pays);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Return all pays with nested villes and communes.
      */
-    public function create()
+    public function getFullData()
     {
-        //
+        $pays = Pays::with('villes.communes')->orderBy('nom', 'asc')->get();
+        return response()->json($pays);
     }
 
     /**
@@ -27,7 +30,13 @@ class PaysController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'code_pays' => 'nullable|string|max:10',
+        ]);
+
+        $pays = Pays::create($request->all());
+        return response()->json($pays, 201);
     }
 
     /**
@@ -35,15 +44,11 @@ class PaysController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        $pays = Pays::find($id);
+        if (!$pays) {
+            return response()->json(['message' => 'Pays non trouvé'], 404);
+        }
+        return response()->json($pays);
     }
 
     /**
@@ -51,7 +56,18 @@ class PaysController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $pays = Pays::find($id);
+        if (!$pays) {
+            return response()->json(['message' => 'Pays non trouvé'], 404);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'code_pays' => 'nullable|string|max:10',
+        ]);
+
+        $pays->update($request->all());
+        return response()->json($pays);
     }
 
     /**
@@ -59,6 +75,12 @@ class PaysController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $pays = Pays::find($id);
+        if (!$pays) {
+            return response()->json(['message' => 'Pays non trouvé'], 404);
+        }
+
+        $pays->delete();
+        return response()->json(null, 204);
     }
 }

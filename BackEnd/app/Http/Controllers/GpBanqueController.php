@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GpBanque;
 use Illuminate\Http\Request;
 
 class GpBanqueController extends Controller
@@ -11,15 +12,8 @@ class GpBanqueController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $banques = GpBanque::orderBy('nom', 'asc')->get();
+        return response()->json($banques);
     }
 
     /**
@@ -27,7 +21,12 @@ class GpBanqueController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nom' => 'required|string|max:255',
+        ]);
+
+        $banque = GpBanque::create($request->all());
+        return response()->json($banque, 201);
     }
 
     /**
@@ -35,15 +34,11 @@ class GpBanqueController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        $banque = GpBanque::find($id);
+        if (!$banque) {
+            return response()->json(['message' => 'Banque non trouvée'], 404);
+        }
+        return response()->json($banque);
     }
 
     /**
@@ -51,7 +46,17 @@ class GpBanqueController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $banque = GpBanque::find($id);
+        if (!$banque) {
+            return response()->json(['message' => 'Banque non trouvée'], 404);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+        ]);
+
+        $banque->update($request->all());
+        return response()->json($banque);
     }
 
     /**
@@ -59,6 +64,12 @@ class GpBanqueController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $banque = GpBanque::find($id);
+        if (!$banque) {
+            return response()->json(['message' => 'Banque non trouvée'], 404);
+        }
+
+        $banque->delete();
+        return response()->json(null, 204);
     }
 }

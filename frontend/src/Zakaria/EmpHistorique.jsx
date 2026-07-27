@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import { IoFolderOpenOutline } from "react-icons/io5";
 import { FaMinus, FaPlus, FaSquare } from "react-icons/fa6";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,6 +19,8 @@ import { openPrintableTable } from "./Standardized/printTable";
 
 
 import { useHeader } from "../Acceuil/HeaderContext";
+
+const axios = axiosInstance;
 
 
 

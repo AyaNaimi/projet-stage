@@ -191,11 +191,15 @@ class EmployeController extends Controller
             'sexe' => 'nullable|string|max:50',
             'situation_fm' => 'nullable|string|max:255',
             'nb_enfants' => 'nullable|integer',
+            'adresse' => 'nullable|array',
+            'adresse.adress' => 'nullable|string|max:255',
+            'adresse.adresse' => 'nullable|string|max:255',
             'adresse.ville' => 'nullable|string|max:255',
-             'adresse.pays' => 'nullable|string|max:255',
-'adresse.codePostal' => 'nullable|string|max:20',
-'adresse.commune' => 'nullable|string|max:255',
-'adresse.codePays' => 'nullable|string|max:10',
+            'adresse.pays' => 'nullable|string|max:255',
+            'adresse.codePostal' => 'nullable|string|max:20',
+            'adresse.code_postal' => 'nullable|string|max:20',
+            'adresse.commune' => 'nullable|string|max:255',
+            'adresse.codePays' => 'nullable|string|max:10',
             'tel' => 'nullable|string|max:20',
             'fax' => 'nullable|string|max:20',
             'email' => 'nullable|string|email|max:35',
@@ -209,7 +213,11 @@ class EmployeController extends Controller
             'date_entree' => 'nullable|date',
             'date_embauche' => 'nullable|date',
             'date_sortie' => 'nullable|date',
-            'salaire_base' => 'nullable|numeric',
+            'salaire' => 'nullable|array',
+            'salaire.salaire_base' => 'nullable|numeric',
+            'salaire.salaire_moyen' => 'nullable|numeric',
+            'salaire.salaire_reference_annuel' => 'nullable|numeric',
+            'salaire.bulletin_modele' => 'nullable|string',
             'remarque' => 'nullable|string',
             'url_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'centreCout' => 'nullable|string|max:255',
@@ -223,9 +231,6 @@ class EmployeController extends Controller
             'engagement_procedure' => 'nullable|date',
             'signature_rupture_conventionnelle' => 'nullable|date',
             'transaction_en_cours' => 'nullable|boolean',
-            'bulletin_modele' => 'nullable|string',
-            'salaire_moyen' => 'nullable|numeric',
-            'salaire_reference_annuel' => 'nullable|numeric',
         ]);
     
         Log::info('Données validées pour création d\'employé : ', $validatedData);
@@ -233,31 +238,44 @@ class EmployeController extends Controller
         try {
             DB::beginTransaction();
     
-            $employeData = $validatedData;
+            $employeFields = [
+                'matricule', 'num_badge', 'nom', 'prenom', 'lieu_naiss', 'date_naiss',
+                'cin', 'cnss', 'sexe', 'situation_fm', 'nb_enfants', 'tel', 'fax',
+                'email', 'fonction', 'nationalite', 'niveau', 'echelon', 'categorie',
+                'coeficients', 'imputation', 'date_entree', 'date_embauche', 'date_sortie',
+                'remarque', 'centreCout', 'departement_id', 'delivree_par', 'date_expiration',
+                'carte_sejour', 'motif_depart', 'dernier_jour_travaille', 'notification_rupture',
+                'engagement_procedure', 'signature_rupture_conventionnelle', 'transaction_en_cours'
+            ];
+            $employeData = $request->only($employeFields);
             $employeData['active'] = 1;
-
-            $employeData['ville'] = $request->input('adresse.ville');
-            $employeData['pays'] = $request->input('adresse.pays');
-            $employeData['code_postal'] = $request->input('adresse.codePostal');
-            $employeData['commune'] = $request->input('adresse.commune');
-            $employeData['code_pays'] = $request->input('adresse.codePays');
-
-
-
+            if ($request->has('adresse')) {
+                $adresseInput = $request->input('adresse');
+                if (is_array($adresseInput)) {
+                    $employeData['adresse'] = $adresseInput['adresse'] ?? $adresseInput['adress'] ?? $adresseInput['rue'] ?? null;
+                    $employeData['ville'] = $adresseInput['ville'] ?? null;
+                    $employeData['pays'] = $adresseInput['pays'] ?? null;
+                    $employeData['code_postal'] = $adresseInput['codePostal'] ?? $adresseInput['code_postal'] ?? null;
+                    $employeData['commune'] = $adresseInput['commune'] ?? null;
+                    $employeData['code_pays'] = $adresseInput['codePays'] ?? null;
+                } else {
+                    $employeData['adresse'] = $adresseInput;
+                }
+            }
+            if ($request->has('ville')) $employeData['ville'] = $request->input('ville');
+            if ($request->has('pays')) $employeData['pays'] = $request->input('pays');
+            if ($request->has('code_postal')) $employeData['code_postal'] = $request->input('code_postal');
+            if ($request->has('commune')) $employeData['commune'] = $request->input('commune');
+            if ($request->has('code_pays')) $employeData['code_pays'] = $request->input('code_pays');
+    
             $employeData['salaire_base'] = $request->input('salaire.salaire_base');
             $employeData['salaire_moyen'] = $request->input('salaire.salaire_moyen');
             $employeData['salaire_reference_annuel'] = $request->input('salaire.salaire_reference_annuel');
-
-
-            if (isset($employeData['adresse'])) {
-                unset($employeData['adresse']);
-            }
-
-            
+            $employeData['bulletin_modele'] = $request->input('salaire.bulletin_modele');
+    
             if ($request->hasFile('url_img')) {
                 $imagePath = $request->file('url_img')->store('employee_images', 'public');
                 $employeData['url_img'] = $imagePath;
-    
                 Log::info('Image enregistrée à : ' . $imagePath);
             }
     
@@ -327,10 +345,15 @@ class EmployeController extends Controller
             'sexe' => 'nullable|string|max:50',
             'situation_fm' => 'nullable|string|max:255',
             'nb_enfants' => 'nullable|integer',
-            'adresse' => 'nullable|string|max:255',
-            'ville' => 'nullable|string|max:255',
-            'pays' => 'nullable|string|max:255',
-            'code_postal' => 'nullable|string|max:20',
+            'adresse' => 'nullable|array',
+            'adresse.adress' => 'nullable|string|max:255',
+            'adresse.adresse' => 'nullable|string|max:255',
+            'adresse.ville' => 'nullable|string|max:255',
+            'adresse.pays' => 'nullable|string|max:255',
+            'adresse.codePostal' => 'nullable|string|max:20',
+            'adresse.code_postal' => 'nullable|string|max:20',
+            'adresse.commune' => 'nullable|string|max:255',
+            'adresse.codePays' => 'nullable|string|max:10',
             'tel' => 'nullable|string|max:20',
             'fax' => 'nullable|string|max:20',
             'email' => 'nullable|string|email|max:35',
@@ -344,7 +367,11 @@ class EmployeController extends Controller
             'date_entree' => 'nullable|date',
             'date_embauche' => 'nullable|date',
             'date_sortie' => 'nullable|date',
-            'salaire_base' => 'nullable|numeric',
+            'salaire' => 'nullable|array',
+            'salaire.salaire_base' => 'nullable|numeric',
+            'salaire.salaire_moyen' => 'nullable|numeric',
+            'salaire.salaire_reference_annuel' => 'nullable|numeric',
+            'salaire.bulletin_modele' => 'nullable|string',
             'remarque' => 'nullable|string',
             'url_img' => 'nullable',
             'centreCout' => 'nullable|string|max:255',
@@ -358,15 +385,42 @@ class EmployeController extends Controller
             'engagement_procedure' => 'nullable|date',
             'signature_rupture_conventionnelle' => 'nullable|date',
             'transaction_en_cours' => 'nullable|boolean',
-            'bulletin_modele' => 'nullable|string',
-            'salaire_moyen' => 'nullable|numeric',
-            'salaire_reference_annuel' => 'nullable|numeric',
-
         ]);
     
         try {
-            $employeData = $validatedData;
-            $employeData['active'] = 1; 
+            $employeFields = [
+                'matricule', 'num_badge', 'nom', 'prenom', 'lieu_naiss', 'date_naiss',
+                'cin', 'cnss', 'sexe', 'situation_fm', 'nb_enfants', 'tel', 'fax',
+                'email', 'fonction', 'nationalite', 'niveau', 'echelon', 'categorie',
+                'coeficients', 'imputation', 'date_entree', 'date_embauche', 'date_sortie',
+                'remarque', 'centreCout', 'departement_id', 'delivree_par', 'date_expiration',
+                'carte_sejour', 'motif_depart', 'dernier_jour_travaille', 'notification_rupture',
+                'engagement_procedure', 'signature_rupture_conventionnelle', 'transaction_en_cours'
+            ];
+            $employeData = $request->only($employeFields);
+            if ($request->has('adresse')) {
+                $adresseInput = $request->input('adresse');
+                if (is_array($adresseInput)) {
+                    $employeData['adresse'] = $adresseInput['adresse'] ?? $adresseInput['adress'] ?? $adresseInput['rue'] ?? null;
+                    $employeData['ville'] = $adresseInput['ville'] ?? null;
+                    $employeData['pays'] = $adresseInput['pays'] ?? null;
+                    $employeData['code_postal'] = $adresseInput['codePostal'] ?? $adresseInput['code_postal'] ?? null;
+                    $employeData['commune'] = $adresseInput['commune'] ?? null;
+                    $employeData['code_pays'] = $adresseInput['codePays'] ?? null;
+                } else {
+                    $employeData['adresse'] = $adresseInput;
+                }
+            }
+            if ($request->has('ville')) $employeData['ville'] = $request->input('ville');
+            if ($request->has('pays')) $employeData['pays'] = $request->input('pays');
+            if ($request->has('code_postal')) $employeData['code_postal'] = $request->input('code_postal');
+            if ($request->has('commune')) $employeData['commune'] = $request->input('commune');
+            if ($request->has('code_pays')) $employeData['code_pays'] = $request->input('code_pays');
+    
+            $employeData['salaire_base'] = $request->input('salaire.salaire_base');
+            $employeData['salaire_moyen'] = $request->input('salaire.salaire_moyen');
+            $employeData['salaire_reference_annuel'] = $request->input('salaire.salaire_reference_annuel');
+            $employeData['bulletin_modele'] = $request->input('salaire.bulletin_modele');
     
             if ($request->hasFile('url_img')) {
                 $imagePath = $request->file('url_img')->store('employee_images', 'public');

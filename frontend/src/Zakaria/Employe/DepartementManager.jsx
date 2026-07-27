@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import axiosInstance from "../../axiosInstance";
 import "./DepartementManager.css";
 import { MdOutlinePostAdd } from "react-icons/md";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -14,6 +14,7 @@ import { useOpen } from "../../Acceuil/OpenProvider";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Box } from "@mui/material";
 
+const axios = axiosInstance;
 function DepartementManager() {
   const [departements, setDepartements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,35 +79,6 @@ function DepartementManager() {
     };
   }, [setTitle, setOnPrint, setOnExportPDF, setOnExportExcel, clearActions]);
 
-
-  const fetchDepartmentHierarchy = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/departements/hierarchy');
-      setDepartements(response.data);
-      localStorage.setItem('departmentHierarchy', JSON.stringify(response.data));
-    } catch (error) {
-      console.error("Error fetching department hierarchy:", error);
-      if (error.response && error.response.status === 403) {
-        Swal.fire({
-          icon: "error",
-          title: "Accès refusé",
-          text: "Vous n'avez pas l'autorisation de voir la hiérarchie des départements.",
-        });
-      }
-    }
-  };
-
-
-
-  useEffect(() => {
-    const departmentsFromStorage = localStorage.getItem('departmentHierarchy');
-
-    if (departmentsFromStorage) {
-      setDepartements(JSON.parse(departmentsFromStorage));
-    }
-
-    fetchDepartmentHierarchy();
-  }, []);
 
   const fetchDepartements = useCallback(async () => {
     setIsLoading(true);
@@ -236,7 +208,7 @@ function DepartementManager() {
         confirmButtonText: 'OK',
       });
 
-      fetchDepartmentHierarchy();
+      fetchDepartements();
     } catch (error) {
       console.error("Error adding sub-department:", error);
 
@@ -568,7 +540,7 @@ function DepartementManager() {
           'success'
         );
 
-        fetchDepartmentHierarchy();
+        fetchDepartements();
       } catch (error) {
         console.error("Erreur lors de la suppression du département:", error);
         Swal.fire(
@@ -636,6 +608,33 @@ function DepartementManager() {
   >
             <div className="departement_home1">
               <ul className="departement_list">
+                <li style={{ listStyleType: "none", marginBottom: "15px", display: "flex", justifyContent: "center" }}>
+                  <button
+                    onClick={() => setIsFormVisible(true)}
+                    className="btn btn-primary d-flex align-items-center"
+                    style={{ backgroundColor: "#0d6efd", border: "none" }}
+                  >
+                    <MdOutlinePostAdd style={{ marginRight: "8px", fontSize: "1.2rem" }} />
+                    Ajouter un département
+                  </button>
+                </li>
+                {isFormVisible && (
+                  <li style={{ listStyleType: "none", marginBottom: "15px", display: "flex", justifyContent: "center" }}>
+                    <form onSubmit={handleAddDepartement} style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nom du département"
+                        value={newDepartementName}
+                        onChange={(e) => setNewDepartementName(e.target.value)}
+                        required
+                        style={{ width: "200px" }}
+                      />
+                      <button type="submit" className="btn btn-success btn-sm">Valider</button>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsFormVisible(false)}>Annuler</button>
+                    </form>
+                  </li>
+                )}
                 <li style={{ listStyleType: "none" }}>
                   <div className="checkbox-container" style={{ marginTop:'5%', width:'90%',display: 'flex',alignItems: 'center', justifyContent:'center',marginLeft:'5%' }}>
                     <input

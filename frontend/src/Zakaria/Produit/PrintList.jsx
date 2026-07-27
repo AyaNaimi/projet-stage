@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import Swal from "sweetalert2";
 import { Form, Button, Modal, DropdownButton } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
@@ -49,6 +49,8 @@ import TableContainer from "../components/TableContainer";
 import SortableColumn from "../components/SortableColumn";
 import useSortableData from "../hooks/useSortableData";
 import { useAuth } from "../AuthContext";
+
+const axios = axiosInstance;
 
 const ProduitList = () => {
   const dispatch = useDispatch();

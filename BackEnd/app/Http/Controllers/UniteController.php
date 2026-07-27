@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Unite;
 use Illuminate\Http\Request;
 
 class UniteController extends Controller
@@ -11,15 +12,8 @@ class UniteController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $unites = Unite::orderBy('id', 'desc')->get();
+        return response()->json($unites);
     }
 
     /**
@@ -27,7 +21,13 @@ class UniteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'service_id' => 'nullable|exists:services,id',
+        ]);
+
+        $unite = Unite::create($request->all());
+        return response()->json($unite, 201);
     }
 
     /**
@@ -35,15 +35,11 @@ class UniteController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        $unite = Unite::find($id);
+        if (!$unite) {
+            return response()->json(['message' => 'Unité non trouvée'], 404);
+        }
+        return response()->json($unite);
     }
 
     /**
@@ -51,7 +47,18 @@ class UniteController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $unite = Unite::find($id);
+        if (!$unite) {
+            return response()->json(['message' => 'Unité non trouvée'], 404);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'service_id' => 'nullable|exists:services,id',
+        ]);
+
+        $unite->update($request->all());
+        return response()->json($unite);
     }
 
     /**
@@ -59,6 +66,12 @@ class UniteController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $unite = Unite::find($id);
+        if (!$unite) {
+            return response()->json(['message' => 'Unité non trouvée'], 404);
+        }
+
+        $unite->delete();
+        return response()->json(null, 204);
     }
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
+
+const axios = axiosInstance;
 
 const CategoryProductChart = () => {
   const [chartData, setChartData] = useState(null);

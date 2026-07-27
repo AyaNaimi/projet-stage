@@ -68,4 +68,16 @@ class ServiceController extends Controller
         $service->delete();
         return response()->json(['message' => 'Service supprimé avec succès']);
     }
+
+    // Récupérer les unités d'un service
+    public function getUnitesByService($id)
+    {
+        $service = Service::find($id);
+        if (!$service) {
+            return response()->json(['message' => 'Service non trouvé'], 404);
+        }
+
+        $unites = \App\Models\Unite::where('service_id', $id)->orderBy('id', 'desc')->get();
+        return response()->json($unites);
+    }
 }

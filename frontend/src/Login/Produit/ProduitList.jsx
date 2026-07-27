@@ -23,6 +23,7 @@ import {
   faFilter,
   faList,
   faClose,
+  faEye,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -42,6 +43,7 @@ import FamilleTypeCarousels from "../components/FamilleTypeCarousels";
 import ProduitForm from "./ProduitForm";
 import Header from "../components/Header";
 import TableMui from "../components/TableMui";
+import ProduitFichePrint from "../../Zakaria/Produit/ProduitFichePrint";
 
 
 const ProduitList = () => {
@@ -65,6 +67,8 @@ const ProduitList = () => {
 
   const [editingProduit, setEditingProduit] = useState(null);
   const [editingProduitId, setEditingProduitId] = useState(null);
+  const [showFicheModal, setShowFicheModal] = useState(false);
+  const [selectedProduitFiche, setSelectedProduitFiche] = useState(null);
   const [userHasDeletePermission, setUserHasDeletePermission] = useState(true);
   const [formContainerStyle, setFormContainerStyle] = useState({
     right: "-100%",
@@ -1657,6 +1661,26 @@ const toggleDetail = (rowId, section) => {
   hasActions={true}
   handleEdit={handleEdit}
   handleDelete={handleDelete}
+  renderCustomActions={(row) => (
+    <button
+      title="Fiche Produit"
+      onClick={() => {
+        setSelectedProduitFiche(row);
+        setShowFicheModal(true);
+      }}
+      style={{
+        background: "none",
+        border: "none",
+        padding: "0",
+        cursor: "pointer",
+        color: "#17a2b8",
+        fontSize: "1rem",
+        lineHeight: 1,
+      }}
+    >
+      <FontAwesomeIcon icon={faEye} />
+    </button>
+  )}
   openDetails={openDetails}
   toggleDetail={toggleDetail}
   renderDetail={(row, rowOpenDetails, toggleDetail) =>
@@ -1754,7 +1778,19 @@ heightOffset={{ trueOffset: 388, falseOffset: 338 }}
 </AnimatePresence>
   }
   tableContainerStyle={tableContainerStyle}
-/>     
+/>
+
+      {/* Modal Fiche Produit */}
+      {selectedProduitFiche && (
+        <ProduitFichePrint
+          show={showFicheModal}
+          onHide={() => {
+            setShowFicheModal(false);
+            setSelectedProduitFiche(null);
+          }}
+          produit={selectedProduitFiche}
+        />
+      )}
           </div>
         </Box>
       </Box>

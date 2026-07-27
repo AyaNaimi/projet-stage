@@ -10,18 +10,23 @@ class VilleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $villes = Ville::with('region')->orderBy('id', 'desc')->get();
+        $pays_id = $request->query('pays_id');
+        if ($pays_id) {
+            $villes = Ville::where('pays_id', $pays_id)->orderBy('nom', 'asc')->get();
+        } else {
+            $villes = Ville::orderBy('nom', 'asc')->get();
+        }
         return response()->json($villes);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Retrieve villes, optionally filtered by pays_id (alias for index).
      */
-    public function create()
+    public function getVilles(Request $request)
     {
-        //
+        return $this->index($request);
     }
 
     /**
@@ -29,57 +34,57 @@ class VilleController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
         $request->validate([
-            'ville' => 'required|string|max:255',
-            'region_id' => 'nullable|exists:regions,id',  // Check if region_id exists in the regions table
+            'nom' => 'required|string|max:255',
+            'pays_id' => 'required|exists:gp_pays,id',
         ]);
 
-        // Create a new Ville
         $ville = Ville::create($request->all());
-
-        return response()->json($ville, 201); // Return the newly created Ville
+        return response()->json($ville, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Ville $ville)
+    public function show(string $id)
     {
+        $ville = Ville::find($id);
+        if (!$ville) {
+            return response()->json(['message' => 'Ville non trouvée'], 404);
+        }
         return response()->json($ville);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Ville $ville)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Ville $ville)
+    public function update(Request $request, string $id)
     {
-        // Validate the request
+        $ville = Ville::find($id);
+        if (!$ville) {
+            return response()->json(['message' => 'Ville non trouvée'], 404);
+        }
+
         $request->validate([
-            'ville' => 'required|string|max:255',
+            'nom' => 'required|string|max:255',
+            'pays_id' => 'nullable|exists:gp_pays,id',
         ]);
 
-        // Update the Ville
         $ville->update($request->all());
-
         return response()->json($ville);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Ville $ville)
+    public function destroy(string $id)
     {
-        $ville->delete();
+        $ville = Ville::find($id);
+        if (!$ville) {
+            return response()->json(['message' => 'Ville non trouvée'], 404);
+        }
 
-        return response()->json(null, 204);  // Return 204 No Content
+        $ville->delete();
+        return response()->json(null, 204);
     }
 }

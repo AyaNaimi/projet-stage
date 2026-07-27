@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef,forwardRef, useImperativeHandle } from "react";
-import axios from "axios";
+import axiosInstance from "../../axiosInstance";
 import { Button, Card, Tab, Tabs, Table, Modal, Form } from 'react-bootstrap';
 import { faEdit, faTrash, faFilePdf, faFileExcel, faPrint, faSliders, faChevronDown, faChevronUp, faSearch, faCalendarAlt, faClipboardCheck, faIdCard, faFilter, faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,6 +24,7 @@ import { FaPlusCircle } from "react-icons/fa";
 import EmployeFichePrint from "./EmployeFichePrint";
 import {useOpen} from "../../Acceuil/OpenProvider";
 
+const axios = axiosInstance;
 
 
 const EmployeTable = forwardRef((props, ref) => {
@@ -358,8 +359,8 @@ const [fieldMappings, setFieldMappings] = useState({});
   const fetchCalendriers = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/api/calendrie');
-      setCalendriers(response.data.calendrie); 
-      console.log(' Données reçues calendriers :', response.data.calendrie);
+      setCalendriers(response.data.calendrie || []); 
+      console.log(' Données reçues calendriers :', response.data.calendrie || []);
 
     } catch (error) {
       console.error('Erreur lors de la récupération des calendriers', error);
@@ -397,14 +398,7 @@ const [fieldMappings, setFieldMappings] = useState({});
 
 
 
-  useEffect(() => {
-    fetch('http://localhost:8000/api/full-data')
-      .then(response => response.json())
-      .then(data => {
-        setData(data);
-      })
-      .catch(error => console.error('Erreur de chargement:', error));
-  }, []);
+
 
 
 
@@ -1120,7 +1114,64 @@ const handleExcelImport = (event) => {
 
 
 const handleFileChange = (e) => {
-  setSelectedFile(e.target.files[0]);
+  const file = e.target.files[0];
+  setSelectedFile(file);
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      let headers = [];
+      if (file.name.endsWith('.csv')) {
+        const data = evt.target.result;
+        const text = new TextDecoder('utf-8').decode(data);
+        const firstLine = text.split('\n')[0] || "";
+        const separator = firstLine.includes(';') ? ';' : ',';
+        headers = firstLine.split(separator).map(h => h.trim().replace(/^["']|["']$/g, ''));
+      } else {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        headers = sheetData[0] || [];
+      }
+
+      const newMappings = {};
+      const newSelectedFields = [];
+      headers.forEach((header, index) => {
+        if (!header) return;
+        const cleanHeader = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        const matchedField = allEmployeFields.find(field => {
+          const cleanField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return cleanField === cleanHeader;
+        });
+
+        if (matchedField) {
+          let colLetter = "";
+          let temp = index;
+          while (temp >= 0) {
+            colLetter = String.fromCharCode((temp % 26) + 65) + colLetter;
+            temp = Math.floor(temp / 26) - 1;
+          }
+          newMappings[matchedField] = colLetter;
+          newSelectedFields.push(matchedField);
+        }
+      });
+
+      setFieldMappings(newMappings);
+      setSelectedFields(newSelectedFields);
+    } catch (err) {
+      console.error("Erreur lors de la lecture des en-têtes du fichier :", err);
+    }
+  };
+
+  if (file.name.endsWith('.csv')) {
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.readAsBinaryString(file);
+  }
 };
 
 const handleImportValidation = () => {
@@ -1445,7 +1496,18 @@ const handleImportValidation = () => {
                   as="button"
                   id="dropdown-import"
                   title="Importer Employés"
-                  onClick={() => setShowImportModal(true)}
+                  onClick={() => {
+                    if (!departementId) {
+                      Swal.fire({
+                        icon: 'warning',
+                        title: 'Sélection requise',
+                        text: 'Veuillez d\'abord sélectionner un département dans la liste de gauche.',
+                        confirmButtonColor: '#00afaa'
+                      });
+                      return;
+                    }
+                    setShowImportModal(true);
+                  }}
                   style={iconButtonStyle}
                 >
                   <FontAwesomeIcon
@@ -1973,16 +2035,7 @@ const handleImportValidation = () => {
         </Modal.Footer>
       </Modal>
 
-      <style jsx>{`
-        // .custom-checkbox1 .form-check-input:checked {
-        //   background-color: #00afaa;
-        //   border-color: #00afaa;
-        // }
-        
-        // .custom-checkbox1 .form-check-input:focus {
-        //   border-color: #00afaa;
-        //   box-shadow: 0 0 0 0.25rem rgba(0, 175, 170, 0.25);
-        // }
+      <style>{`
         
         /* Ajouter animation et transition pour une meilleure UX */
         .custom-modal-excel .modal-content {
@@ -2072,7 +2125,7 @@ const handleImportValidation = () => {
     </h6>
     <Form.Control
       type="file"
-      accept=".xlsx, .xls"
+      accept=".xlsx, .xls, .csv"
       onChange={handleFileChange}
       style={{ maxWidth: '400px' }}
     />
@@ -2092,10 +2145,39 @@ const handleImportValidation = () => {
           color: '#00afaa',
           fontWeight: 'bold',
           fontSize: '1.1rem',
-          zIndex: 1
+          zIndex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px'
         }}
       >
-        Champs à importer
+        <span>Champs à importer</span>
+        <Form.Check
+          type="checkbox"
+          id="select-all-fields"
+          label="Tout sélectionner"
+          style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#666', cursor: 'pointer' }}
+          checked={selectedFields.length === allEmployeFields.length}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedFields(allEmployeFields);
+              const initialMapping = {};
+              allEmployeFields.forEach((field, index) => {
+                let colLetter = "";
+                let temp = index;
+                while (temp >= 0) {
+                  colLetter = String.fromCharCode((temp % 26) + 65) + colLetter;
+                  temp = Math.floor(temp / 26) - 1;
+                }
+                initialMapping[field] = colLetter;
+              });
+              setFieldMappings(initialMapping);
+            } else {
+              setSelectedFields([]);
+              setFieldMappings({});
+            }
+          }}
+        />
       </div>
 
       {/* Contenu encadré */}
@@ -2112,7 +2194,7 @@ const handleImportValidation = () => {
           {/* Colonne 1 */}
           <div className="d-flex flex-column me-2" style={{ minWidth: '120px' }}>
             {allEmployeFields.slice(0, 11).map(field => (
-              <div className="d-flex align-items-center mb-2">
+              <div key={field} className="d-flex align-items-center mb-2">
   <Form.Check
     type="checkbox"
     id={`field-${field}`}
@@ -2149,7 +2231,7 @@ const handleImportValidation = () => {
           {/* Colonne 2 */}
           <div className="d-flex flex-column me-2" style={{ minWidth: '120px' }}>
             {allEmployeFields.slice(11, 22).map(field => (
-              <div className="d-flex align-items-center mb-2">
+              <div key={field} className="d-flex align-items-center mb-2">
   <Form.Check
     type="checkbox"
     id={`field-${field}`}
@@ -2304,7 +2386,7 @@ const handleImportValidation = () => {
   </Modal.Footer>
 
 
-  <style jsx>{`
+  <style>{`
     .custom-checkbox1 .form-check-input:checked {
       background-color: #00afaa;
       border-color: #00afaa;

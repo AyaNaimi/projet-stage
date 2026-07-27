@@ -9,13 +9,19 @@ class Ville extends Model
 {
     use HasFactory;
 
+    protected $table = 'gp_villes';
+
     protected $fillable = [
-        'ville', 'region_id',
+        'nom', 'pays_id',
     ];
 
-    // Define a relationship with the Region model (assuming Region exists).
-    public function region()
+    public function pays()
     {
-        return $this->belongsTo(Region::class);
+        return $this->belongsTo(Pays::class, 'pays_id');
+    }
+
+    public function communes()
+    {
+        return $this->hasMany(Commune::class, 'ville_id');
     }
 }

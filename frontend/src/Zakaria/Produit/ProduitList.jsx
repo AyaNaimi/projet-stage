@@ -9,6 +9,7 @@ import PrintList from "./PrintList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Carousel } from "react-bootstrap";
 import { motion, AnimatePresence } from "framer-motion";
+import ProduitFichePrint from "./ProduitFichePrint";
 
 import {
   faTrash,
@@ -20,6 +21,7 @@ import {
   faFilter,
   faList,
   faClose,
+  faEye,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -80,6 +82,8 @@ const ProduitList = () => {
 
   const [editingProduit, setEditingProduit] = useState(null);
   const [editingProduitId, setEditingProduitId] = useState(null);
+  const [showFicheModal, setShowFicheModal] = useState(false);
+  const [selectedProduitFiche, setSelectedProduitFiche] = useState(null);
   const [userHasDeletePermission, setUserHasDeletePermission] = useState(true);
   const [formContainerStyle, setFormContainerStyle] = useState({
     right: "-100%",
@@ -2276,49 +2280,74 @@ const ProduitList = () => {
                             {columnVisibility.action && (
                               <td
                                 className="sticky-action-column"
-                                style={{ backgroundColor: "white" }}
+                                style={{
+                                  backgroundColor: "white",
+                                  padding: "6px 10px",
+                                  minWidth: "110px",
+                                  whiteSpace: "nowrap",
+                                }}
                               >
-                                {/* Vérification de la permission pour l'édition */}
-                                <FontAwesomeIcon
-                                  onClick={
-                                    permissions.includes("edit_product")
-                                      ? () => handleEdit(produit, false)
-                                      : null
-                                  }
-                                  icon={faEdit}
-                                  style={{
-                                    color: permissions.includes("edit_product")
-                                      ? "#007bff"
-                                      : "#b0bec5",
-                                    cursor: permissions.includes("edit_product")
-                                      ? "pointer"
-                                      : "not-allowed",
-                                  }}
-                                />
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  {/* Modifier */}
+                                  <FontAwesomeIcon
+                                    title="Modifier"
+                                    onClick={
+                                      permissions.includes("edit_product")
+                                        ? () => handleEdit(produit, false)
+                                        : null
+                                    }
+                                    icon={faEdit}
+                                    style={{
+                                      color: permissions.includes("edit_product")
+                                        ? "#007bff"
+                                        : "#b0bec5",
+                                      cursor: permissions.includes("edit_product")
+                                        ? "pointer"
+                                        : "not-allowed",
+                                      fontSize: "1rem",
+                                    }}
+                                  />
 
-                                <span style={{ margin: "0 8px" }}></span>
+                                  {/* Fiche Produit */}
+                                  <button
+                                    title="Fiche Produit"
+                                    onClick={() => {
+                                      setSelectedProduitFiche(produit);
+                                      setShowFicheModal(true);
+                                    }}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      padding: "0",
+                                      cursor: "pointer",
+                                      color: "#17a2b8",
+                                      fontSize: "1rem",
+                                      lineHeight: 1,
+                                    }}
+                                  >
+                                    <FontAwesomeIcon icon={faEye} />
+                                  </button>
 
-                                {/* Vérification de la permission pour la suppression */}
-                                <FontAwesomeIcon
-                                  onClick={
-                                    permissions.includes("delete_product")
-                                      ? () => handleDelete(produit.id)
-                                      : null
-                                  }
-                                  icon={faTrash}
-                                  style={{
-                                    color: permissions.includes(
-                                      "delete_product",
-                                    )
-                                      ? "#ff0000"
-                                      : "#b0bec5",
-                                    cursor: permissions.includes(
-                                      "delete_product",
-                                    )
-                                      ? "pointer"
-                                      : "not-allowed",
-                                  }}
-                                />
+                                  {/* Supprimer */}
+                                  <FontAwesomeIcon
+                                    title="Supprimer"
+                                    onClick={
+                                      permissions.includes("delete_product")
+                                        ? () => handleDelete(produit.id)
+                                        : null
+                                    }
+                                    icon={faTrash}
+                                    style={{
+                                      color: permissions.includes("delete_product")
+                                        ? "#ff0000"
+                                        : "#b0bec5",
+                                      cursor: permissions.includes("delete_product")
+                                        ? "pointer"
+                                        : "not-allowed",
+                                      fontSize: "1rem",
+                                    }}
+                                  />
+                                </div>
                               </td>
                             )}
                           </tr>
@@ -2376,6 +2405,18 @@ const ProduitList = () => {
           </div>
         </Box>
       </Box>
+
+      {/* Modal Fiche Produit */}
+      {selectedProduitFiche && (
+        <ProduitFichePrint
+          show={showFicheModal}
+          onHide={() => {
+            setShowFicheModal(false);
+            setSelectedProduitFiche(null);
+          }}
+          produit={selectedProduitFiche}
+        />
+      )}
     </ThemeProvider>
   );
 };

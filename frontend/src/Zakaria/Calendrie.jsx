@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AbsenceForm from './AbsenceForm';
-import axios from 'axios';
+import axiosInstance from '../axiosInstance';
 import Swal from "sweetalert2";
 import { Button, Card, Tab, Tabs, Table, Modal, Form } from 'react-bootstrap';
 import { Trash2, Edit2, Plus, Check, X } from 'lucide-react';
@@ -34,6 +34,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useHeader } from "../Acceuil/HeaderContext";
 import { ThemeProvider, createTheme, Box  } from "@mui/material";
 import { useOpen } from "../Acceuil/OpenProvider";
+
+const axios = axiosInstance;
 
 
 

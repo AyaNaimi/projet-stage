@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Calendar, Clock, CalendarDays } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '../axiosInstance';
 import { faGear, faCalendarAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+const axios = axiosInstance;
 const CalendrieForm = ({ onSubmit, onCancel, initialData, selectedGroup, selectedType }) => {
     const [formData, setFormData] = useState({
         debut: initialData?.debut || '',

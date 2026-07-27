@@ -27,7 +27,7 @@ class GpCalendrierEmploye extends Model
 
     public function calendrier()
     {
-        return $this->belongsTo(Calendrie::class, 'calendrie_id');
+        return $this->belongsTo(Calendrie::class, 'calendrier_id');
     }
 
 }

@@ -200,6 +200,13 @@ const [selectedCategorie, setSelectedCategorie] = useState(null);
 
 
 
+// ── Auth helper ──────────────────────────────────────────────────────────────
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const handleCategorieChange = (selectedOption) => {
   setSelectedCategorie(selectedOption);
 };
@@ -358,7 +365,7 @@ const initialContractState = {
   
       const response = await axios.post(`http://127.0.0.1:8000/api/employes/${employeId}/bulletins`, {
         bulletins: assignedBulletinModeles
-      });
+      }, { headers: getAuthHeaders() });
   
       alert('Bulletins enregistrés avec succès !');
     } catch (error) {
@@ -422,9 +429,34 @@ const initialContractState = {
 
   useEffect(() => {
     if (selectedEmployer) {
+      const empAdresse = typeof selectedEmployer.adresse === 'object' && selectedEmployer.adresse !== null
+        ? {
+            rue: selectedEmployer.adresse.rue || selectedEmployer.adresse.adress || selectedEmployer.adresse.adresse || '',
+            adress: selectedEmployer.adresse.adress || selectedEmployer.adresse.rue || selectedEmployer.adresse.adresse || '',
+            adresse: selectedEmployer.adresse.adresse || selectedEmployer.adresse.rue || selectedEmployer.adresse.adress || '',
+            ville: selectedEmployer.adresse.ville || selectedEmployer.ville || '',
+            pays: selectedEmployer.adresse.pays || selectedEmployer.pays || '',
+            code_postal: selectedEmployer.adresse.code_postal || selectedEmployer.adresse.codePostal || selectedEmployer.code_postal || '',
+            codePostal: selectedEmployer.adresse.codePostal || selectedEmployer.adresse.code_postal || selectedEmployer.code_postal || '',
+            commune: selectedEmployer.adresse.commune || selectedEmployer.commune || '',
+            codePays: selectedEmployer.adresse.codePays || selectedEmployer.code_pays || ''
+          }
+        : {
+            rue: selectedEmployer.adresse || '',
+            adress: selectedEmployer.adresse || '',
+            adresse: selectedEmployer.adresse || '',
+            ville: selectedEmployer.ville || '',
+            pays: selectedEmployer.pays || '',
+            code_postal: selectedEmployer.code_postal || '',
+            codePostal: selectedEmployer.code_postal || '',
+            commune: selectedEmployer.commune || '',
+            codePays: selectedEmployer.code_pays || ''
+          };
+
       setFormData((prevState) => ({
         ...initialFormState,
         ...selectedEmployer,
+        adresse: empAdresse,
         departement_id: idDep,
         contrat: selectedEmployer.contrat?.[0] || {}
       }));
@@ -434,10 +466,48 @@ const initialContractState = {
           : null
       );
       fetchContracts(selectedEmployer.id);
+
+      const targetPays = selectedEmployer.pays || (typeof selectedEmployer.adresse === 'object' ? selectedEmployer.adresse?.pays : null);
+      const targetCodePays = selectedEmployer.code_pays || (typeof selectedEmployer.adresse === 'object' ? selectedEmployer.adresse?.codePays : null);
+      const targetVille = selectedEmployer.ville || (typeof selectedEmployer.adresse === 'object' ? selectedEmployer.adresse?.ville : null);
+      const targetCommune = selectedEmployer.commune || (typeof selectedEmployer.adresse === 'object' ? selectedEmployer.adresse?.commune : null);
+
+      if ((targetPays || targetCodePays) && pays.length > 0) {
+        const foundPays = pays.find(p => p.nom === targetPays || p.code_pays === targetCodePays);
+        if (foundPays) {
+          const paysOpt = { value: foundPays.id, label: foundPays.nom, code_pays: foundPays.code_pays };
+          setSelectedPays(paysOpt);
+          setSelectedPaysId(foundPays.id);
+
+          axios.get(`http://127.0.0.1:8000/api/villes?pays_id=${foundPays.id}`, { headers: getAuthHeaders() })
+            .then(res => {
+              setVilles(res.data);
+              if (targetVille) {
+                const foundVille = res.data.find(v => v.nom === targetVille);
+                if (foundVille) {
+                  const villeOpt = { value: foundVille.id, label: foundVille.nom };
+                  setSelectedVille(villeOpt);
+                  setSelectedVilleId(foundVille.id);
+
+                  axios.get(`http://127.0.0.1:8000/api/communes?ville_id=${foundVille.id}`, { headers: getAuthHeaders() })
+                    .then(cRes => {
+                      setCommunes(cRes.data);
+                      if (targetCommune) {
+                        const foundCommune = cRes.data.find(c => c.nom === targetCommune);
+                        setSelectedCommune({ value: targetCommune, label: targetCommune });
+                      }
+                    }).catch(console.error);
+                } else {
+                  setSelectedVille({ value: targetVille, label: targetVille });
+                }
+              }
+            }).catch(console.error);
+        }
+      }
     } else {
       resetForm();
     }
-  }, [selectedEmployer, idDep]);
+  }, [selectedEmployer, idDep, pays]);
 
   
 
@@ -451,7 +521,7 @@ const initialContractState = {
 
   const fetchContractTypes = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/contract-types');
+      const response = await axios.get('http://127.0.0.1:8000/api/contract-types', { headers: getAuthHeaders() });
       setContractTypes(response.data);
     } catch (error) {
       console.error('Error fetching contract types', error);
@@ -465,7 +535,7 @@ const initialContractState = {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/contract-types', {
         name: newContractType
-      });
+      }, { headers: getAuthHeaders() });
 
       setContractTypes([...contractTypes, response.data]);
       setNewContractType('');
@@ -479,7 +549,7 @@ const initialContractState = {
     try {
       const response = await axios.put(`http://127.0.0.1:8000/api/contract-types/${editingContractTypeId}`, {
         name: newContractType
-      });
+      }, { headers: getAuthHeaders() });
 
       const updatedTypes = contractTypes.map(type =>
         type.id === editingContractTypeId
@@ -499,7 +569,7 @@ const initialContractState = {
 
   const handleDeleteContractType = async (typeId) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/contract-types/${typeId}`);
+      await axios.delete(`http://127.0.0.1:8000/api/contract-types/${typeId}`, { headers: getAuthHeaders() });
 
       const updatedTypes = contractTypes.filter(type => type.id !== typeId);
       setContractTypes(updatedTypes);
@@ -513,7 +583,7 @@ const initialContractState = {
 
   const fetchContracts = async (employeId) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/employes/${employeId}/contrats`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/employes/${employeId}/contrats`, { headers: getAuthHeaders() });
       setContracts(response.data);
     } catch (error) {
       console.error('Error fetching contracts', error);
@@ -637,7 +707,7 @@ const initialContractState = {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce contrat ?')) {
       try {
         if (typeof contractId === 'number') {
-          await axios.delete(`http://127.0.0.1:8000/api/contrats/${contractId}`);
+          await axios.delete(`http://127.0.0.1:8000/api/contrats/${contractId}`, { headers: getAuthHeaders() });
         }
         setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
         setEditingContractId(null);
@@ -664,7 +734,7 @@ const initialContractState = {
 
   const handleSaveContractEdit = async (contractId) => {
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/contrats/${contractId}`, editedContract);
+      const response = await axios.put(`http://127.0.0.1:8000/api/contrats/${contractId}`, editedContract, { headers: getAuthHeaders() });
       setContracts(contracts.map(c => c.id === contractId ? response.data : c));
       setEditingRow(null);
       setEditedContract(null);
@@ -745,7 +815,10 @@ const initialContractState = {
           `http://127.0.0.1:8000/api/employes/${selectedEmployer.id}?_method=PUT`,
           submitData,
           {
-            headers: { "Content-Type": "multipart/form-data" },
+            headers: { 
+              "Content-Type": "multipart/form-data",
+              ...getAuthHeaders()
+            },
           }
         );
   
@@ -759,14 +832,15 @@ const initialContractState = {
                 console.log(`Mise à jour du contrat ID: ${contract.id}`);
                 await axios.put(
                   `http://127.0.0.1:8000/api/contrats/${contract.id}`,
-                  contract
+                  contract,
+                  { headers: getAuthHeaders() }
                 );
               } else {
                 console.log("Ajout d'un nouveau contrat :", contract);
                 await axios.post(`http://127.0.0.1:8000/api/contrats`, {
                   ...contract,
                   employe_id: selectedEmployer.id,
-                });
+                }, { headers: getAuthHeaders() });
               }
             } catch (e) {
               console.error("Erreur contrat :", e.response?.data || e.message);
@@ -784,7 +858,10 @@ const initialContractState = {
         console.log("==> Appel API création employé : POST http://127.0.0.1:8000/api/employe");
 
         response = await axios.post(`http://127.0.0.1:8000/api/employe`, submitData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            ...getAuthHeaders()
+          },
         });
   
         const employeId = response.data.id;
@@ -795,7 +872,8 @@ const initialContractState = {
               `http://127.0.0.1:8000/api/employes/${employeId}/bulletins`,
               {
                 bulletins: assignedBulletinModeles,
-              }
+              },
+              { headers: getAuthHeaders() }
             );
             console.log("Bulletins ajoutés avec succès :", resBulletins.data);
           } catch (e) {
@@ -822,7 +900,7 @@ const initialContractState = {
               const res = await axios.post(`http://127.0.0.1:8000/api/contrats`, {
                 ...contract,
                 employe_id: employeId,
-              });
+              }, { headers: getAuthHeaders() });
               console.log("Contrat ajouté avec succès :", res.data);
             } catch (e) {
               console.error("Erreur ajout contrat :", e.response?.data || e.message);
@@ -981,7 +1059,7 @@ const loadHierarchyFromDepartementId = async (departementId) => {
   try {
     console.log(" Chargement de la hiérarchie pour selectedDepartementId:", departementId);
     
-    const response = await axios.get('http://127.0.0.1:8000/api/departements');
+    const response = await axios.get('http://127.0.0.1:8000/api/departements', { headers: getAuthHeaders() });
     const departements = response.data;
 
     const hierarchy = organizeHierarchyFromDepartement(departements, departementId);
@@ -1015,7 +1093,7 @@ const loadHierarchyFromDepartementId = async (departementId) => {
 
 const loadPostes = async () => {
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/api/postes`);
+    const response = await axios.get(`http://127.0.0.1:8000/api/postes`, { headers: getAuthHeaders() });
     console.log("Tous les postes chargés :", response.data);
     setPostes(Array.isArray(response.data) ? response.data : []);
   } catch (error) {
@@ -1057,7 +1135,7 @@ useEffect(() => {
 
 const loadAllDepartements = async () => {
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/departements');
+    const response = await axios.get('http://127.0.0.1:8000/api/departements', { headers: getAuthHeaders() });
     setDepartements(response.data);
   } catch (error) {
     console.error('Erreur lors du chargement des départements', error);
@@ -1110,7 +1188,7 @@ const handleAddPoste = async () => {
     const response = await axios.post("http://127.0.0.1:8000/api/postes", {
       nom: newPosteName,
       unite_id: selectedUnite.id
-    });
+    }, { headers: getAuthHeaders() });
 
     setPostes(prev => [...prev, response.data]);
     setNewPosteName('');
@@ -1191,14 +1269,14 @@ const handleSaveCalendrier = async (index) => {
     calendrier_id: item.calendrier_id,
     date_debut: item.date_debut,
     date_fin: item.date_fin,
-  });
+  }, { headers: getAuthHeaders() });
 
   fetchAssignedCalendriers();
 };
 
 const fetchCalendriers = async () => {
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/calendrie');
+    const response = await axios.get('http://127.0.0.1:8000/api/calendrie', { headers: getAuthHeaders() });
     console.log('calendriers responssssssssssssssssse :', response);
 
     setCalendriers(response.data.calendrie); 
@@ -1237,7 +1315,7 @@ const handleAddPays = async () => {
     const response = await axios.post('http://127.0.0.1:8000/api/pays', {
       nom: newPays,
       code_pays: newCodePays
-    });
+    }, { headers: getAuthHeaders() });
 
     setPays([...pays, response.data]);
     setNewPays('');
@@ -1254,7 +1332,7 @@ const handleUpdatePays = async () => {
     const response = await axios.put(`http://127.0.0.1:8000/api/pays/${editingPaysId}`, {
       nom: newPays,
       code_pays: newCodePays
-    });
+    }, { headers: getAuthHeaders() });
 
     const updatedPays = pays.map(p =>
       p.id === editingPaysId ? { ...p, nom: newPays, code_pays: newCodePays } : p
@@ -1273,7 +1351,7 @@ const handleUpdatePays = async () => {
 
 const handleDeletePays = async (paysId) => {
   try {
-    await axios.delete(`http://127.0.0.1:8000/api/pays/${paysId}`);
+    await axios.delete(`http://127.0.0.1:8000/api/pays/${paysId}`, { headers: getAuthHeaders() });
 
     const updatedPays = pays.filter(p => p.id !== paysId);
     setPays(updatedPays);
@@ -1295,7 +1373,7 @@ const handleAddVille = async () => {
     const response = await axios.post('http://127.0.0.1:8000/api/villes', {
       nom: newVille,
       pays_id: selectedPaysId
-    });
+    }, { headers: getAuthHeaders() });
 
     setVilles([...villes, response.data]);
     setNewVille('');
@@ -1311,7 +1389,7 @@ const handleUpdateVille = async () => {
     const response = await axios.put(`http://127.0.0.1:8000/api/villes/${editingVilleId}`, {
       nom: newVille,
       pays_id: selectedPaysId
-    });
+    }, { headers: getAuthHeaders() });
 
     const updatedVilles = villes.map(v =>
       v.id === editingVilleId ? { ...v, nom: newVille, pays_id: selectedPaysId } : v
@@ -1330,7 +1408,7 @@ const handleUpdateVille = async () => {
 
 const handleDeleteVille = async (villeId) => {
   try {
-    await axios.delete(`http://127.0.0.1:8000/api/villes/${villeId}`);
+    await axios.delete(`http://127.0.0.1:8000/api/villes/${villeId}`, { headers: getAuthHeaders() });
 
     const updatedVilles = villes.filter(v => v.id !== villeId);
     setVilles(updatedVilles);
@@ -1346,7 +1424,7 @@ const handleDeleteVille = async (villeId) => {
 
   const fetchPays = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/pays');
+      const response = await axios.get('http://127.0.0.1:8000/api/pays', { headers: getAuthHeaders() });
       setPays(response.data);
       console.log("payyyyyyyys",response.data)
     } catch (error) {
@@ -1365,7 +1443,7 @@ const handleAddCommune = async () => {
     const response = await axios.post('http://127.0.0.1:8000/api/communes', {
       nom: newCommune,
       ville_id: selectedVilleId
-    });
+    }, { headers: getAuthHeaders() });
 
     setCommunes([...communes, response.data]);
     setNewCommune('');
@@ -1382,7 +1460,7 @@ const handleUpdateCommune = async () => {
     const response = await axios.put(`http://127.0.0.1:8000/api/communes/${editingCommuneId}`, {
       nom: newCommune,
       ville_id: selectedVilleId
-    });
+    }, { headers: getAuthHeaders() });
 
     const updatedCommunes = communes.map(c =>
       c.id === editingCommuneId ? { ...c, nom: newCommune, ville_id: selectedVilleId } : c
@@ -1400,7 +1478,7 @@ const handleUpdateCommune = async () => {
 
 const handleDeleteCommune = async (communeId) => {
   try {
-    await axios.delete(`http://127.0.0.1:8000/api/communes/${communeId}`);
+    await axios.delete(`http://127.0.0.1:8000/api/communes/${communeId}`, { headers: getAuthHeaders() });
 
     const updatedCommunes = communes.filter(c => c.id !== communeId);
     setCommunes(updatedCommunes);
@@ -1432,9 +1510,10 @@ const handleDeleteCommune = async (communeId) => {
   //   }
   // };
   const fetchVillesByPays = async (paysId) => {
+    if (!paysId) return;
     console.log('Pays ID:', paysId);
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/villes?pays_id=${paysId}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/villes?pays_id=${paysId}`, { headers: getAuthHeaders() });
       console.log("Villes récupérées:", response.data);
       setVilles(response.data);
     } catch (error) {
@@ -1444,10 +1523,10 @@ const handleDeleteCommune = async (communeId) => {
   };
     
   const fetchCommunesByVille = async (villeId) => {
+    if (!villeId) return;
     console.log('villeId ID:', villeId);
-  
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/communes?ville_id=${villeId}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/communes?ville_id=${villeId}`, { headers: getAuthHeaders() });
       setCommunes(response.data);
       setSelectedVilleId(villeId);
     } catch (error) {
@@ -1461,8 +1540,6 @@ const handleDeleteCommune = async (communeId) => {
 
   useEffect(() => {
     fetchPays();
-    fetchVillesByPays();
-    fetchCommunesByVille();
   }, []);
       
 
@@ -1575,7 +1652,7 @@ const handleDeleteCommune = async (communeId) => {
       const { data } = await axios.post('http://127.0.0.1:8000/api/agences', {
         nom: newAgence,
         banque_id: selectedBanqueId
-      });
+      }, { headers: getAuthHeaders() });
       setAgences([...agences, data]);
       setNewAgence('');
       showSuccessNotification('Agence ajoutée');
@@ -1589,7 +1666,7 @@ const handleDeleteCommune = async (communeId) => {
       await axios.put(`http://127.0.0.1:8000/api/agences/${editingAgenceId}`, {
         nom: newAgence,
         banque_id: selectedBanqueId
-      });
+      }, { headers: getAuthHeaders() });
       setAgences(agences.map(a =>
         a.id === editingAgenceId ? { ...a, nom: newAgence, banque_id: selectedBanqueId } : a
       ));
@@ -1603,7 +1680,7 @@ const handleDeleteCommune = async (communeId) => {
   
   const handleDeleteAgence = async (id) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/agences/${id}`);
+      await axios.delete(`http://127.0.0.1:8000/api/agences/${id}`, { headers: getAuthHeaders() });
       setAgences(agences.filter(a => a.id !== id));
       showSuccessNotification('Agence supprimée');
     } catch (e) {
@@ -1620,7 +1697,7 @@ const handleDeleteCommune = async (communeId) => {
   
   
   const fetchBanques = async () => {
-    const res = await axios.get('http://127.0.0.1:8000/api/banque');
+    const res = await axios.get('http://127.0.0.1:8000/api/banque', { headers: getAuthHeaders() });
     console.log("bannnnnnnnnnnnnnnnnnnnnnque:", res.data);
     setBanques(Array.isArray(res.data) ? res.data : res.data.data);
 
@@ -1632,7 +1709,7 @@ const handleDeleteCommune = async (communeId) => {
 
   
   const fetchAgences = async () => {
-    const res = await axios.get('http://127.0.0.1:8000/api/agences');
+    const res = await axios.get('http://127.0.0.1:8000/api/agences', { headers: getAuthHeaders() });
     console.log(res.data);
     setAgences(Array.isArray(res.data) ? res.data : res.data.data);
   };
@@ -1650,7 +1727,7 @@ const handleDeleteCommune = async (communeId) => {
         return;
       }
       try {
-        const res = await axios.post('http://127.0.0.1:8000/api/banque', { nom: newBanque.trim() });
+        const res = await axios.post('http://127.0.0.1:8000/api/banque', { nom: newBanque.trim() }, { headers: getAuthHeaders() });
         setBanques(prev => [...prev, res.data]);
         setNewBanque('');
         setShowBanqueModal(false);
@@ -1662,7 +1739,7 @@ const handleDeleteCommune = async (communeId) => {
     
     const handleUpdateBanque = async () => {
       try {
-        await axios.put(`http://127.0.0.1:8000/api/banque/${editingBanqueId}`, { nom: newBanque });
+        await axios.put(`http://127.0.0.1:8000/api/banque/${editingBanqueId}`, { nom: newBanque }, { headers: getAuthHeaders() });
         setBanques(banques.map(b =>
           b.id === editingBanqueId ? { ...b, nom: newBanque } : b
         ));
@@ -1676,7 +1753,7 @@ const handleDeleteCommune = async (communeId) => {
     
     const handleDeleteBanque = async (id) => {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/banque/${id}`);
+        await axios.delete(`http://127.0.0.1:8000/api/banque/${id}`, { headers: getAuthHeaders() });
         setBanques(banques.filter(b => b.id !== id));
         showSuccessNotification('Banque supprimée');
       } catch (e) {
@@ -2366,132 +2443,138 @@ style={{ height: "150px", width: "100%", maxWidth: "150px" }}
 
 
 <Tab eventKey="adresse" title="Adresse">
-                  <div className="tab-content p-3">
-                    <div className="row">
+  <div className="tab-content p-3">
+    <div className="row">
 
+      {/* Pays */}
+      <div className="col-md-6 mb-3">
+        <div className="form-group">
+          <label className="form-label">Pays</label>
+          <div className="d-flex align-items-center">
+            <div style={{ flex: 1 }}>
+              <Select
+                options={sortedPays}
+                value={selectedPays}
+                onChange={handlePaysChange}
+                placeholder="Sélectionner un pays"
+                getOptionLabel={(e) => e.label}
+                getOptionValue={(e) => e.value}
+                isClearable
+                noOptionsMessage={() => 'Aucun pays disponible'}
+              />
+            </div>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowPaysModal(true)}
+              style={{ width: '38px', height: '38px', padding: '0', marginLeft: '8px', flexShrink: 0 }}
+            >+</Button>
+          </div>
+        </div>
+      </div>
 
+      {/* Code Pays (readonly) */}
+      <div className="col-md-6 mb-3">
+        <div className="form-group">
+          <label className="form-label">Code Pays</label>
+          <input
+            className="form-control"
+            type="text"
+            name="adresse.codePays"
+            value={(typeof formData.adresse === 'object' ? (formData.adresse?.codePays || formData.adresse?.code_pays) : formData.code_pays) || ''}
+            readOnly
+            placeholder="Rempli automatiquement"
+          />
+        </div>
+      </div>
 
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <label className="form-label">Pays</label>
-                          <div className="d-flex align-items-center">
-                            <div style={{ flex: 1 }}>
-                              <Select
-                                options={sortedPays}
-                                value={selectedPays}
-                                onChange={handlePaysChange}
-                                placeholder="Sélectionner un pays"
-                                getOptionLabel={(e) => e.label}
-                                getOptionValue={(e) => e.id}
-                                styles={{
-                                  control: (base) => ({
-                                    ...base,
-                                    borderRadius: '0.375rem',
-                                    borderColor: '#d1d5db',
-                                    '&:hover': {
-                                      borderColor: '#3b82f6'
-                                    }
-                                  })
-                                }}
-                              />
-                            </div>
-                            <Button
-                              variant="outline-secondary"
-                              onClick={() => setShowPaysModal(true)}
-                              className="ml-2"
-                              style={{ 
-                                width: "40px",
-                                height: "38px",
-                                padding: "0",
-                                marginLeft: "8px",
-                                borderRadius: "0.375rem",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
-                              }}
-                            >
-                              +
-                            </Button>
-                          </div>
-                        </div>
+      {/* Ville */}
+      <div className="col-md-6 mb-3">
+        <div className="form-group">
+          <label className="form-label">Ville</label>
+          <div className="d-flex align-items-center">
+            <div style={{ flex: 1 }}>
+              <Select
+                options={villesOptions}
+                value={selectedVille}
+                onChange={handleVilleChange}
+                placeholder={selectedPays ? 'Sélectionner une ville' : 'Choisir un pays d\'abord'}
+                getOptionLabel={(e) => e.label}
+                getOptionValue={(e) => e.value}
+                isClearable
+                isDisabled={!selectedPays}
+                noOptionsMessage={() => 'Aucune ville disponible'}
+              />
+            </div>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowVilleModal(true)}
+              style={{ width: '38px', height: '38px', padding: '0', marginLeft: '8px', flexShrink: 0 }}
+              disabled={!selectedPays}
+            >+</Button>
+          </div>
+        </div>
+      </div>
 
+      {/* Code Postal */}
+      <div className="col-md-6 mb-3">
+        <div className="form-group">
+          <label className="form-label">Code Postal</label>
+          <input
+            className="form-control"
+            type="text"
+            name="adresse.codePostal"
+            value={(typeof formData.adresse === 'object' ? (formData.adresse?.codePostal || formData.adresse?.code_postal) : formData.code_postal) || ''}
+            onChange={handleChange}
+            placeholder="Saisissez le code postal"
+          />
+        </div>
+      </div>
 
+      {/* Commune */}
+      <div className="col-md-6 mb-3">
+        <div className="form-group">
+          <label className="form-label">Commune</label>
+          <div className="d-flex align-items-center">
+            <div style={{ flex: 1 }}>
+              <Select
+                options={communesOptions}
+                value={selectedCommune}
+                onChange={handleCommuneChange}
+                placeholder={selectedVille ? 'Sélectionner une commune' : 'Choisir une ville d\'abord'}
+                getOptionLabel={(e) => e.label}
+                getOptionValue={(e) => e.value}
+                isClearable
+                isDisabled={!selectedVille}
+                noOptionsMessage={() => 'Aucune commune disponible'}
+              />
+            </div>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowCommuneModal(true)}
+              style={{ width: '38px', height: '38px', padding: '0', marginLeft: '8px', flexShrink: 0 }}
+              disabled={!selectedVille}
+            >+</Button>
+          </div>
+        </div>
+      </div>
 
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <label className="form-label">Code Pays</label>
-                          <input
-                            className="form-control"
-                            type="text"
-                            name="adresse.codePays"
-                            value={formData.adresse?.codePays || ''}
-                            onChange={handleChange}
-                            readOnly
-                          />
-                        </div>
-                      </div>
+      {/* Adresse (rue) */}
+      <div className="col-md-6 mb-3">
+        <div className="form-group">
+          <label className="form-label">Adresse</label>
+          <input
+            className="form-control"
+            type="text"
+            name="adresse.rue"
+            value={(typeof formData.adresse === 'object' ? (formData.adresse?.rue || formData.adresse?.adress || formData.adresse?.adresse) : formData.adresse) || ''}
+            onChange={handleChange}
+            placeholder="Numéro et nom de rue"
+          />
+        </div>
+      </div>
 
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <label className="form-label">Ville</label>
-                          <div className="d-flex align-items-center">
-                            <div style={{ flex: 1 }}>
-                              <Select
-                                options={villesOptions}
-                                value={selectedVille}
-                                onChange={(selectedOption) => handleVilleChange(selectedOption)}
-                                placeholder="Sélectionner une ville"
-                                getOptionLabel={(e) => e.label}
-                                getOptionValue={(e) => e.id}
-                                styles={{
-                                  control: (base) => ({
-                                    ...base,
-                                    borderRadius: '0.375rem',
-                                    borderColor: '#d1d5db',
-                                    '&:hover': {
-                                      borderColor: '#3b82f6'
-                                    }
-                                  })
-                                }}
-                              />
-                            </div>
-                            <Button
-                              variant="outline-secondary"
-                              onClick={() => setShowVilleModal(true)}
-                              className="ml-2"
-                              style={{ 
-                                width: "40px",
-                                height: "38px",
-                                padding: "0",
-                                marginLeft: "8px",
-                                borderRadius: "0.375rem",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
-                              }}
-                            >
-                              +
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <label className="form-label">Code Postal</label>
-                          <input
-                            className="form-control"
-                            type="text"
-                            name="adresse.codePostal"
-                            value={formData.adresse?.codePostal || ''}
-                            onChange={handleChange}
-                            placeholder="Saisissez le code postal"
-                          />
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
+    </div>
+  </div>
 </Tab>
 
 <Tab eventKey="profile" title="Infos Professionnels">
@@ -2718,987 +2801,8 @@ style={{ height: "150px", width: "100%", maxWidth: "150px" }}
       </div>
     </div>
 
-    {/* Section Bulletin Modèles */}
-    <div className="mt-4">
-    <div className="section-header mb-3">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 className="section-title mb-1">
-              <i className="fas fa-file-invoice me-2"></i>
-              Bulletins Modèles
-            </h6>
-            <p className="section-description text-muted mb-0">
-              Gérez les modèles de bulletins de paie associés
-            </p>
-          </div>
-          <Button
-            onClick={handleAddBulletinModele}
-            className="btn btn-outline-primary d-flex align-items-center"
-            size="sm"
-          >
-            <FaPlusCircle className="me-2" />
-            Ajouter un modèle
-          </Button>
-        </div>
-      </div>
-      
-      <div className="table-responsive">
-        <Table striped bordered hover className="mb-0">
-          <thead className="table-light">
-            <tr>
-              <th>Bulletin Modèle</th>
-              <th>Date début</th>
-              <th>Date fin</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assignedBulletinModeles.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center text-muted py-3">
-                  <i className="fas fa-inbox me-2"></i>
-                  Aucun bulletin modèle assigné
-                </td>
-              </tr>
-            ) : (
-              assignedBulletinModeles.map((item, index) => (
-                <tr key={index}>
-                  <td>
-                    <Form.Select
-                      value={item.bulletin_modele_id}
-                      onChange={(e) => handleChangeBulletinModele(index, e.target.value)}
-                      className="form-select-sm"
-                    >
-                      <option value="">-- Choisir --</option>
-                      {bulletinModeles.map((modele) => (
-                        <option key={modele.id} value={modele.id}>
-                          {modele.designation}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </td>
-                  <td>
-                    <Form.Control
-                      type="date"
-                      value={item.date_debut}
-                      onChange={(e) => handleChangeBulletinDate(index, 'date_debut', e.target.value)}
-                      size="sm"
-                    />
-                  </td>
-                  <td>
-                    <Form.Control
-                      type="date"
-                      value={item.date_fin}
-                      onChange={(e) => handleChangeBulletinDate(index, 'date_fin', e.target.value)}
-                      size="sm"
-                    />
-                  </td>
-                  <td className="text-center">
-                    {item.id ? (
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
-                        onClick={() => handleEditBulletinModele(item.id)}
-                      >
-                        <Edit size={14} className="me-1" />
-                        Modifier
-                      </Button>
-                    ) : (
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm" 
-                        onClick={() => handleDeleteBulletinModele(index)}
-                      >
-                        <Trash2 size={14} className="me-1" />
-                        Supprimer
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </Table>
-      </div>
-    </div>
   </div>
 </Tab>               
-
-
-
-
-
-
-
-
- <Tab eventKey="poste" title="Poste">
-  <div className="tab-content p-3" style={{ height: "520px" }}>
-  <div className="row">
-          <div className="col-md-6">
-
-            <div className="form-group">
-              <Briefcase className="form-tag" size={16} />
-              <label className="form-label" htmlFor="poste" style={{ fontWeight: 'bold', color: '#6c757d' }}>
-                Poste <span style={{ fontSize: '12px', color: '#6c757d' }}>
-                  ({postes.length} poste{postes.length !== 1 ? 's' : ''} disponible{postes.length !== 1 ? 's' : ''})
-                </span>
-              </label>
-              <div className="d-flex">
-                <Select
-                  id="poste"
-                  options={postes}
-                  value={selectedPoste}
-                  onChange={handlePosteChange}
-                  placeholder={postes.length > 0 ? "Sélectionner un poste" : "Aucun poste disponible"}
-                  getOptionLabel={(e) => e.nom}
-                  getOptionValue={(e) => e.id}
-                  className="flex-grow-1"
-                  isClearable={true}
-                  isDisabled={postes.length === 0}
-                  noOptionsMessage={() => "Aucun poste disponible pour cette sélection"}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setShowPosteModal(true)}
-                  className="ml-2"
-                  style={{ width: "40px", padding: "0" }}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            {/* CATÉGORIE */}
-            <div className="form-group">
-              <Tag className="form-tag" size={16} />
-              <label className="form-label" htmlFor="categorie">Catégorie</label>
-              <div className="d-flex">
-                <Select
-                  id="categorie"
-                  options={categories}
-                  value={selectedCategorie}
-                  onChange={handleCategorieChange}
-                  placeholder="Sélectionner"
-                  getOptionLabel={(e) => e.nom}
-                  getOptionValue={(e) => e.id}
-                  className="flex-grow-1"
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setShowCategorieModal(true)}
-                  className="ml-2"
-                  style={{ width: "40px", padding: "0" }}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-
-            <div className="form-group">
-              <Building className="form-tag" size={16} />
-              <label className="form-label" htmlFor="departement">
-                Département 
-              </label>
-              <div className="d-flex">
-                <input
-                  type="text"
-                  className="form-control"
-                  value={selectedService ? selectedService.nom : ''}
-                  placeholder="Département"
-                  readOnly
-                  style={{ 
-                    backgroundColor: 'white', 
-                    color: '#495057',
-                  }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setShowDepartementModal(true)}
-                  className="ml-2"
-                  style={{ width: "40px", padding: "0" }}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            {/* SERVICE - Lecture seule, auto-rempli */}
-            <div className="form-group">
-              <Layers className="form-tag" size={16} />
-              <label className="form-label" htmlFor="service">
-                Service 
-              </label>
-              <div className="d-flex">
-                <input
-                  type="text"
-                  className="form-control"
-                  value={selectedDepartement ? selectedDepartement.nom : ''}
-                  placeholder="Service"
-                  readOnly
-                  style={{ 
-                    backgroundColor: 'white', 
-                    color: '#495057',
-                  }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => {
-                    if (!selectedDepartement) {
-                      showErrorNotification("Aucun département détecté.");
-                    } else {
-                      setShowServiceModal(true);
-                    }
-                  }}
-                  className="ml-2"
-                  style={{ width: "40px", padding: "0" }}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <div className="form-group">
-              <Grid className="form-tag" size={16} />
-              <label className="form-label" htmlFor="unite">
-                Unité
-              </label>
-              <div className="d-flex">
-                <input
-                  type="text"
-                  className="form-control"
-                  value={selectedUnite ? selectedUnite.nom : ''}
-                  placeholder="Unité"
-                  readOnly
-                  style={{ 
-                    backgroundColor: 'white', 
-                    color: '#495057',
-                  }}
-                />
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => {
-                    if (!selectedService) {
-                      showErrorNotification("Aucun service détecté.");
-                    } else {
-                      setShowUniteModal(true);
-                    }
-                  }}
-                  className="ml-2"
-                  style={{ width: "40px", padding: "0" }}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-    {/* Planning Annuel  */}
-    <div className="mt-4">
-          <div className="section-header mb-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 className="section-title mb-1">
-                  <i className="fas fa-calendar-alt me-2"></i>
-                  Planning Annuel
-                </h6>
-                <p className="section-description text-muted mb-0">
-                  Gérez les calendriers de planification associés
-                </p>
-              </div>
-              <Button
-                onClick={handleAddCalendrier}
-                className="btn btn-outline-primary d-flex align-items-center"
-                size="sm"
-              >
-                <FaPlusCircle className="me-2" />
-                Ajouter un planning
-              </Button>
-            </div>
-          </div>
-          
-          <div className="table-responsive">
-            <Table striped bordered hover className="mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Planning</th>
-                  <th>Date début</th>
-                  <th>Date fin</th>
-                  <th className="text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assignedCalendriers.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="text-center text-muted py-3">
-                      <i className="fas fa-inbox me-2"></i>
-                      Aucun planning assigné
-                    </td>
-                  </tr>
-                ) : (
-                  assignedCalendriers.map((item, index) => (
-                    <tr key={index}>
-                      <td>
-                        <Form.Select
-                          value={item.calendrier_id}
-                          onChange={(e) => handleChangeCalendrier(index, e.target.value)}
-                          className="form-select-sm"
-                        >
-                          <option value="">-- Choisir --</option>
-                          {calendriers.map((cal) => (
-                            <option key={cal.id} value={cal.id}>
-                              {cal.nom}
-                            </option>
-                          ))}
-                        </Form.Select>
-                      </td>
-                      <td>
-                        <Form.Control
-                          type="date"
-                          value={item.date_debut}
-                          onChange={(e) => handleChangeDate(index, 'date_debut', e.target.value)}
-                          size="sm"
-                        />
-                      </td>
-                      <td>
-                        <Form.Control
-                          type="date"
-                          value={item.date_fin}
-                          onChange={(e) => handleChangeDate(index, 'date_fin', e.target.value)}
-                          size="sm"
-                        />
-                      </td>
-                      <td className="text-center">
-                        {item.id ? (
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
-                            onClick={() => handleEditCalendrier(item.id)}
-                          >
-                            <Edit size={14} className="me-1" />
-                            Modifier
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="outline-danger" 
-                            size="sm" 
-                            onClick={() => handleDeleteCalendrier(index)}
-                          >
-                            <Trash2 size={14} className="me-1" />
-                            Supprimer
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </div>
-        </div>
-
-
-
-
-    
-  </div>
-
-</Tab>
-
-
-
-
-
-<Tab eventKey="contrat" title="Contrat">
-  <div className="tab-content p-3" style={{height:"800px"}}>
-    <div className="row">
-      <div className="col-md-6">
-        <div className="form-group">
-          <FileText className="form-tag" size={16} />
-          <label className="form-label" htmlFor="numero_contrat">N° Contrat</label>
-          <input
-            id="numero_contrat"
-            className="form-control"
-            type="text"
-            name="contrat.numero_contrat"
-            value={formData.contrat.numero_contrat}
-            onChange={handleChange}
-            placeholder="Saisissez le numéro du contrat"
-          />
-        </div>
-
-        <div className="form-group">
-          <FileSignature className="form-tag" size={16} />
-          <label className="form-label" htmlFor="type_contrat">Type Contrat</label>
-          <div className="d-flex">
-            <select
-              id="type_contrat"
-              className="form-control mr-2"
-              name="contrat.type_contrat"
-              value={formData.contrat.type_contrat}
-              onChange={handleChange}
-            >
-              <option value="">Sélectionner un type</option>
-              {contractTypes.map((type) => (
-                <option key={type.id} value={type.name}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-            <Button
-              variant="outline-secondary"
-              onClick={() => setShowContractTypeListModal(true)}
-              className="ml-2"
-              style={{ width: '40px', padding: '0' }}
-            >
-              +
-            </Button>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <AlertCircle className="form-tag" size={16} />
-          <label className="form-label" htmlFor="arret_prevu">Arrêt Prévu</label>
-          <input
-            id="arret_prevu"
-            className="form-control"
-            type="date"
-            name="contrat.arret_prevu"
-            value={formData.contrat.arret_prevu}
-            onChange={handleChange}
-          />
-        </div>
-        
-        <div className="form-group">
-          <Clock className="form-tag" size={16} />
-          <label className="form-label" htmlFor="duree_prevu">Durée Prévue</label>
-          <input
-            id="duree_prevu"
-            className="form-control"
-            type="number"
-            name="contrat.duree_prevu"
-            value={formData.contrat.duree_prevu}
-            onChange={handleChange}
-            placeholder="En jours"
-          />
-        </div>
-      </div>
-
-      <div className="col-md-6">
-        <div className="form-group">
-          <Tag className="form-tag" size={16} />
-          <label className="form-label" htmlFor="design">Design</label>
-          <input
-            id="design"
-            className="form-control"
-            type="text"
-            name="contrat.design"
-            value={formData.contrat.design}
-            onChange={handleChange}
-            placeholder="Saisissez la désignation"
-          />
-        </div>
-        
-        <div className="form-group">
-          <Calendar className="form-tag" size={16} />
-          <label className="form-label" htmlFor="debut_le">Début le</label>
-          <input
-            id="debut_le"
-            className="form-control"
-            type="date"
-            name="contrat.debut_le"
-            value={formData.contrat.debut_le}
-            onChange={handleChange}
-          />
-        </div>
-        
-        <div className="form-group">
-          <CalendarX className="form-tag" size={16} />
-          <label className="form-label" htmlFor="arret_effectif">Arrêt Effectif</label>
-          <input
-            id="arret_effectif"
-            className="form-control"
-            type="date"
-            name="contrat.arret_effectif"
-            value={formData.contrat.arret_effectif}
-            onChange={handleChange}
-          />
-        </div>
-        
-        <div className="form-group">
-          <Watch className="form-tag" size={16} />
-          <label className="form-label" htmlFor="duree_effective">Durée Effective</label>
-          <input
-            id="duree_effective"
-            className="form-control"
-            type="number"
-            name="contrat.duree_effective"
-            value={formData.contrat.duree_effective}
-            onChange={handleChange}
-            placeholder="En jours"
-          />
-        </div>
-      </div>
-    </div>
-
-    {/* Section Rupture Contrat */}
-    <div className="row mt-4">
-      <div className="col-12">
-        <h5>
-          Rupture Contrat
-        </h5>
-        <hr />
-      </div>
-      <div className="col-12">
-        <div className="row">
-          <div className="col-md-6">
-            <div className="form-group">
-              <LogOut className="form-tag" size={16} />
-              <label className="form-label" htmlFor="motif_depart">Motif de départ</label>
-              <select
-                id="motif_depart"
-                className="form-control"
-                name="contrat.rupture.motif_depart"
-                value={formData.contrat.motif_depart || ""}
-                onChange={handleChange}
-              >
-                <option value="">Sélectionner un motif</option>
-                <option value="Démission">Démission</option>
-                <option value="Licenciement">Licenciement</option>
-                <option value="Rupture conventionnelle">Rupture conventionnelle</option>
-                <option value="Fin de CDD">Fin de CDD</option>
-                <option value="Abandon de poste">Abandon de poste</option>
-                <option value="Autre">Autre</option>
-              </select>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="form-group">
-              <CalendarMinus className="form-tag" size={16} />
-              <label className="form-label" htmlFor="dernier_jour_travaille">Derniers jours travaillés et payés</label>
-              <input
-                id="dernier_jour_travaille"
-                className="form-control"
-                type="date"
-                name="contrat.dernier_jour_travaille"
-                value={formData.contrat.dernier_jour_travaille || ""}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Section Licenciement */}
-    <div className="row mt-4">
-      <div className="col-12">
-        <h5>
-          Licenciement
-        </h5>
-        <hr />
-      </div>
-      <div className="col-md-6">
-        <div className="form-group">
-          <AlertTriangle className="form-tag" size={16} />
-          <label className="form-label" htmlFor="notification_rupture">Notification de rupture</label>
-          <input
-            id="notification_rupture"
-            className="form-control"
-            type="date"
-            name="contrat.notification_rupture"
-            value={formData.contrat.notification_rupture || ""}
-            onChange={handleChange}
-          />
-        </div>
-        
-        <div className="form-group">
-          <FileText className="form-tag" size={16} />
-          <label className="form-label" htmlFor="engagement_procedure">Engagement procédure</label>
-          <input
-            id="engagement_procedure"
-            className="form-control"
-            type="date"
-            name="contrat.engagement_procedure"
-            value={formData.contrat.engagement_procedure || ""}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-      
-      <div className="col-md-6">
-        <div className="form-group">
-          <Edit className="form-tag" size={16} />
-          <label className="form-label" htmlFor="signature_rupture_conventionnelle">Signature rupture conventionnelle</label>
-          <input
-            id="signature_rupture_conventionnelle"
-            className="form-control"
-            type="date"
-            name="contrat.signature_rupture_conventionnelle"
-            value={formData.contrat.signature_rupture_conventionnelle || ""}
-            onChange={handleChange}
-          />
-        </div>
-        
-        <div className="form-group">
-          <Activity className="form-tag" size={16} />
-          <label className="form-label" htmlFor="transaction_en_cours">Transaction en cours</label>
-          <div className="d-flex align-items-center">
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="contrat.transaction_en_cours"
-                checked={formData.contrat.transaction_en_cours === true}
-                onChange={(e) => {
-                  handleChange({
-                    target: {
-                      name: "contrat.licenciement.transaction_en_cours",
-                      value: true
-                    }
-                  });
-                }}
-                id="transactionEnCoursOui"
-              />
-              <label className="form-check-label" htmlFor="transactionEnCoursOui">
-                Oui
-              </label>
-            </div>
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="contrat.licenciement.transaction_en_cours"
-                checked={formData.contrat.licenciement?.transaction_en_cours === false}
-                onChange={(e) => {
-                  handleChange({
-                    target: {
-                      name: "contrat.licenciement.transaction_en_cours",
-                      value: false
-                    }
-                  });
-                }}
-                id="transactionEnCoursNon"
-              />
-              <label className="form-check-label" htmlFor="transactionEnCoursNon">
-                Non
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <Button
-      onClick={handleAddContract}
-      variant="primary"
-      style={{ marginTop: "20px", backgroundColor: "#3a8a90", border: "none" }}
-    >
-      <Save size={16} className="mr-2" />
-      {editingContractId ? "Mettre à jour le contrat" : "Ajouter Contrat"}
-    </Button>
-    
-    <div className="mt-4">
-      <div className="section-header mb-3">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 className="section-title mb-1">
-              <i className="fas fa-file-contract me-2"></i>
-              Contrats existants
-            </h6>
-            <p className="section-description text-muted mb-0">
-              Gérez les contrats associés à cet employé
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="table-responsive">
-        <Table striped bordered hover className="mb-0">
-          <thead className="table-light">
-            <tr>
-              <th>N° Contrat</th>
-              <th>Type</th>
-              <th>Début</th>
-              <th>Fin prévue</th>
-              <th>Motif de départ</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contracts.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center text-muted py-3">
-                  <i className="fas fa-inbox me-2"></i>
-                  Aucun contrat assigné
-                </td>
-              </tr>
-            ) : (
-              contracts.map((contract, index) => (
-                <tr key={index}>
-                  <td>
-                    {editingRow === contract.id ? (
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={editedContract?.numero_contrat || ''}
-                        onChange={(e) => handleContractFieldChange('numero_contrat', e.target.value)}
-                      />
-                    ) : (
-                      contract.numero_contrat
-                    )}
-                  </td>
-                  <td>
-                    {editingRow === contract.id ? (
-                      <select
-                        className="form-control form-control-sm"
-                        value={editedContract?.type_contrat || ''}
-                        onChange={(e) => handleContractFieldChange('type_contrat', e.target.value)}
-                      >
-                        <option value="">Sélectionner un type</option>
-                        {contractTypes.map((type) => (
-                          <option key={type.id} value={type.name}>
-                            {type.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      contract.type_contrat
-                    )}
-                  </td>
-                  <td>
-                    {editingRow === contract.id ? (
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        value={editedContract?.debut_le || ''}
-                        onChange={(e) => handleContractFieldChange('debut_le', e.target.value)}
-                      />
-                    ) : (
-                      contract.debut_le
-                    )}
-                  </td>
-                  <td>
-                    {editingRow === contract.id ? (
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        value={editedContract?.arret_prevu || ''}
-                        onChange={(e) => handleContractFieldChange('arret_prevu', e.target.value)}
-                      />
-                    ) : (
-                      contract.arret_prevu
-                    )}
-                  </td>
-                  <td>
-                    {editingRow === contract.id ? (
-                      <select
-                        className="form-control form-control-sm"
-                        value={editedContract?.rupture?.motif_depart || ''}
-                        onChange={(e) => handleContractFieldChange('rupture', { ...editedContract?.rupture, motif_depart: e.target.value })}
-                      >
-                        <option value="">Sélectionner un motif</option>
-                        <option value="Démission">Démission</option>
-                        <option value="Licenciement">Licenciement</option>
-                        <option value="Rupture conventionnelle">Rupture conventionnelle</option>
-                        <option value="Fin de CDD">Fin de CDD</option>
-                        <option value="Abandon de poste">Abandon de poste</option>
-                        <option value="Autre">Autre</option>
-                      </select>
-                    ) : (
-                      contract.rupture?.motif_depart || "-"
-                    )}
-                  </td>
-                  <td className="text-center">
-                    {editingRow === contract.id ? (
-                      <div className="d-flex gap-2 justify-content-center">
-                        <Button 
-                          variant="outline-success" 
-                          size="sm" 
-                          onClick={() => handleSaveContractEdit(contract.id)}
-                        >
-                          <Save size={14} className="me-1" />
-                          Enregistrer
-                        </Button>
-                        <Button 
-                          variant="outline-secondary" 
-                          size="sm" 
-                          onClick={handleCancelEdit}
-                        >
-                          <X size={14} className="me-1" />
-                          Annuler
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="d-flex gap-2 justify-content-center">
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm" 
-                          onClick={() => handleEditContract(contract.id)}
-                        >
-                          <Edit size={14} className="me-1" />
-                          Modifier
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm" 
-                          onClick={() => handleDeleteContract(contract.id)}
-                        >
-                          <Trash2 size={14} className="me-1" />
-                          Supprimer
-                        </Button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </Table>
-      </div>
-    </div>
-  </div>
-
-  {/* Modal Type contrat */}
-  <Modal
-    show={showContractTypeListModal}
-    onHide={() => {
-      setShowContractTypeListModal(false);
-      setEditingContractTypeId(null);
-    }}
-    style={{ marginTop: '19%' }}
-  >
-    <Modal.Header closeButton>
-      <div className="d-flex flex-column w-100">
-        <div className="d-flex mb-2">
-          <input
-            type="text"
-            className="form-control mr-2"
-            value={newContractType}
-            onChange={(e) => setNewContractType(e.target.value)}
-            placeholder="Ajouter un type"
-          />
-        </div>
-        <div className="d-flex">
-          <Button 
-            variant="secondary"
-            onClick={() => {
-              setShowContractTypeListModal(false);
-              setEditingContractTypeId(null);
-            }}
-            className="ml-2"
-          >
-            Annuler
-          </Button>
-          <Button
-            variant="primary"
-            onClick={editingContractTypeId ? handleUpdateContractType : handleAddContractType}
-            disabled={!newContractType.trim()}
-            className="ml-2"
-          >
-            {editingContractTypeId ? 'Modifier' : 'Ajouter'}
-          </Button>
-        </div>
-      </div>
-    </Modal.Header>
-    <Modal.Body>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>TYPE</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {contractTypes.map((type) => (
-            <tr key={type.id}>
-              {editingContractTypeId === type.id ? (
-                <>
-                  <td>
-                    <input
-                      type="text"
-                      value={newContractType}
-                      onChange={(e) => setNewContractType(e.target.value)}
-                      className="form-control"
-                    />
-                  </td>
-                  <td>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={handleUpdateContractType}
-                    >
-                      Enregistrer
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        setEditingContractTypeId(null);
-                        setNewContractType('');
-                      }}
-                      className="ml-2"
-                    >
-                      Annuler
-                    </Button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td>{type.name}</td>
-                  <td>
-                    <Button
-                      style={{ backgroundColor: 'transparent', border: 'none' }}
-                      size="sm"
-                      onClick={() => {
-                        setEditingContractTypeId(type.id);
-                        setNewContractType(type.name);
-                        setShowContractTypeModal(true);
-                      }}
-                    >
-                      <FontAwesomeIcon
-                        icon={faEdit}
-                        style={{ color: "#007bff", cursor: "pointer" }}
-                      />
-                    </Button>
-                    <Button
-                      style={{ backgroundColor: 'transparent', border: 'none' }}
-                      size="sm"
-                      className="ml-2"
-                      onClick={() => {
-                        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce type ?')) {
-                          handleDeleteContractType(type.id);
-                        }
-                      }}
-                    >
-                      <FontAwesomeIcon
-                        icon={faTrash}
-                        style={{ color: "#ff0000", cursor: "pointer" }}
-                      />
-                    </Button>
-                  </td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Modal.Body>
-  </Modal>
-</Tab>
 
 
 <Tab eventKey="compte-bancaire" title="Compte bancaire">

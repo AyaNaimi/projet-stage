@@ -56,7 +56,8 @@ class Employe extends Model
             'delivree_par', 'date_expiration', 'carte_sejour', 'motif_depart',
             'dernier_jour_travaille', 'notification_rupture', 'engagement_procedure',
             'signature_rupture_conventionnelle', 'transaction_en_cours', 'bulletin_modele',
-            'salaire_moyen', 'salaire_reference_annuel'
+            'salaire_moyen', 'salaire_reference_annuel',
+            'poste_id'
         
     ];
     public function departements()
@@ -66,6 +67,16 @@ class Employe extends Model
 public function contrat()
     {
         return $this->hasMany(Contrat::class);
+    }
+
+    public function poste()
+    {
+        return $this->belongsTo(\App\Models\Poste::class, 'poste_id');
+    }
+
+    public function calendriers()
+    {
+        return $this->hasMany(\App\Models\GpCalendrierEmploye::class, 'employe_id');
     }
 
 
