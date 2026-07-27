@@ -355,7 +355,7 @@ hasChart={hasChart}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDelete(row.id);
+                                  handleDelete(row);
                                 }}
                                 aria-label="Delete"
                                 title="Supprimer"

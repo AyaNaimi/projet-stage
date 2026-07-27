@@ -48,8 +48,13 @@ class Produit extends Model
         'emballage_primaire_label',
         'emballage_secondaire_label',
         'etiquette_label',
+        'perte_mod',
     ];
 
+    public function fournisseur()
+{
+    return $this->belongsTo(Fournisseur::class, 'fournisseur_id');
+}
 
     public function getLogoUrlAttribute()
     {
@@ -178,5 +183,10 @@ public function stockProduit()
 public function stock()
 {
     return $this->hasMany(StockProduit::class, 'produit_id');
+}
+
+public function packagingsUtilises()
+{
+    return $this->hasMany(ProduitPackaging::class, 'produit_id');
 }
 }

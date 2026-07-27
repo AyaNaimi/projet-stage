@@ -572,6 +572,7 @@ use App\Http\Controllers\DemandeAttestationController;
 use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ReclamationSalaireController;
+use App\Http\Controllers\ProduitPackagingController;
 
 Route::get('/demandes-attestation', [DemandeAttestationController::class, 'index']);
 Route::post('/demandes-attestation', [DemandeAttestationController::class, 'store']);
@@ -873,6 +874,9 @@ Route::apiResource('groupe-arrondi', GroupeArrondiController::class);
 
      //produits
      Route::get('produits', [ProduitController::class, 'index']);
+     Route::post('produits/packagings', [ProduitController::class, 'storePackaging']);
+     Route::put('produits/packagings/{id}', [ProduitController::class, 'updatePackaging']);
+     Route::get('produits/packagings', [ProduitController::class, 'packagings']);
      Route::get('produits/search', [ProduitController::class, 'search']);
      Route::get('produits/categorie/{categorieId}', [ProduitController::class, 'byCategorie']);
      Route::get('produits/chart-data', [ProduitController::class, 'chartProduitData']);
@@ -1119,8 +1123,48 @@ Route::get('offres/{offreId}/offre_details', [OffreController::class, 'offreDeta
 // Route::apiResource('communes', CommuneController::class);
 
 
+Route::middleware('auth:sanctum')->group(function () {
 
 
+    // ============================================================
+    // 1. ROUTES PRODUITS SPÉCIFIQUES (sans paramètre générique)
+    // ============================================================
+    Route::get('produits/search', [ProduitController::class, 'search']);                  // Recherche
+    Route::get('produits/categorie/{categorieId}', [ProduitController::class, 'byCategorie']);
+    Route::get('produits/chart-data', [ProduitController::class, 'chartProduitData']);    // Données graphique
+
+    // ============================================================
+    // 2. ROUTES CHARGES DIRECTES (avec paramètres)
+    // ============================================================
+    Route::get('produits/{id}/charges-directes', [ProduitController::class, 'chargesDirectes']);
+    Route::get('produits/{id}/charges-directes-detail', [ProduitController::class, 'getChargesDirectesWithPackaging']);
+    Route::get('produits/{id}/cout-lot', [ProduitController::class, 'getCoutLot']);                       // Coût par lot
+    Route::get('produits/{id}/valider-cout', [ProduitController::class, 'validerCoutUnitaire']);         // Validation marge
+    Route::get('produits/{id}/prix-minimum', [ProduitController::class, 'calculerPrixMinimum']);         // Prix minimum
+    Route::get('produits/{id}/verifier-coherence', [ProduitController::class, 'verifierCoherence']);     // Cohérence calcul
+    Route::get('produits/{produitId}/historique-mod', [ProduitController::class, 'getHistoriqueMOD']);   // Historique MOD
+
+
+    
+    // ============================================================
+    // 3. ROUTES PRODUIT PACKAGINGS
+    // ============================================================
+
+    Route::get('produit-packagings/produit/{produitId}', [ProduitPackagingController::class, 'index']);   // Lire associations
+    Route::post('produit-packagings/sync/{produitId}', [ProduitPackagingController::class, 'sync']);      // Synchroniser
+
+    // ============================================================
+    // 4. ROUTES CRUD PRODUITS (les plus génériques en dernier)
+    // ============================================================
+    Route::get('produits/{produit}', [ProduitController::class, 'show']);
+    Route::put('produits/{produit}', [ProduitController::class, 'update']);
+    Route::delete('produits/{produit}', [ProduitController::class, 'destroy']);
+    Route::post('produits', [ProduitController::class, 'store']);
+    Route::match(['post', 'options'], 'produit/{id}/update-logo', [ProduitController::class, 'updateLogo']);
+    Route::delete('deleteSelectProd', [ProduitController::class, 'deleteSelected']);
+    Route::delete('prixProduit/{id}', [ProduitController::class, 'destroyPrix']);
+
+});
 
 
 

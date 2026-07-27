@@ -18,6 +18,7 @@ import ChargeIndirecteList from "./ChargesIndirectes/ChargeIndirecteList.jsx";
 import CoutProduitList from "./CoutProduit/CoutProduitList.jsx";
 import SimulationPage from "./Simulation/SimulationPage.jsx";
 import PricingMargesPage from "./Pricing/PricingMargesPage.jsx";
+import PackagingList from './Packaging/PackagingList';
 
 const App = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const App = () => {
             <Route path="/produits" element={<ProduitList />} />
             <Route path="/recettes" element={<RecetteList />} />
             <Route path="/charges-directes" element={<ChargeDirecteList />} />
+            <Route path="/packagings" element={<PackagingList />} />
             <Route path="/matieres-premieres" element={<MatierePremiereList />} />
             <Route path="/charges-indirectes" element={<ChargeIndirecteList />} />
             <Route path="/cout-produits" element={<CoutProduitList />} />

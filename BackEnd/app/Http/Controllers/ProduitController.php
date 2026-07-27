@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\HistoriqueMOD;
+use App\Models\ChargeDirecte;
 
 class ProduitController extends Controller
 {
@@ -527,36 +529,6 @@ class ProduitController extends Controller
      * PATCH /api/produits/{id}/charges-directes
      * Body : { cout_horaire_mod: float, temps_production: float }
      */
-    public function updateChargesDirectes(Request $request, $id)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'cout_horaire_mod'  => 'nullable|numeric|min:0',
-                'temps_production'  => 'nullable|numeric|min:0',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 422);
-            }
-
-            $produit = Produit::findOrFail($id);
-
-            $produit->update($request->only(['cout_horaire_mod', 'temps_production']));
-
-            return response()->json([
-                'message' => 'Charges directes mises à jour',
-                'produit' => [
-                    'id'               => $produit->id,
-                    'cout_horaire_mod' => $produit->cout_horaire_mod,
-                    'temps_production' => $produit->temps_production,
-                ],
-            ], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
-            return response()->json(['error' => 'Produit introuvable.'], 404);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
 
     public function destroy($id)
     {
@@ -822,4 +794,288 @@ class ProduitController extends Controller
         $cleaned = str_replace(',', '.', trim($value));
         return is_numeric($cleaned) ? (float) $cleaned : null;
     }
+
+    public function chargesDirectes($id)
+{
+    try {
+        $produit = Produit::findOrFail($id);
+
+        $service = new ChargeDirecte();
+        $detail = $service->calculer($produit);
+
+        return response()->json([
+            'message' => 'Charges directes calculees avec succes',
+            'produit_id' => $produit->id,
+            'designation' => $produit->designation,
+            'charges_directes' => $detail,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function updateChargesDirectes(Request $request, $id)
+{
+    try {
+        $validator = Validator::make($request->all(), [
+            'cout_horaire_mod' => 'required|numeric|min:0',
+            'temps_production' => 'required|numeric|min:0',
+            'quantite' => 'nullable|numeric|min:0',
+            'cout_total' => 'nullable|numeric|min:0',
+            'prix_vente' => 'nullable|numeric|min:0',
+            'perte_mod' => 'nullable|numeric|min:0|max:99.99',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        $produit = Produit::findOrFail($id);
+        $produit->update([
+            'cout_horaire_mod' => $request->input('cout_horaire_mod', $produit->cout_horaire_mod),
+            'temps_production' => $request->input('temps_production', $produit->temps_production),
+            'perte_mod' => $request->input('perte_mod', $produit->perte_mod),
+            'prix_vente' => $request->input('prix_vente', $produit->prix_vente),
+        ]);
+
+        DB::table('produits')->where('id', $id)->update([
+    'perte_mod' => $request->input('perte_mod', 0),
+]);
+        // Créer le nouvel historique
+        $nouvelHistorique = \App\Models\HistoriqueMOD::create([
+            'produit_id' => $produit->id,
+            'cout_horaire_mod' => $request->input('cout_horaire_mod'),
+            'temps_production' => $request->input('temps_production'),
+            'perte_mod' => $request->input('perte_mod', 0),
+            'quantite' => $request->input('quantite', 1),
+            'cout_total' => $request->input('cout_total', 0),
+            'date_debut' => now(),
+            'date_fin' => null,
+            'user_id' => Auth::id(),
+        ]);
+
+        // Fermer les anciens historiques ouverts
+        \App\Models\HistoriqueMOD::where('produit_id', $produit->id)
+            ->whereNull('date_fin')
+            ->where('id', '!=', $nouvelHistorique->id)
+            ->update(['date_fin' => now()]);
+
+        return response()->json([
+            'message' => 'Charges directes mises a jour avec succes',
+            'produit' => $produit,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function getChargesDirectesWithPackaging($id)
+{
+    try {
+        $produit = Produit::with([
+            'recettes.matierePremiere',
+            'packagingsUtilises.packaging.prixProduitsLast'
+        ])->findOrFail($id);
+
+        $chargeDirecte = new ChargeDirecte();
+        $detail = $chargeDirecte->calculer($produit);
+
+        return response()->json([
+            'produit_id' => $produit->id,
+            'designation' => $produit->designation,
+            'charges_directes' => $detail,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+public function getHistoriqueMOD($produitId)
+{
+    try {
+        $historique = HistoriqueMOD::with('user')
+            ->where('produit_id', $produitId)
+            ->orderBy('date_debut', 'desc')
+            ->get();
+
+        return response()->json([
+            'historique' => $historique
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function getCoutLot(Request $request, $id)
+{
+    try {
+        $quantite = $request->input('quantite', 1);
+
+        $produit = Produit::with([
+            'recettes.matierePremiere',
+            'packagingsUtilises.packaging.prixProduitsLast'
+        ])->findOrFail($id);
+
+        $chargeDirecte = new ChargeDirecte();
+        $resultat = $chargeDirecte->calculerCoutLot($produit, $quantite);
+
+        return response()->json($resultat, 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+public function verifierCoherence($id)
+{
+    try {
+        $produit = Produit::with([
+            'recettes.matierePremiere',
+            'packagingsUtilises.packaging.prixProduitsLast'
+        ])->findOrFail($id);
+
+        $chargeDirecte = new ChargeDirecte();
+        $verification = $chargeDirecte->verifierCoherenceCalcul($produit);
+
+        return response()->json($verification, 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function validerCoutUnitaire($id)
+{
+    try {
+        $produit = Produit::with([
+            'recettes.matierePremiere',
+            'packagingsUtilises.packaging.prixProduitsLast'
+        ])->findOrFail($id);
+
+        $chargeDirecte = new \App\Models\ChargeDirecte();
+        $validation = $chargeDirecte->validerCoutUnitaire($produit);
+
+        return response()->json($validation, 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+public function calculerPrixMinimum(Request $request, $id)
+{
+    try {
+        $margeSouhaitee = $request->input('marge', 20);
+
+        $produit = Produit::with([
+            'recettes.matierePremiere',
+            'packagingsUtilises.packaging.prixProduitsLast'
+        ])->findOrFail($id);
+
+        $chargeDirecte = new \App\Models\ChargeDirecte();
+        $resultat = $chargeDirecte->calculerPrixMinimum($produit, $margeSouhaitee);
+
+        return response()->json($resultat, 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+public function packagings()
+{
+    $packagings = Produit::with(['fournisseur', 'prixProduitsLast'])
+        ->where('type', 'emballage')
+        ->orderBy('designation')
+        ->get();
+
+    return response()->json(['produits' => $packagings]);
+}
+
+public function storePackaging(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'Code_produit' => 'required|unique:produits,Code_produit',
+        'designation' => 'required',
+        'unite' => 'nullable',
+        'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+        'prixProduit' => 'required|numeric|min:0',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['error' => $validator->errors()], 400);
+    }
+
+    try {
+        return DB::transaction(function () use ($request) {
+            $categorieEmballage = \App\Models\categorie::firstOrCreate(
+                ['categorie' => 'Emballage'],
+                ['idCatMer' => null, 'logoP' => '']
+            );
+
+            $produit = Produit::create([
+                'Code_produit' => $request->Code_produit,
+                'designation' => $request->designation,
+                'unite' => $request->unite,
+                'fournisseur_id' => $request->fournisseur_id,
+                'type' => 'emballage',
+                'type_quantite' => 'unite',
+                'categorie_id' => $categorieEmballage->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            $produit->prixProduits()->create([
+                'dateDebut' => now(),
+                'dateFin' => null,
+                'prixProduit' => $request->prixProduit,
+            ]);
+
+            return response()->json([
+                'message' => 'Packaging cree avec succes',
+                'produit' => $produit->load('prixProduitsLast', 'fournisseur'),
+            ], 201);
+        });
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+public function updatePackaging(Request $request, $id)
+{
+    try {
+        $validator = Validator::make($request->all(), [
+            'Code_produit' => 'required|unique:produits,Code_produit,' . $id,
+            'designation' => 'required',
+            'unite' => 'nullable',
+            'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+            'prixProduit' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        $produit = Produit::where('type', 'emballage')->findOrFail($id);
+        $produit->update([
+            'Code_produit' => $request->Code_produit,
+            'designation' => $request->designation,
+            'unite' => $request->unite,
+            'fournisseur_id' => $request->fournisseur_id,
+        ]);
+
+        // Nouveau prix uniquement si le montant a changé
+        $dernierPrix = $produit->prixProduitsLast;
+        if (!$dernierPrix || (float) $dernierPrix->prixProduit !== (float) $request->prixProduit) {
+            if ($dernierPrix) {
+                $dernierPrix->update(['dateFin' => now()]);
+            }
+            $produit->prixProduits()->create([
+                'dateDebut' => now(),
+                'dateFin' => null,
+                'prixProduit' => $request->prixProduit,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Packaging modifie avec succes',
+            'produit' => $produit->fresh()->load('prixProduitsLast', 'fournisseur'),
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+
 }

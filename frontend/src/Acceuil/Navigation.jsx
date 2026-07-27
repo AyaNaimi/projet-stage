@@ -38,6 +38,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import SellIcon from "@mui/icons-material/Sell";
 import { useOpen } from "./OpenProvider";
 import { useHeader } from "./HeaderContext";
+import { Package } from 'lucide-react';
 
 const drawerWidth = 220;
 const AUTH_API_URL =
@@ -143,11 +144,18 @@ const navItems = [
     match: (pathname) => pathname === "/charges-directes",
   },
   {
+  to: "/packagings",
+  label: "Packagings",
+  icon: <Package />,
+  match: (pathname) => pathname === "/packagings",
+},
+  {
     to: "/charges-indirectes",
     label: "Charges indirectes",
     icon: <TableViewIcon />,
     match: (pathname) => pathname === "/charges-indirectes",
   },
+  
   {
     to: "/cout-produits",
     label: "Coût de revient",
