@@ -41,6 +41,7 @@ class Produit extends Model
         'rendement',
         'temps_production',
         'cout_horaire_mod',
+        'is_recette',
         // Champs CostEngine (personne 5)
         'quantite_production_mensuelle',
         'temps_machine',
@@ -49,6 +50,10 @@ class Produit extends Model
         'emballage_secondaire_label',
         'etiquette_label',
         'perte_mod',
+    ];
+
+    protected $casts = [
+        'is_recette' => 'boolean',
     ];
 
     public function fournisseur()

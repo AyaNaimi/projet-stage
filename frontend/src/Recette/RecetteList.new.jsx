@@ -1,6 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
 import axiosInstance from "../axiosInstance";
-import "./RecettePage.css";
 import { Pencil, Trash2, X, SlidersHorizontal } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "react-bootstrap";
@@ -50,16 +49,6 @@ const normalizeBackendProducts = (list) => {
 const parseNumber = (value) => {
   const parsed = parseFloat(value);
   return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const normalizeTypeQuantite = (value) => {
-  if (!value) return "kg";
-  const normalized = String(value).trim().toLowerCase();
-  if (normalized === "k" || normalized === "kg") return "kg";
-  if (normalized === "l" || normalized === "litre" || normalized === "liter") return "litre";
-  if (normalized === "u" || normalized === "unite") return "unite";
-  if (["kg/unite", "m", "bidon", "carton"].includes(normalized)) return normalized;
-  return "kg";
 };
 
 const generateLocalLineId = () => {
@@ -151,7 +140,7 @@ const RecetteList = () => {
     try {
       const [recipesRes, productsRes, categoriesRes] = await Promise.all([
         axiosInstance.get("/api/produits?include_recettes=1"),
-        axiosInstance.get("/api/produits?include_recettes=0"),
+        axiosInstance.get("/api/produits"),
         axiosInstance.get("/api/categories"),
       ]);
 
@@ -307,10 +296,9 @@ const RecetteList = () => {
       formData.append("designation", recipeForm.name.trim());
       formData.append("Code_produit", currentRecipe?.Code_produit || currentRecipe?.code_produit || `REC-${Date.now()}`);
       formData.append("categorie_id", currentRecipe?.categorie_id || defaultCategoryId);
-      const typeQuantite = normalizeTypeQuantite(currentRecipe?.type_quantite);
+      const typeQuantite = currentRecipe?.type_quantite === "K" ? "kg" : currentRecipe?.type_quantite || "kg";
       formData.append("type_quantite", typeQuantite);
-      // ensure boolean-like value sent as string '1' so Laravel's boolean validator accepts it reliably
-      formData.append("is_recette", "1");
+      formData.append("is_recette", 1);
       if (recipeForm.imageFile) {
         formData.append("logoP", recipeForm.imageFile);
       }
@@ -351,7 +339,7 @@ const RecetteList = () => {
   const confirmDeleteRecipe = async () => {
     if (deleteConfirmId === null) return;
     try {
-      await axiosInstance.delete(`/api/produits/${deleteConfirmId}`);
+      await axiosInstance.delete(`/api/recettes/${deleteConfirmId}`);
       await fetchRecipesAndProducts();
       setSelectedRecipeId(null);
       setDeleteConfirmId(null);
@@ -361,13 +349,6 @@ const RecetteList = () => {
   };
 
   const openIngredientForm = () => {
-    // If no recipe selected, show simple alert and do not open the form
-    if (!selectedRecipeId) {
-      window.alert("Veuillez créer ou sélectionner une recette avant d'ajouter un ingrédient.");
-      setIngredientError("Veuillez créer ou sélectionner une recette avant d'ajouter un ingrédient.");
-      return;
-    }
-
     setIngredientFormOpen(true);
     setIsRecipeFormOpen(false);
     setEditingIngredientId(null);
@@ -519,12 +500,50 @@ const RecetteList = () => {
         lines: newLines,
       };
 
-      const res = await axiosInstance.post(`/api/recettes/sync/${selectedRecipeId}`, {
+      const res = await axiosInstance.put(`/api/recettes/${selectedRecipeId}`, {
+        ...updatedRecipe,
         lines: newLines.map(mapIngredientForBackend),
       });
 
-      await fetchRecipesAndProducts();
+      try {
+        const fresh = await axiosInstance.get(`/api/recettes/${selectedRecipeId}`);
+        const serverData = fresh?.data?.produit || fresh?.data || null;
+        if (serverData) {
+          const normalizedServer = normalizeBackendProducts(Array.isArray(serverData) ? serverData : [serverData])[0];
+          const serverLines = Array.isArray(normalizedServer?.lines) ? normalizedServer.lines : newLines;
+          setRecipes((prev) => prev.map((r) => (String(r.id) === String(selectedRecipeId) ? { ...r, ...normalizedServer } : r)));
+          setSelectedRecipe((prev) => ({ ...prev, ...normalizedServer }));
+          setIngredientRows(serverLines);
+        } else {
+          const serverDataFromPut = res?.data?.produit || res?.data || null;
+          if (serverDataFromPut) {
+            const normalizedServer = normalizeBackendProducts(Array.isArray(serverDataFromPut) ? serverDataFromPut : [serverDataFromPut])[0];
+            const serverLines = Array.isArray(normalizedServer?.lines) ? normalizedServer.lines : newLines;
+            setRecipes((prev) => prev.map((r) => (String(r.id) === String(selectedRecipeId) ? { ...r, ...normalizedServer } : r)));
+            setSelectedRecipe((prev) => ({ ...prev, ...normalizedServer }));
+            setIngredientRows(serverLines);
+          } else {
+            setSelectedRecipe(updatedRecipe);
+            setIngredientRows(newLines);
+          }
+        }
+      } catch (getErr) {
+        console.warn('GET after PUT failed, falling back to PUT response or optimistic update', getErr);
+        const serverDataFromPut = res?.data?.produit || res?.data || null;
+        if (serverDataFromPut) {
+          const normalizedServer = normalizeBackendProducts(Array.isArray(serverDataFromPut) ? serverDataFromPut : [serverDataFromPut])[0];
+          const serverLines = Array.isArray(normalizedServer?.lines) ? normalizedServer.lines : newLines;
+          setRecipes((prev) => prev.map((r) => (String(r.id) === String(selectedRecipeId) ? { ...r, ...normalizedServer } : r)));
+          setSelectedRecipe((prev) => ({ ...prev, ...normalizedServer }));
+          setIngredientRows(serverLines);
+        } else {
+          setSelectedRecipe(updatedRecipe);
+          setIngredientRows(newLines);
+        }
+      }
+
       setPendingIngredients([]);
+      fetchRecipesAndProducts();
       closeIngredientForm();
     } catch (err) {
       console.error("Save ingredient failed", err);
@@ -552,7 +571,8 @@ const RecetteList = () => {
     });
 
     try {
-      await axiosInstance.post(`/api/recettes/sync/${selectedRecipeId}`, {
+      await axiosInstance.put(`/api/recettes/${selectedRecipeId}`, {
+        ...currentRecipe,
         lines: filteredLines.map(mapIngredientForBackend),
       });
 
@@ -598,7 +618,8 @@ const RecetteList = () => {
     const filteredLines = existingLines.filter((line, idx) => !selectedIngredientIds.includes(line.id ?? idx));
 
     try {
-      await axiosInstance.post(`/api/recettes/sync/${selectedRecipeId}`, {
+      await axiosInstance.put(`/api/recettes/${selectedRecipeId}`, {
+        ...currentRecipe,
         lines: filteredLines.map(mapIngredientForBackend),
       });
 

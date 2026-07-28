@@ -132,8 +132,14 @@ class ProduitController extends Controller
     {
         try {
             $isDirectCharges = $request->query('directes') || $request->query('minimal');
+            $includeRecettes = filter_var($request->query('include_recettes'), FILTER_VALIDATE_BOOLEAN);
 
             $query = Produit::orderBy('id', 'desc');
+            if (!$includeRecettes && Schema::hasColumn('produits', 'is_recette')) {
+                $query = $query->where(function ($query) {
+                    $query->whereNull('is_recette')->orWhere('is_recette', 0);
+                });
+            }
 
             if ($isDirectCharges) {
                 $query = $query->select([
@@ -214,7 +220,8 @@ class ProduitController extends Controller
                 'Code_produit' => 'required|string|min:2|max:50|unique:produits,Code_produit',
                 'designation' => 'required|string|min:2|max:255',
                 'calibre_id' => 'nullable|exists:calibre,id',
-                'type_quantite' => 'required|in:kg,unite,litre,kg/unite,M,bidon,Carton',
+                // accept both capitalized and lowercase variants sent by frontend
+                'type_quantite' => 'required|in:kg,unite,litre,kg/unite,M,m,bidon,Bidon,Carton,carton',
                 'unite' => 'nullable|string|max:10',
                 'seuil_alerte' => 'nullable|numeric|min:0|max:999999',
                 'stock_initial' => 'nullable|numeric|min:0|max:999999',
@@ -225,6 +232,7 @@ class ProduitController extends Controller
                 'Dvie' => 'nullable|string|max:100',
                 'reference' => 'nullable|string|max:100',
                 'tva' => 'nullable|numeric|min:0|max:100',
+                'is_recette' => 'nullable|boolean',
                 'logoP' => 'nullable|sometimes|image|mimes:jpeg,png,jpg,gif,webp,svg,bmp,tiff,ico|max:5120',
                 'produit_Etiq_id' => 'nullable',
                 'produit_Embalg_id' => 'nullable',
@@ -349,7 +357,8 @@ class ProduitController extends Controller
                 'Code_produit' => 'required|string|min:2|max:50|unique:produits,Code_produit,' . $id,
                 'designation' => 'required|string|min:2|max:255',
                 'calibre_id' => 'nullable|exists:calibre,id',
-                'type_quantite' => 'required|in:kg,unite,litre,kg/unite,M,bidon,Carton',
+                // accept both capitalized and lowercase variants sent by frontend
+                'type_quantite' => 'required|in:kg,unite,litre,kg/unite,M,m,bidon,Bidon,Carton,carton',
                 'unite' => 'nullable|string|max:10',
                 'seuil_alerte' => 'nullable|numeric|min:0|max:999999',
                 'stock_initial' => 'nullable|numeric|min:0|max:999999',
@@ -358,6 +367,7 @@ class ProduitController extends Controller
                 'genre' => 'nullable|in:vente,achat,venteachat',
                 'Dvie' => 'nullable|string|max:100',
                 'tva' => 'nullable|numeric|min:0|max:100',
+                'is_recette' => 'nullable|boolean',
                 'logoP' => 'nullable|sometimes|image|mimes:jpeg,png,jpg,gif,webp,svg,bmp,tiff,ico|max:5120',
                 'produit_Etiq_id' => 'nullable',
                 'produit_Embalg_id' => 'nullable',
@@ -624,17 +634,38 @@ class ProduitController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('query');
-        $produits = Produit::where('designation', 'like', "%$query%")
-            ->orWhere('Code_produit', 'like', "%$query%")
+        $includeRecettes = filter_var($request->query('include_recettes'), FILTER_VALIDATE_BOOLEAN);
+
+        $produitsQuery = Produit::where(function ($q) use ($query) {
+            $q->where('designation', 'like', "%$query%")
+                ->orWhere('Code_produit', 'like', "%$query%");
+        });
+
+        if (!$includeRecettes && Schema::hasColumn('produits', 'is_recette')) {
+            $produitsQuery->where(function ($query) {
+                $query->whereNull('is_recette')->orWhere('is_recette', 0);
+            });
+        }
+
+        $produits = $produitsQuery
             ->with(['categorie', 'calibre', 'user', 'souscategorie', 'prixProduits', 'prixProduitsLast', 'Embalge', 'etiquette', 'EmbalgeS', 'stockProduit', 'recettes.matierePremiere'])
             ->get()
             ->map(fn ($produit) => $this->formatProduit($produit));
         return response()->json(['produits' => $produits]);
     }
 
-    public function byCategorie($categorieId)
+    public function byCategorie(Request $request, $categorieId)
     {
-        $produits = Produit::where('categorie_id', $categorieId)
+        $includeRecettes = filter_var($request->query('include_recettes'), FILTER_VALIDATE_BOOLEAN);
+
+        $produitsQuery = Produit::where('categorie_id', $categorieId);
+        if (!$includeRecettes && Schema::hasColumn('produits', 'is_recette')) {
+            $produitsQuery->where(function ($query) {
+                $query->whereNull('is_recette')->orWhere('is_recette', 0);
+            });
+        }
+
+        $produits = $produitsQuery
             ->with(['categorie', 'calibre', 'user', 'souscategorie', 'prixProduits', 'prixProduitsLast', 'Embalge', 'etiquette', 'EmbalgeS', 'stockProduit', 'recettes.matierePremiere'])
             ->get()
             ->map(fn ($produit) => $this->formatProduit($produit));
