@@ -184,6 +184,7 @@ const RecetteList = () => {
         recette: [
           {
             matiere_premiere_id: "",
+            matiere_premiere_nom: "",
             quantite: "",
             unite: "",
             perte: "",
@@ -225,19 +226,22 @@ const RecetteList = () => {
       recette: [
         {
           id: row.id,
-  
+
           matiere_premiere_id:
             row.matiere_premiere_id || "",
-  
+
+          matiere_premiere_nom:
+            row.matiere_premiere_nom || "",
+
           quantite:
             row.quantite || "",
-  
+
           unite:
             row.unite || "K",
-  
+
           perte:
             row.perte || "",
-  
+
           quantite_reelle:
             row.quantite_reelle || "",
         },
@@ -336,18 +340,9 @@ const RecetteList = () => {
             recette.matiere_premiere_id
           ),
   
-        quantite:
-          parseFloat(
-            recette.quantite
-          ) || 0,
-  
-        unite:
-          recette.unite || "K",
-  
-        perte:
-          parseFloat(
-            recette.perte
-          ) || 0,
+        matiere_premiere_nom:
+          recette.matiere_premiere_nom || "",
+
   
         quantite_reelle:
           parseFloat(

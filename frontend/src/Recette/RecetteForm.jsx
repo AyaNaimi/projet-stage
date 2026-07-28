@@ -1,7 +1,18 @@
 import React from "react";
 import { Form, Button } from "react-bootstrap";
 import { Tag, Barcode } from "lucide-react";
-import { width } from "@mui/system";
+
+const computeRealQuantity = (quantite, perte) => {
+  const quantity = parseFloat(quantite || 0) || 0;
+  const lossPercent = parseFloat(perte || 0) || 0;
+  const lossFactor = 1 - lossPercent / 100;
+
+  if (lossFactor <= 0) {
+    return "";
+  }
+
+  return parseFloat((quantity / lossFactor).toFixed(2));
+};
 
 const RecetteForm = ({
   show,
@@ -13,9 +24,6 @@ const RecetteForm = ({
   closeForm,
   formContainerStyle,
 }) => {
-
-
-
   if (!show) {
     return null;
   }
@@ -34,30 +42,62 @@ const RecetteForm = ({
 
   const handleChange = (index, field, value) => {
     const updatedRecettes = [...(formData.recette || [])];
-  
-    updatedRecettes[index] = {
+    const updatedLine = {
       ...updatedRecettes[index],
       [field]: value,
     };
-  
-    const quantite =
-      parseFloat(updatedRecettes[index].quantite) || 0;
-  
-    const perte =
-      parseFloat(updatedRecettes[index].perte) || 0;
-  
-    updatedRecettes[index].quantite_reelle = (
-      quantite +
-      (quantite * perte) / 100
-    ).toFixed(2);
-  
+
+    if (field === "matiere_premiere_id") {
+      const selectedMatiere = matierePremieres.find(
+        (m) => String(m.id) === String(value),
+      );
+      updatedLine.matiere_premiere_nom = selectedMatiere
+        ? selectedMatiere.nom || selectedMatiere.designation || ""
+        : "";
+    }
+
+    updatedLine.quantite_reelle = computeRealQuantity(
+      updatedLine.quantite,
+      updatedLine.perte,
+    );
+
+    updatedRecettes[index] = updatedLine;
+
     setFormData((prev) => ({
       ...prev,
       recette: updatedRecettes,
     }));
   };
 
-  
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    const recette = formData.recette?.[0] || {};
+    if (!recette.matiere_premiere_id) {
+      alert("Veuillez sélectionner une matière première.");
+      return;
+    }
+
+    if (
+      recette.quantite === "" ||
+      recette.quantite === null ||
+      Number.isNaN(parseFloat(recette.quantite))
+    ) {
+      alert("Veuillez saisir une quantité valide.");
+      return;
+    }
+
+    if (
+      recette.perte !== "" &&
+      recette.perte !== null &&
+      Number.isNaN(parseFloat(recette.perte))
+    ) {
+      alert("Veuillez saisir un pourcentage de perte valide.");
+      return;
+    }
+
+    handleSubmit(e);
+  };
 
   return (
     <div
@@ -171,7 +211,7 @@ const RecetteForm = ({
         </div>
       </div>
 
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleFormSubmit}>
         
         {(formData.recette || []).map((line, index) => (
           <div
