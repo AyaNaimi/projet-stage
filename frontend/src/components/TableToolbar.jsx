@@ -1,0 +1,53 @@
+
+import React from 'react';
+import ColumnVisibilityMenu from './ColumnVisibilityMenu';
+
+export default function TableToolbar({
+  AddButton,
+  ChartActionButton,
+  FilterToggleButton,
+  handleShowFormButtonClick,
+  showFilters,
+  toggleFilters,
+  columns,
+  columnVisibility,
+  handleColumnCheckboxChange,
+  showColumnMenu,
+  handleToggleColumnMenu,
+  columnMenuRef,
+  handleShowFormButtonClickChart,
+  hasChart,
+  addButtonText,
+  ExportButtons
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '8px 16px 0 0' }}>
+      {hasChart && ChartActionButton && (
+        <ChartActionButton />
+      )}
+      {FilterToggleButton && showFilters !== undefined && toggleFilters && (
+        <FilterToggleButton
+          showFilters={showFilters}
+          toggleFilters={toggleFilters}
+          align="right"
+        />
+      )}
+      <ColumnVisibilityMenu
+        columns={columns}
+        columnVisibility={columnVisibility}
+        onToggleColumn={handleColumnCheckboxChange}
+        show={showColumnMenu}
+        onToggleMenu={handleToggleColumnMenu}
+        menuRef={columnMenuRef}
+      />
+      {ExportButtons && ExportButtons}
+      {AddButton && handleShowFormButtonClick && (
+        <AddButton
+          onClick={() => handleShowFormButtonClick(false)}
+          text={addButtonText || "Ajouter"}
+          align="right"
+        />
+      )}
+    </div>
+  );
+}

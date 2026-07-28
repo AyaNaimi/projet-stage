@@ -1,0 +1,6 @@
+matricule,num_badge,nom,prenom,lieu_naiss,date_naiss,cin,cnss,sexe,situation_fm,nb_enfants,adresse,ville,pays,code_postal,tel,email,fonction,nationalite,salaire_base,date_entree
+EMP001,B001,Dupont,Jean,Paris,1985-04-12,A1234567,1122334455,M,M,2,"12 Rue de la Paix",Paris,France,75002,0601020304,jean.dupont@email.com,Développeur,Française,3500.00,2020-01-15
+EMP002,B002,Martin,Marie,Lyon,1990-08-25,B7654321,2233445566,F,C,0,"5 Avenue des Fleurs",Lyon,France,69001,0611223344,marie.martin@email.com,Designer,Française,3200.00,2021-03-01
+EMP003,B003,Kowalski,Jan,Varsovie,1988-11-02,C9876543,3344556677,M,D,1,"ul. Nowa 5",Varsovie,Pologne,00-001,0622334455,jan.kowalski@email.com,Chef de Projet,Polonaise,4500.00,2019-06-10
+EMP004,B004,Silva,Ana,Lisbonne,1993-01-30,D1122334,4455667788,F,M,3,"Rua da Prata 10",Lisbonne,Portugal,1100-001,0633445566,ana.silva@email.com,Analyste,Portugaise,3000.00,2022-09-01
+EMP005,B005,Müller,Hans,Berlin,1982-07-15,E4433221,5566778899,M,M,2,"Hauptstrasse 45",Berlin,Allemagne,10115,0644556677,hans.mueller@email.com,Directeur,Allemande,6000.00,2015-11-01

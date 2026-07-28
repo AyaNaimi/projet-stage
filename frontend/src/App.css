@@ -1,0 +1,1027 @@
+body {
+  margin-bottom: 70px;
+   /* Ajoutez une marge en bas pour éviter que le pied de page ne chevauche le contenu */
+background-color: #ffffff !important;
+/* background-color: #f5f5f5 !important; */
+
+  }
+
+.app-container {
+  min-height: calc(100vh - 110px); /* Calculez la hauteur minimale de votre contenu pour s'adapter à l'écran */
+}
+
+#formContainer {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 500px;
+  height: auto;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224);
+  background-color: #fff;
+}
+#formContainer1SC {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 400px;
+  height: auto;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224);
+  background-color: #fff;
+}
+#tableContainer {
+ /* Espacement pour afficher le tableau à côté du formulaire */
+}
+
+a {
+  text-decoration: none;
+}
+.clientS {
+  list-style-type: none;
+  margin: 0;
+  padding: 5px;
+  margin-left: 5px;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+.table-hover {
+  background-color: rgb(23, 7, 7);
+  border-radius: 10px;
+}
+.page-header {
+  display: none;
+}
+.hidden {
+  display: none;
+}
+#formContainer {
+  position: fixed;
+  right: -100%; /* Débutera hors de l'écran */
+  width: 30%;
+  height: 100%;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 2px;
+  border-radius: 10px;
+  background-color:rgb(250, 250, 250);
+}
+#formContainerCommande {
+  position: fixed;
+  right: -100%; /* Débutera hors de l'écran */
+  width: 20%;
+  height: 100%;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 2px solid #ddd !important;
+  border-radius: 10px;
+  background-color:rgb(250, 250, 250);
+}
+#formContainer1SC{
+    position: fixed;
+    right:  -100; /* Débutera hors de l'écran */
+    width: 30%;
+    height: 100%;
+    transition: right 0.3s ease; /* Effet de glissement du formulaire */
+    border: 2px;
+    border-radius: 10px;
+    background-color:rgb(250, 250, 250);
+}
+#tableContainer {
+  /* Espacement pour afficher le tableau à côté du formulaire */
+}
+
+a{
+  text-decoration: none;
+}
+.clientS{
+list-style-type: none;
+margin: 0;
+padding: 5px;
+margin-left: 5px;
+overflow: hidden;
+background-color: #f1f1f1;
+}
+
+.table-hover{
+  background-color:rgb(250, 250, 250);
+  border-radius: 10px;
+
+}
+.page-header{
+  display: none;
+}
+.hidden{
+  display: none;
+}
+.custom-select {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  margin-left: "-10px",
+                  
+             
+}
+
+.custom-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.custom-table th, .custom-table td {
+  border: 1px solid #cb4a4a !important;
+  padding: 8px;
+  text-align: left;
+}
+
+.custom-table th {
+  background-color: #f2f2f2;
+}
+.filter-container input {
+  margin-right: 10px;
+  padding: 5px;
+}
+.table-container {
+  width: 100%; /* Adjust the width as needed */
+  margin: 0 auto;
+  /* Center the table horizontally */
+}
+
+.table {
+  width: 100%;
+  margin-top: 3%;
+}
+
+
+.input-warning {
+  border: 5px solid red !important; /* Add a red border */
+  color: red !important; /* Change text color to red */
+}
+.ddd{
+  background-color: #ddd !important;
+}
+.btn-danger{
+  border-color: red !important;
+  background-color: red !important;
+  color: #f1f1f1 !important;
+}
+.btn-secondary {
+  background-color: #928f8f !important;
+  color:  #fff !important;
+
+}
+.ddd th{
+  background-color: #ddd;
+}
+.bgtab{
+  background-color: #ddd !important;
+}
+table th{
+  background-color: #ddd;
+}
+.table_width {
+  width: 100%;
+}
+.table-bordered {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-bordered th, .table-bordered td {
+  border: 2px solid #ddd; /* Ajustez la largeur de la bordure ici */
+  padding: 8px;
+  text-align: left;
+}
+.back{
+  background-color: #23c18756 !important;
+}
+.backe{
+  background-color: #2f8e6b56 !important;
+}
+body {
+  margin-bottom: 70px;
+   /* Ajoutez une marge en bas pour éviter que le pied de page ne chevauche le contenu */
+background-color: #ffffff !important;
+font-size: 14px !important;
+
+  }
+
+.app-container {
+  min-height: calc(100vh - 110px); /* Calculez la hauteur minimale de votre contenu pour s'adapter à l'écran */
+}
+#formContainerChargement {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 49% !important;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224) !important;
+  background-color: #fff !important;
+  border-radius: 0 !important;
+  padding: 5px !important;
+  margin-right: 10px !important;
+  border: 1px solid rgb(224, 224, 224) !important;
+  box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 12px !important;
+  border-radius: 10px !important;
+}
+#formContainer {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 32% !important;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224) !important;
+  background-color: #fff !important;
+  border-radius: 0 !important;
+  padding: 5px !important;
+  margin-right: 10px !important;
+  border: 1px solid rgb(224, 224, 224) !important;
+  box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 12px !important;
+  border-radius: 10px !important;
+}
+td, th {
+  white-space: nowrap !important;
+}
+
+#formContainerunique {
+  position: absolute;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 40% !important;
+
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  background-color: #fff !important;
+  padding: 5px !important;
+  margin-right: 10px !important;
+  border: 1px solid rgb(224, 224, 224) !important;
+  box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 12px !important;
+  border-radius: 10px !important;
+}
+#formContainerunique36 {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 39% !important;
+
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  background-color: #fff !important;
+  padding: 5px !important;
+  margin-right: 10px !important;
+  border: 1px solid rgb(224, 224, 224) !important;
+  box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 12px !important;
+  border-radius: 10px !important;
+}
+#formContainerunique60 {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 50% !important;
+
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  background-color: #fff !important;
+  padding: 5px !important;
+  margin-right: 10px !important;
+  border: 1px solid rgb(224, 224, 224) !important;
+  box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 12px !important;
+  border-radius: 10px !important;
+}
+#formContainerunique80 {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 70% !important;
+
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224) !important;
+  background-color: #fff !important;
+  border-radius: 0 !important;
+  padding: 5px !important;
+  margin-right: 10px !important;
+}
+#formContainer1SC {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 500px;
+  
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224);
+  background-color: #fff;
+  border-radius: none !important;
+  max-height: calc(100vh - 150px);
+  height: calc(100vh - 150px);
+}
+#tableContainer {
+ /* Espacement pour afficher le tableau à côté du formulaire */
+}
+
+a {
+  text-decoration: none;
+}
+.clientS {
+  list-style-type: none;
+  margin: 0;
+  padding: 5px;
+  margin-left: 5px;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+.table-hover {
+  background-color: rgb(23, 7, 7);
+  border-radius: 10px;
+}
+.page-header {
+  display: none;
+}
+.hidden {
+  display: none;
+}
+#formContainer {
+  position: fixed;
+  /* right: -100%;
+  height: 100%;
+  transition: right 0.3s ease;  */
+}
+#formContainerunique {
+  position: fixed;
+  right: -100%; /* Débutera hors de l'écran */
+  width: 60%;
+  height: 100%;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+}
+#formContainerCommande {
+  position: fixed;
+  right: -900px; /* Débutera hors de l'écran */
+  width: 650px !important;
+  height: 900px !important;
+  transition: right 0.3s ease; /* Effet de glissement du formulaire */
+  border: 3px solid rgb(224, 224, 224);
+  background-color: #fff;
+  border-radius: 0 !important;
+  padding: 5px !important;
+  margin-right: 5px !important;
+}
+#formContainer1SC{
+    position: fixed;
+    right:  -100; /* Débutera hors de l'écran */
+    width: 32% !important;
+    height: 100% !important;
+    transition: right 0.3s ease; /* Effet de glissement du formulaire */
+    border: 2px;
+    background-color:rgb(250, 250, 250);
+    border-radius: none !important;
+}
+#tableContainer {
+  /* Espacement pour afficher le tableau à côté du formulaire */
+}
+
+a{
+  text-decoration: none;
+}
+.clientS{
+list-style-type: none;
+margin: 0;
+padding: 5px;
+margin-left: 5px;
+overflow: hidden;
+background-color: #f1f1f1;
+}
+
+.table-hover{
+  background-color:rgb(250, 250, 250);
+  border-radius: 10px;
+
+}
+.page-header{
+  display: none;
+}
+.hidden{
+  display: none;
+}
+.custom-select {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  margin-left: "-10px",
+                  
+             
+}
+
+.custom-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.custom-table th, .custom-table td {
+  border: 1px solid #cb4a4a !important;
+  padding: 8px;
+  text-align: left;
+}
+
+.custom-table th {
+  background-color: #f2f2f2;
+}
+.filter-container input {
+  margin-right: 10px;
+  padding: 5px;
+}
+.table-container {
+  width: 100%; /* Adjust the width as needed */
+  margin: 0 auto;
+  /* Center the table horizontally */
+}
+
+.table {
+  width: 100%;
+  margin-top: 3%;
+}
+
+
+.input-warning {
+  border: 5px solid #fa4343 !important; /* Add a red border */
+  color: red !important; /* Change text color to red */
+}
+.ddd{
+  background-color: #ddd !important;
+}
+.btn-danger{
+  border-color: red !important;
+  background-color: red !important;
+  color: #f1f1f1 !important;
+}
+.btn-secondary {
+  background-color: #928f8f !important;
+  color:  #fff !important;
+
+}
+.ddd th{
+  background-color: #ddd;
+}
+.bgtab{
+  background-color: #ddd !important;
+}
+table th{
+  /* background-color: #c60000; */
+}
+.table_width {
+  width: 100%;
+}
+.table-bordered {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-bordered th, .table-bordered td {
+  border: 2px solid #ddd; /* Ajustez la largeur de la bordure ici */
+  padding: 8px;
+  text-align: left;
+}
+.black th , .black td{
+  border: 2px solid black; /* Ajustez la largeur de la bordure ici */
+  padding: 8px;
+  text-align: left;
+}
+
+#produitsTable{
+  height: 100px !important;
+}
+
+.is-invalid {
+  border-color: red;
+}
+.text-danger {
+  color: red;
+  font-size: 0.875em;
+  margin-top: 5px;
+}
+.tableHead{
+    gridTemplateColumns: repeat(9, 1fr) !important;
+    gap: 1rem !important;
+    paddingBottom: 0.5rem !important;
+    borderBottom: none !important;
+    fontSize: 0.875rem !important;
+    fontWeight: 600 !important;
+    color: #4b5563 !important;
+    backgroundColor: #1e1ecd  !important;
+    whiteSpace: nowrap !important;
+    padding: 0.75rem 1rem !important;
+    textTransform: uppercase !important;
+    letterSpacing: 0.5px !important;
+}
+.titreColore{
+  color:rgb(0, 0, 0) ;
+  
+}
+.titreColoreUnique{
+  color:rgb(129, 42, 42) ;
+  position: relative;
+  top: -50px;
+  left: 20px;
+  
+}
+.titreColoreUnique h2{
+  color:rgb(255, 255, 255) ;
+position: fixed !important;
+top: 15px;
+}
+
+.AjouteBotton{
+  color: #08b3ad;
+
+}
+.postionPage{
+  position: fixed;
+  top:-0px;
+  left: 290px;
+  width: 86.5%;
+}
+.widthDetails{
+  width: 10px;
+}
+.Fab{
+  background-color: #00afaa !important;
+  color: rgb(255, 255, 255) !important;
+  z-index: 1 !important;
+  padding-left: 50px !important;
+  padding-right: 50px !important;
+
+  
+}
+.FabAnnule{
+  background-color: gray !important;
+  color: rgb(255, 255, 255) !important;
+z-index: 1 !important;
+padding-left: 50px !important;
+  padding-right: 50px !important;
+/* color:##c7fffd */
+}
+
+.sidBarcomposantColore{
+  color:white !important
+}
+.sidBarSucomposantColore{
+  color:white !important;
+  margin-left: 10px !important;
+}
+.iconSedBar{
+  font-size: x-large !important;
+  color:white !important;
+
+}
+.composantDecomp{
+  color:white !important;
+
+  margin-left: 30px !important;
+  height: 35 px !important;
+}
+.ColoretableForm{
+  background-color: #00afaa !important;
+color: white !important;
+}
+.z-index{
+  z-index: 10000 !important;
+}
+.category-item {
+  text-align: center;
+}
+
+.category-img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border: 3px solid #e0e0e0;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.category-text {
+  margin-top: px;
+  font-weight: bold;
+  margin-bottom: -3px;
+  color: #333;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+ 
+}
+.carousel-control-prev{
+  margin-top: 45px;
+  width: 30px;
+  height: 30px;
+}
+.carousel-control-next{
+  margin-top: 45px;
+  width: 30px;
+  height: 30px;
+}
+.carousel-control-prev-icon{
+  
+  margin-top: -40px;
+}
+.carousel-control-next-icon{
+  margin-top: -40px;
+
+}
+.bgCategories{
+  width: 49% !important;
+  padding-bottom: -20px !important;
+  margin-bottom: 5px;
+}
+.bgSecteur{
+  background-color: #fff;
+  width: 100% !important;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+
+}
+.siteclient td{
+  background-color: #dcfffe !important;
+}
+.table th, .table td {
+   /* Ajoute une bordure légère autour des cellules */
+  /* Ajoute du padding pour l'espacement */
+  vertical-align: middle !important; /* Centre le texte verticalement */
+}
+.table td {
+  text-align: center !important; /* Centre le texte horizontalement */
+}
+table thead th{
+  text-align: center !important; /* Centre le texte horizontalement */
+    backgroundColor: #f1f1f2  !important;
+
+}
+.category-item {
+  position: relative;
+}
+
+.category-img {
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Couleur du cercle pour la catégorie sélectionnée */
+.category-item.active .category-img.selected {
+  background-color: #007bff; /* Couleur à changer selon vos préférences */
+  border: 3px solid #007bff; /* Ajouter une bordure si nécessaire */
+}
+
+.category-item.active .category-img {
+  border: 2px solid #007bff; /* Bordure pour le cercle actif */
+}
+.input-error {
+  border: 1px solid red; /* Changer la bordure en rouge */
+}
+
+.custom-dropdown {
+  border-radius: 5px; /* Rounded corners */
+  border: 1px solid #ccc; /* Border color */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.custom-dropdown-item {
+  padding: 10px 15px; /* Padding for each item */
+  transition: background-color 0.2s ease; /* Smooth background transition */
+}
+
+.custom-dropdown-item:hover {
+  background-color: #f8f9fa; /* Light background on hover */
+}
+.category-text {
+  font-family: 'Roboto', 'Arial', 'Helvetica', sans-serif; /* Prioritize Roboto, then Arial, then Helvetica */
+  font-size: 16px; /* Adjust the size as per your needs */
+  color: #333; /* Dark grey similar to the example */
+  font-weight: 400; /* Regular font weight */
+  letter-spacing: 0.5px; /* Slight letter spacing for clarity */
+}
+.formselect{
+  border-radius: 7px !important;
+}
+.table-header th{
+  white-space: nowrap; /* Prevents text from wrapping to the next line */
+  text-align: center; /* Centers the text */
+  padding: 10px; /* Optional: add padding for better spacing */
+}
+
+
+.in-stock {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #e6f3ff; /* Soft, light blue background */
+  color: #1a5f7a; /* Deep teal text */
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.in-déposer {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #f0f7e8; /* Very soft sage green background */
+  color: #2c5e1a; /* Dark forest green text */
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.in-Déposer {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #f4e6ff; /* Soft lavender background */
+  color: #6a0dad; /* Deep purple text */
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.in-Encaissé {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #e6f2e6; /* Soft mint green background */
+  color: #145a32; /* Dark green text */
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+/* styles.css */
+
+/* Styles pour le groupe de formulaire */
+.nature-normal {
+  color: green;
+}
+
+.nature-urgent {
+  color: #f85c5c;
+}
+.stock-table-container {
+  width: 100%;
+  margin: 20px auto;
+  overflow-x: auto;
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.header-row {
+  background-color: #FFD700;
+  color: #000;
+  font-weight: bold;
+}
+
+.stock-table th,
+.stock-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.highlighted-row {
+  background-color: #FF4C4C;
+  color: #fff;
+}
+
+.stock-table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.stock-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+.tables-container {
+  display: flex;
+  gap: 0px; /* Espace entre les tables */
+}
+
+#produitsTable {
+  flex: 1; /* Ajuste la taille des tables pour qu'elles occupent l'espace également */
+}
+.category-text {
+  font-size: small;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.summaryRow th {
+  text-align: center; /* Centrer le texte */
+  font-size: 1.2rem; /* Taille de police */
+  padding: 10px 15px; /* Espacement interne */
+  border-bottom: 2px solid #ddd; /* Ligne en bas */
+  width: 100px;
+  background-color: #fff !important;
+}
+
+/*  *//* Style par défaut pour les résultats */
+.result {
+  font-weight: bold;
+  font-size: 1.2rem; /* Augmenter la taille pour attirer l'attention */
+}
+
+/* Couleurs spécifiques pour chaque catégorie */
+.orange {
+  color: rgb(251, 208, 128); /* À déposer */
+}
+
+.blue {
+  color: rgb(87, 87, 253); /* Déposé */
+}
+
+.green {
+  color: rgb(124, 248, 124); /* Encaissé */
+}
+
+.red {
+  color: rgb(252, 128, 128); /* Impayé */
+}
+
+
+
+
+
+.colordiails{
+  background-color: #efefef !important;
+}
+.colortoutal{
+  background-color: #ddd !important;
+}
+
+.element {
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidBarcomposantColore {
+  background-color: #f0f0f0; /* Couleur de base */
+  transition: background-color 0.3s ease;
+}
+
+.sidBarcomposantColore.submenu-open {
+  background-color: #0b4d54; /* Couleur lorsque le submenu est ouvert */
+  color: white; /* Changer la couleur du texte si nécessaire */
+}
+
+::placeholder {
+  font-size: 12px; /* Remplacez 16px par la taille que vous voulez */
+ 
+}
+.table-bordered{
+  margin-top: 0px !important;
+}
+option {
+             /* Couleur du texte */
+  font-size: 12px !important;          /* Taille de la police */
+
+}
+.option {
+             /* Couleur du texte */
+  font-size: 12px !important;          /* Taille de la police */
+
+}
+select {
+  font-size: 12px; /* Taille de la police pour la valeur sélectionnée */
+    /* Espacement interne pour le select */
+}
+text {
+  font-size: 12px; /* Taille de la police pour la valeur sélectionnée */
+    /* Espacement interne pour le select */
+}
+.status-label {
+
+}
+
+.sticky-action-column {
+  position: sticky;
+  right: 0;
+  background-color: white;
+  z-index: 0; /* Assurez-vous que la colonne soit au-dessus des autres */
+  padding: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.action-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.btn{
+  font-size: 12px;
+}
+.table-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* ou une hauteur spécifique */
+}
+
+.table-container table {
+  flex-grow: 1; /* La table prend tout l'espace disponible */
+  overflow-y: auto;
+}
+
+.table-container .MuiTablePagination-root {
+  position: sticky;
+  bottom: 0;
+  right: 0;
+  background-color: white; /* Pour éviter qu'elle se chevauche avec le contenu */
+  z-index: 10;
+  border-top: 1px solid #ddd; /* Facultatif : une bordure pour la distinguer */
+}
+.status-fiche {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color:  #fff5f5; /* Couleur de fond */
+  color: #f85c5c; /* Couleur du texte pour 'Sold Out' */
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+.status {
+  display: inline-block;
+  padding: 5px 10px;
+
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+#dropdown-basic
+{
+  z-index: 9999;
+}
+
+.detail-title {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+/* Style pour les valeurs (ex: "123" ou "-") */
+.detail-value {
+  background-color: #ffffff;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+/* Petite bordure entre les cases */
+.detail-table td {
+  border: 1px solid #dee2e6;
+}
+
+/* Enlever marges autour du tableau */
+.detail-table {
+  margin: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* === UI Customizer animations & styles === */
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.hover-lift { transition: transform 160ms ease, box-shadow 160ms ease; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+
+.animated-fade-right { animation: fadeInRight 240ms ease both; }
+.animated-pop { animation: popIn 180ms ease both; }
+
+.customizer-drawer { overflow: hidden; }
+.customizer-section-title { font-size: 12px; font-weight: 700; letter-spacing: .5px; color: #6b7280; }
+.color-swatch { width: 28px; height: 28px; border-radius: 6px; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); }
+.option-tile { border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px; cursor: pointer; background: #fff; }
+.option-tile.active { outline: 2px solid #0ea5a4; }
+.quick-icons { position: fixed; right: 70px; top: 42%; display: flex; flex-direction: column; gap: 10px; z-index: 1201; }
+.quick-icons .icon { width: 40px; height: 40px; display:flex; align-items:center; justify-content:center; color:#fff; border-radius:8px; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+
+/* Theme cards */
+.theme-grid { display: grid; grid-template-columns: repeat(2, 160px); justify-content: space-between; gap: 12px; }
+.theme-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:10px; cursor:pointer; transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease; width: 160px; }
+.theme-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.08); }
+.theme-card.active { border-color:#0ea5a4; box-shadow: 0 0 0 3px rgba(14,165,164,.2) inset; }
+.theme-title { font-size:12px; font-weight:600; color:#374151; margin-top:8px; }
+.theme-preview { display:flex; gap:8px; align-items:center; }
+.theme-preview .box { border-radius:8px; overflow:hidden; border:1px solid rgba(0,0,0,.06); display:flex; }
+.theme-preview .header { height:18px; width:64px; }
+.theme-preview .sidebar { height:36px; width:16px; }
+.theme-preview .content { height:36px; width:48px; background:#f8fafc; }
+.swatch-row { display:flex; gap:8px; margin-top:8px; }
+.swatch { width:18px; height:18px; border-radius:6px; border:1px solid rgba(0,0,0,.08); }
+
