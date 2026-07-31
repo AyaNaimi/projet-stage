@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\CoutHistorique;
 use App\Models\Produit;
 use App\Models\ChargeIndirecte;
+use Illuminate\Support\Carbon;
 
 /**
  * CostEngineService — Moteur de calcul du coût de revient
@@ -100,6 +102,25 @@ class CostEngineService
             'cout_mod_lot'                => round($base['cout_mod'] * $quantite, 4),
             'cout_packaging_lot'          => round($base['cout_packaging'] * $quantite, 4),
             'cout_charges_indirectes_lot' => round($base['cout_charges_indirectes'] * $quantite, 4),
+        ]);
+    }
+
+    public function enregistrerHistoriqueCout(Produit $produit, array $calcul, ?Carbon $date = null): void
+    {
+        $date = $date ?: Carbon::today();
+        $coutUnitaire = (float) ($calcul['cout_unitaire'] ?? 0);
+        $prixVente = (float) ($produit->prix_vente ?? 0);
+
+        $margePct = $prixVente > 0
+            ? round((($prixVente - $coutUnitaire) / $prixVente) * 100, 4)
+            : null;
+
+        CoutHistorique::updateOrCreate([
+            'produit_id'  => $produit->id,
+            'date_calcul' => $date->toDateString(),
+        ], [
+            'cout_unitaire' => $coutUnitaire,
+            'marge_pct'     => $margePct,
         ]);
     }
 

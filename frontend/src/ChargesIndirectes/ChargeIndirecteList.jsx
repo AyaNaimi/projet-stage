@@ -58,11 +58,30 @@ const ChargeIndirecteList = () => {
 
   const fetchData = async () => {
     try {
-      // Charges indirectes uniquement — /api/produits n'est pas nécessaire ici
-      // (le carousel produits n'a pas de rôle fonctionnel dans ce module)
       const chargesRes = await axiosInstance.get("/api/charges-indirectes").catch(() => ({ data: [] }));
       const chargesData = chargesRes.data?.data ?? chargesRes.data;
       setCharges(Array.isArray(chargesData) ? chargesData : []);
+
+      const produitsRes = await axiosInstance.get("/api/produits").catch(() => ({ data: {} }));
+      const produitsData = produitsRes.data?.produit || produitsRes.data || [];
+      const produitsFiltres = Array.isArray(produitsData)
+        ? produitsData.filter((p) => {
+            const type = String(p?.type ?? "").toLowerCase();
+            const categorie = String(p?.categorie?.categorie ?? p?.categorie ?? "").toLowerCase();
+            const codeProduit = String(p?.Code_produit ?? "").toLowerCase();
+
+            if (type === "emballage" || type === "emballage_secondaire" || categorie.includes("emballage")) {
+              return false;
+            }
+
+            if (["etiq001", "pkg-001", "pkg-002"].includes(codeProduit)) {
+              return false;
+            }
+
+            return p?.is_recette !== true && p?.is_recette !== "1" && p?.is_recette !== 1;
+          })
+        : [];
+      setProduits(produitsFiltres);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -74,11 +93,24 @@ const ChargeIndirecteList = () => {
 
   useEffect(() => {
     const safeSearchQuery = (searchQuery || '').toLowerCase();
-    const filtered = charges.filter((c) =>
-      c.nom?.toLowerCase().includes(safeSearchQuery)
-    );
+    const selectedProductId = carouselSelectedProductId === 'tout' ? null : Number(carouselSelectedProductId);
+
+    const filtered = charges.filter((c) => {
+      const matchesSearch = c.nom?.toLowerCase().includes(safeSearchQuery);
+      if (!matchesSearch) return false;
+
+      if (selectedProductId === null) return true;
+
+      const chargeProductId = c.produit_id ?? c.product_id ?? c.produit?.id;
+      if (chargeProductId === null || chargeProductId === undefined || chargeProductId === '') {
+        return false;
+      }
+
+      return Number(chargeProductId) === selectedProductId;
+    });
+
     setFilteredCharges(filtered);
-  }, [charges, searchQuery]);
+  }, [charges, searchQuery, carouselSelectedProductId]);
 
   const handleSelectAllChange = (e) => {
     if (e.target.checked) {
@@ -156,10 +188,16 @@ const ChargeIndirecteList = () => {
     e.preventDefault();
     const url = formData.id ? `/api/charges-indirectes/${formData.id}` : `/api/charges-indirectes`;
     const method = formData.id ? "put" : "post";
+    const payload = {
+      ...formData,
+      produit_id: carouselSelectedProductId && carouselSelectedProductId !== 'tout'
+        ? Number(carouselSelectedProductId)
+        : null,
+    };
 
     setLoading(true);
     try {
-      await axiosInstance[method](url, formData);
+      await axiosInstance[method](url, payload);
       fetchData();
       closeForm();
       Swal.fire("Succès", `Charge ${formData.id ? 'modifiée' : 'ajoutée'} avec succès.`, "success");

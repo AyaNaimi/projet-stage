@@ -177,11 +177,20 @@ const handleVerifierCoherence = async () => {
       const tousLesProduits = Array.isArray(prodData) ? prodData : [];
 
       const produitsFiltres = tousLesProduits.filter((p) => {
-        if (p.type === "emballage" || p.type === "emballage_secondaire") return false;
-        if (p.categorie?.categorie === "Emballage") return false;
-        const codesExclus = ["ETIQ001", "PKG-001", "PKG-002"];
-        if (codesExclus.includes(p.Code_produit)) return false;
-        return p.type === "P" || p.type === null;
+        const type = String(p?.type ?? "").toLowerCase();
+        const categorie = String(p?.categorie?.categorie ?? p?.categorie ?? "").toLowerCase();
+        const codeProduit = String(p?.Code_produit ?? "").toLowerCase();
+
+        if (type === "emballage" || type === "emballage_secondaire" || categorie.includes("emballage")) {
+          return false;
+        }
+
+        const codesExclus = ["etiq001", "pkg-001", "pkg-002"];
+        if (codesExclus.includes(codeProduit)) {
+          return false;
+        }
+
+        return p?.is_recette !== true && p?.is_recette !== "1" && p?.is_recette !== 1;
       });
 
       setProduits(produitsFiltres);

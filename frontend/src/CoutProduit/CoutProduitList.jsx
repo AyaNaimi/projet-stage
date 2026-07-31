@@ -127,7 +127,15 @@ const CoutProduitList = () => {
     try {
       const res = await axiosInstance.get("/api/produits", { params: { minimal: 1 } }).catch(() => ({ data: {} }));
       const data = res.data?.produit || res.data?.produits || res.data?.data || res.data || [];
-      setProduits(Array.isArray(data) ? data : []);
+      const produitsFiltres = Array.isArray(data)
+        ? data.filter((p) => {
+            if (p.type === "emballage" || p.type === "emballage_secondaire") return false;
+            if (p.categorie?.categorie === "Emballage") return false;
+            if (p.is_recette === true || p.is_recette === "1" || p.is_recette === 1) return false;
+            return true;
+          })
+        : [];
+      setProduits(produitsFiltres);
     } catch (err) {
       console.error("Erreur chargement produits:", err);
     }

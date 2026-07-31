@@ -99,6 +99,7 @@ class ChargeIndirecteController extends Controller
                 $fail("Le champ $attribute doit etre un nombre entier de mois >= 1 ou une valeur parmi : mensuel, trimestriel, annuel.");
             }],
             'methode_repartition' => ['required', Rule::in(['volume', 'quantite', 'temps_machine'])],
+            'produit_id' => ['nullable', 'integer', 'exists:produits,id'],
         ];
     }
 

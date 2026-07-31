@@ -770,9 +770,11 @@ const ProduitList = () => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
+    console.log('CLIC VALIDER');
     e.preventDefault();
 
     const newErrors = validateForm(formData);
+    console.log('newErrors', newErrors);
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);

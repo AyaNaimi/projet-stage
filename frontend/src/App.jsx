@@ -3,7 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
-import Dashboard from "./Acceuil/Dashboard.jsx";
+import DashboardPage from "./Acceuil/DashboardPage.jsx";
 import Navigation from "./Acceuil/Navigation";
 import { OpenProvider } from "./Acceuil/OpenProvider.jsx";
 import { HeaderProvider } from "./Acceuil/HeaderContext";
@@ -30,7 +30,7 @@ const App = () => {
         <HeaderProvider>
           {showNavigation && <Navigation />}
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<DashboardPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/employes" element={<DepartementManager />} />
             <Route path="/produits" element={<ProduitList />} />

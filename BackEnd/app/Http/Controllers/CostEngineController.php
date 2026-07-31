@@ -36,6 +36,7 @@ class CostEngineController extends Controller
             ])->findOrFail($id);
 
             $resultat = $this->engine->calculerCoutUnitaire($produit);
+            $this->engine->enregistrerHistoriqueCout($produit, $resultat);
 
             return response()->json(['success' => true, 'data' => $resultat]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
@@ -109,6 +110,10 @@ class CostEngineController extends Controller
                 $resultats[$produit->id] = $quantite > 1
                     ? $this->engine->calculerCoutLot($produit, $quantite)
                     : $this->engine->calculerCoutUnitaire($produit);
+
+                if ($quantite <= 1) {
+                    $this->engine->enregistrerHistoriqueCout($produit, $resultats[$produit->id]);
+                }
             }
 
             $idsIntrouvables = array_diff($ids, $produits->pluck('id')->toArray());
@@ -211,6 +216,7 @@ class CostEngineController extends Controller
             }
 
             $resultat = $this->engine->calculerCoutUnitaire($produit);
+            $this->engine->enregistrerHistoriqueCout($produit, $resultat);
 
             return response()->json([
                 'success'   => true,

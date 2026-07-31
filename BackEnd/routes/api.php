@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+
 // use App\Http\Controllers\AuthController;
 // use App\Http\Controllers\AutorisationController;
 // use App\Http\Controllers\BonLivraisonController;
@@ -827,6 +829,8 @@ Route::apiResource('groupes-paie', GpGroupPaieController::class);
 Route::apiResource('gp_bon_sortie', GpBonSortieController::class);
 Route::get('/employes/dashboard-stats', [EmployeController::class, 'getDashboardStats']);
 Route::get('/total-departemet', [DepartementController::class, 'TotalDepartemet']);
+Route::get('/dashboard-stats', [DashboardController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/produits-non-rentables', [DashboardController::class, 'produitsNonRentables'])->middleware('auth:sanctum');
 
 
 
